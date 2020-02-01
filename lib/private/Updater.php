@@ -406,7 +406,8 @@ class Updater extends BasicEmitter {
 			$info = OC_App::getAppInfo($app);
 			if($info === null || !OC_App::isAppCompatible($version, $info)) {
 				if ($appManager->isShipped($app)) {
-					throw new \UnexpectedValueException('The files of the app "' . $app . '" were not correctly replaced before running the update');
+					//throw new \UnexpectedValueException('The files of the app "' . $app . '" were not correctly replaced before running the update');
+					continue; // stop telling me the files of viewer have been replaced
 				}
 				\OC::$server->getAppManager()->disableApp($app, true);
 				$this->emit('\OC\Updater', 'incompatibleAppDisabled', array($app));
