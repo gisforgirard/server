@@ -36,6 +36,7 @@ declare(strict_types=1);
 
 namespace OC;
 
+use OCP\Log\IDataLogger;
 use function array_merge;
 use InterfaSys\LogNormalizer\Normalizer;
 
@@ -54,7 +55,7 @@ use OCP\Support\CrashReport\IRegistry;
  *
  * MonoLog is an example implementing this interface.
  */
-class Log implements ILogger {
+class Log implements ILogger, IDataLogger {
 
 	/** @var IWriter */
 	private $logger;
@@ -339,6 +340,29 @@ class Log implements ILogger {
 		}
 	}
 
+	public function logData(string $message, array $data, array $context = []): void {
+		$app = $context['app'] ?? 'no app in context';
+		$level = $context['level'] ?? ILogger::ERROR;
+
+		$minLevel = $this->getLogLevel($context);
+
+		array_walk($context, [$this->normalizer, 'format']);
+
+		try {
+			if ($level >= $minLevel) {
+				$data['message'] = $message;
+				if (!$this->logger instanceof IFileBased) {
+					$data = json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_UNESCAPED_SLASHES);
+				}
+				$this->writeLog($app, $data, $level);
+			}
+
+			$context['level'] = $level;
+		} catch (\Throwable $e) {
+			// make sure we dont hard crash if logging fails
+		}
+	}
+
 	/**
 	 * @param string $app
 	 * @param string|array $entry
@@ -349,7 +373,7 @@ class Log implements ILogger {
 	}
 
 	public function getLogPath():string {
-		if($this->logger instanceof IFileBased) {
+		if ($this->logger instanceof IFileBased) {
 			return $this->logger->getLogFilePath();
 		}
 		throw new \RuntimeException('Log implementation has no path');

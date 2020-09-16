@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Martin Konrad <konrad@frib.msu.edu>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -57,15 +58,16 @@ class CreateEmptyConfig extends Command {
 		;
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$configPrefix = $this->helper->getNextServerConfigurationPrefix();
 		$configHolder = new Configuration($configPrefix);
 		$configHolder->saveConfiguration();
 
 		$prose = '';
-		if(!$input->getOption('only-print-prefix')) {
+		if (!$input->getOption('only-print-prefix')) {
 			$prose = 'Created new configuration with configID ';
 		}
 		$output->writeln($prose . "{$configPrefix}");
+		return 0;
 	}
 }

@@ -1,9 +1,12 @@
 <?php
+
 declare(strict_types=1);
+
 /**
  * @copyright Copyright (c) 2020 Arthur Schiwon <blizzz@arthur-schiwon.de>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Julius Härtl <jus@bitgrid.net>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -18,14 +21,13 @@ declare(strict_types=1);
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  */
 
 namespace OC\App\AppStore\Bundles;
 
 class HubBundle extends Bundle {
-
 	public function getName() {
 		return $this->l10n->t('Hub bundle');
 	}
@@ -36,8 +38,8 @@ class HubBundle extends Bundle {
 			'contacts',
 			'calendar',
 			'mail',
-			'documentserver_community',
-			'onlyoffice',
+			'richdocumentscode',
+			'richdocuments',
 		];
 	}
 }

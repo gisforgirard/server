@@ -39,19 +39,19 @@ use Test\TestCase;
 
 class JsControllerTest extends TestCase {
 
-	/** @var IAppData|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IAppData|\PHPUnit\Framework\MockObject\MockObject */
 	private $appData;
 
 	/** @var JsController */
 	private $controller;
 
-	/** @var IRequest|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IRequest|\PHPUnit\Framework\MockObject\MockObject */
 	private $request;
 
 	protected function setUp(): void {
 		parent::setUp();
 
-		/** @var Factory|\PHPUnit_Framework_MockObject_MockObject $factory */
+		/** @var Factory|\PHPUnit\Framework\MockObject\MockObject $factory */
 		$factory = $this->createMock(Factory::class);
 		$this->appData = $this->createMock(AppData::class);
 		$factory->expects($this->once())
@@ -59,7 +59,7 @@ class JsControllerTest extends TestCase {
 			->with('js')
 			->willReturn($this->appData);
 
-		/** @var ITimeFactory|\PHPUnit_Framework_MockObject_MockObject $timeFactory */
+		/** @var ITimeFactory|\PHPUnit\Framework\MockObject\MockObject $timeFactory */
 		$timeFactory = $this->createMock(ITimeFactory::class);
 		$timeFactory->method('getTime')
 			->willReturn(1337);
@@ -158,13 +158,13 @@ class JsControllerTest extends TestCase {
 			->willReturn($folder);
 
 		$folder->method('getFile')
-			->will($this->returnCallback(
-				function($fileName) use ($file) {
+			->willReturnCallback(
+				function ($fileName) use ($file) {
 					if ($fileName === 'file.js') {
 						return $file;
 					}
 					throw new NotFoundException();
-				})
+				}
 			);
 
 		$this->request->method('getHeader')
@@ -182,5 +182,4 @@ class JsControllerTest extends TestCase {
 		$result = $this->controller->getJs('file.js', 'myapp');
 		$this->assertEquals($expected, $result);
 	}
-
 }

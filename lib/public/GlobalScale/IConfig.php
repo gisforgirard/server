@@ -28,7 +28,6 @@ namespace OCP\GlobalScale;
  *
  * Configuration of the global scale architecture
  *
- * @package OCP\GlobalScale
  * @since 12.0.1
  */
 interface IConfig {
@@ -48,5 +47,4 @@ interface IConfig {
 	 * @return bool
 	 */
 	public function onlyInternalFederation();
-
 }

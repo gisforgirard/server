@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2018 John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
@@ -43,6 +44,7 @@ use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use OCP\L10N\IFactory;
 use OCP\User\Backend\ISetDisplayNameBackend;
 use OCP\User\Backend\ISetPasswordBackend;
 
@@ -58,23 +60,17 @@ abstract class AUserData extends OCSController {
 	protected $userSession;
 	/** @var AccountManager */
 	protected $accountManager;
+	/** @var IFactory */
+	protected $l10nFactory;
 
-	/**
-	 * @param string $appName
-	 * @param IRequest $request
-	 * @param IUserManager $userManager
-	 * @param IConfig $config
-	 * @param IGroupManager $groupManager
-	 * @param IUserSession $userSession
-	 * @param AccountManager $accountManager
-	 */
 	public function __construct(string $appName,
 								IRequest $request,
 								IUserManager $userManager,
 								IConfig $config,
 								IGroupManager $groupManager,
 								IUserSession $userSession,
-								AccountManager $accountManager) {
+								AccountManager $accountManager,
+								IFactory $l10nFactory) {
 		parent::__construct($appName, $request);
 
 		$this->userManager = $userManager;
@@ -82,6 +78,7 @@ abstract class AUserData extends OCSController {
 		$this->groupManager = $groupManager;
 		$this->userSession = $userSession;
 		$this->accountManager = $accountManager;
+		$this->l10nFactory = $l10nFactory;
 	}
 
 	/**
@@ -100,14 +97,14 @@ abstract class AUserData extends OCSController {
 
 		// Check if the target user exists
 		$targetUserObject = $this->userManager->get($userId);
-		if($targetUserObject === null) {
+		if ($targetUserObject === null) {
 			throw new OCSNotFoundException('User does not exist');
 		}
 
 		// Should be at least Admin Or SubAdmin!
 		if ($this->groupManager->isAdmin($currentLoggedInUser->getUID())
 			|| $this->groupManager->getSubAdmin()->isUserAccessible($currentLoggedInUser, $targetUserObject)) {
-				$data['enabled'] = $this->config->getUserValue($targetUserObject->getUID(), 'core', 'enabled', 'true') === 'true';
+			$data['enabled'] = $this->config->getUserValue($targetUserObject->getUID(), 'core', 'enabled', 'true') === 'true';
 		} else {
 			// Check they are looking up themselves
 			if ($currentLoggedInUser->getUID() !== $targetUserObject->getUID()) {
@@ -145,7 +142,7 @@ abstract class AUserData extends OCSController {
 		$data[AccountManager::PROPERTY_WEBSITE] = $userAccount[AccountManager::PROPERTY_WEBSITE]['value'];
 		$data[AccountManager::PROPERTY_TWITTER] = $userAccount[AccountManager::PROPERTY_TWITTER]['value'];
 		$data['groups'] = $gids;
-		$data['language'] = $this->config->getUserValue($targetUserObject->getUID(), 'core', 'lang');
+		$data['language'] = $this->l10nFactory->getUserLanguage($targetUserObject);
 		$data['locale'] = $this->config->getUserValue($targetUserObject->getUID(), 'core', 'locale');
 
 		$backend = $targetUserObject->getBackend();
@@ -155,7 +152,7 @@ abstract class AUserData extends OCSController {
 		];
 
 		return $data;
-    }
+	}
 
 	/**
 	 * Get the groups a user is a subadmin of
@@ -167,7 +164,7 @@ abstract class AUserData extends OCSController {
 	protected function getUserSubAdminGroupsData(string $userId): array {
 		$user = $this->userManager->get($userId);
 		// Check if the user exists
-		if($user === null) {
+		if ($user === null) {
 			throw new OCSNotFoundException('User does not exist');
 		}
 
@@ -215,5 +212,4 @@ abstract class AUserData extends OCSController {
 		}
 		return $data;
 	}
-
 }

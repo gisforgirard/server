@@ -171,7 +171,7 @@ var StorageConfig = function(id) {
 	this.id = id;
 	this.backendOptions = {};
 };
-// Keep this in sync with \OC_Mount_Config::STATUS_*
+// Keep this in sync with \OCA\Files_External\MountConfig::STATUS_*
 StorageConfig.Status = {
 	IN_PROGRESS: -1,
 	SUCCESS: 0,
@@ -475,7 +475,9 @@ MountOptionsDropdown.prototype = {
 		}));
 		this.$el = $el;
 
-		this.setOptions(mountOptions, visibleOptions);
+		var storage = $container[0].parentNode.className;
+
+		this.setOptions(mountOptions, visibleOptions, storage);
 
 		this.$el.appendTo($container);
 		MountOptionsDropdown._last = this;
@@ -523,7 +525,13 @@ MountOptionsDropdown.prototype = {
 	 * @param {Object} options mount options
 	 * @param {Array} visibleOptions enabled mount options
 	 */
-	setOptions: function(options, visibleOptions) {
+	setOptions: function(options, visibleOptions, storage) {
+		if (storage === 'owncloud') {
+			var ind = visibleOptions.indexOf('encrypt');
+			if (ind > 0) {
+				visibleOptions.splice(ind, 1);
+			}
+		}
 		var $el = this.$el;
 		_.each(options, function(value, key) {
 			var $optionEl = $el.find('input, select').filterAttr('name', key);
@@ -999,6 +1007,11 @@ MountConfigListView.prototype = _.extend({
 		} else {
 			newElement = $('<input type="text" class="'+classes.join(' ')+'" data-parameter="'+parameter+'" placeholder="'+ trimmedPlaceholder+'" />');
 		}
+
+		if (placeholder.tooltip) {
+			newElement.attr('title', placeholder.tooltip);
+		}
+
 		highlightInput(newElement);
 		$td.append(newElement);
 		return newElement;
@@ -1290,7 +1303,7 @@ MountConfigListView.prototype = _.extend({
 	}
 }, OC.Backbone.Events);
 
-$(document).ready(function() {
+window.addEventListener('DOMContentLoaded', function() {
 	var enabled = $('#files_external').attr('data-encryption-enabled');
 	var encryptionEnabled = (enabled ==='true')? true: false;
 	var mountConfigListView = new MountConfigListView($('#externalStorage'), {
@@ -1345,7 +1358,7 @@ $(document).ready(function() {
 		var user = $form.find('[name=username]').val();
 		var password = $form.find('[name=password]').val();
 		var $submit = $form.find('[type=submit]');
-		$submit.val(t('files_external', 'Saving...'));
+		$submit.val(t('files_external', 'Saving …'));
 		$.ajax({
 			type: 'POST',
 			contentType: 'application/json',

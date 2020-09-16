@@ -23,8 +23,11 @@
 namespace Test\Support\Subscription;
 
 use OC\Support\Subscription\Registry;
+use OCP\IConfig;
+use OCP\IServerContainer;
 use OCP\Support\Subscription\ISubscription;
 use OCP\Support\Subscription\ISupportedApps;
+use PHPUnit\Framework\MockObject\MockObject;
 use Test\TestCase;
 
 class RegistryTest extends TestCase {
@@ -32,10 +35,18 @@ class RegistryTest extends TestCase {
 	/** @var Registry */
 	private $registry;
 
+	/** @var MockObject|IConfig */
+	private $config;
+
+	/** @var MockObject|IServerContainer */
+	private $serverContainer;
+
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->registry = new Registry();
+		$this->config = $this->createMock(IConfig::class);
+		$this->serverContainer = $this->createMock(IServerContainer::class);
+		$this->registry = new Registry($this->config, $this->serverContainer);
 	}
 
 	/**
@@ -46,7 +57,7 @@ class RegistryTest extends TestCase {
 		$this->addToAssertionCount(1);
 	}
 
-	
+
 	public function testDoubleRegistration() {
 		$this->expectException(\OCP\Support\Subscription\Exception\AlreadyRegisteredException::class);
 
@@ -64,7 +75,7 @@ class RegistryTest extends TestCase {
 	}
 
 	public function testDelegateHasValidSubscription() {
-		/* @var ISubscription|\PHPUnit_Framework_MockObject_MockObject $subscription */
+		/* @var ISubscription|\PHPUnit\Framework\MockObject\MockObject $subscription */
 		$subscription = $this->createMock(ISubscription::class);
 		$subscription->expects($this->once())
 			->method('hasValidSubscription')
@@ -74,8 +85,18 @@ class RegistryTest extends TestCase {
 		$this->assertSame(true, $this->registry->delegateHasValidSubscription());
 	}
 
+	public function testDelegateHasValidSubscriptionConfig() {
+		/* @var ISubscription|\PHPUnit\Framework\MockObject\MockObject $subscription */
+		$this->config->expects($this->once())
+			->method('getSystemValueBool')
+			->with('has_valid_subscription')
+			->willReturn(true);
+
+		$this->assertSame(true, $this->registry->delegateHasValidSubscription());
+	}
+
 	public function testDelegateHasExtendedSupport() {
-		/* @var ISubscription|\PHPUnit_Framework_MockObject_MockObject $subscription */
+		/* @var ISubscription|\PHPUnit\Framework\MockObject\MockObject $subscription */
 		$subscription = $this->createMock(ISubscription::class);
 		$subscription->expects($this->once())
 			->method('hasExtendedSupport')
@@ -87,7 +108,7 @@ class RegistryTest extends TestCase {
 
 
 	public function testDelegateGetSupportedApps() {
-		/* @var ISupportedApps|\PHPUnit_Framework_MockObject_MockObject $subscription */
+		/* @var ISupportedApps|\PHPUnit\Framework\MockObject\MockObject $subscription */
 		$subscription = $this->createMock(ISupportedApps::class);
 		$subscription->expects($this->once())
 			->method('getSupportedApps')
@@ -95,5 +116,15 @@ class RegistryTest extends TestCase {
 		$this->registry->register($subscription);
 
 		$this->assertSame(['abc'], $this->registry->delegateGetSupportedApps());
+	}
+
+	public function testSubscriptionService() {
+		$this->serverContainer->method('query')
+			->with(DummySubscription::class)
+			->willReturn(new DummySubscription(true, false));
+		$this->registry->registerService(DummySubscription::class);
+
+		$this->assertTrue($this->registry->delegateHasValidSubscription());
+		$this->assertFalse($this->registry->delegateHasExtendedSupport());
 	}
 }

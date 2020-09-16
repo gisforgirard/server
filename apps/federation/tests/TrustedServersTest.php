@@ -4,7 +4,9 @@
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
@@ -26,7 +28,6 @@
 
 namespace OCA\Federation\Tests;
 
-
 use OCA\Federation\DbHandler;
 use OCA\Federation\TrustedServers;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -42,37 +43,37 @@ use Test\TestCase;
 
 class TrustedServersTest extends TestCase {
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject | TrustedServers */
+	/** @var \PHPUnit\Framework\MockObject\MockObject | TrustedServers */
 	private $trustedServers;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | DbHandler */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | DbHandler */
 	private $dbHandler;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject | IClientService */
+	/** @var \PHPUnit\Framework\MockObject\MockObject | IClientService */
 	private $httpClientService;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | IClient */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | IClient */
 	private $httpClient;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | IResponse */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | IResponse */
 	private $response;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | ILogger */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | ILogger */
 	private $logger;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | IJobList */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | IJobList */
 	private $jobList;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | ISecureRandom */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | ISecureRandom */
 	private $secureRandom;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | IConfig */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | IConfig */
 	private $config;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | EventDispatcherInterface */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | EventDispatcherInterface */
 	private $dispatcher;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|ITimeFactory */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|ITimeFactory */
 	private $timeFactory;
 
 	protected function setUp(): void {
@@ -101,7 +102,6 @@ class TrustedServersTest extends TestCase {
 			$this->dispatcher,
 			$this->timeFactory
 		);
-
 	}
 
 	/**
@@ -110,7 +110,7 @@ class TrustedServersTest extends TestCase {
 	 * @param bool $success
 	 */
 	public function testAddServer($success) {
-		/** @var \PHPUnit_Framework_MockObject_MockObject|TrustedServers $trustedServers */
+		/** @var \PHPUnit\Framework\MockObject\MockObject|TrustedServers $trustedServers */
 		$trustedServers = $this->getMockBuilder('OCA\Federation\TrustedServers')
 			->setConstructorArgs(
 				[
@@ -217,7 +217,7 @@ class TrustedServersTest extends TestCase {
 			->willReturn($server);
 		$this->dispatcher->expects($this->once())->method('dispatch')
 			->willReturnCallback(
-				function($eventId, $event) {
+				function ($eventId, $event) {
 					$this->assertSame($eventId, 'OCP\Federation\TrustedServerEvent::remove');
 					$this->assertInstanceOf('Symfony\Component\EventDispatcher\GenericEvent', $event);
 					/** @var \Symfony\Component\EventDispatcher\GenericEvent $event */
@@ -268,10 +268,9 @@ class TrustedServersTest extends TestCase {
 	 * @param bool $expected
 	 */
 	public function testIsOwnCloudServer($statusCode, $isValidOwnCloudVersion, $expected) {
-
 		$server = 'server1';
 
-		/** @var \PHPUnit_Framework_MockObject_MockObject | TrustedServers $trustedServers */
+		/** @var \PHPUnit\Framework\MockObject\MockObject | TrustedServers $trustedServers */
 		$trustedServers = $this->getMockBuilder('OCA\Federation\TrustedServers')
 			->setConstructorArgs(
 				[
@@ -307,7 +306,6 @@ class TrustedServersTest extends TestCase {
 		$this->assertSame($expected,
 			$trustedServers->isOwnCloudServer($server)
 		);
-
 	}
 
 	public function dataTestIsOwnCloudServer() {

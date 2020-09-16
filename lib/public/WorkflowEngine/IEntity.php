@@ -37,7 +37,6 @@ use OCP\EventDispatcher\Event;
  * Ensure to listen to 'OCP/WorkflowEngine::loadEntities' for registering your
  * entities.
  *
- * @package OCP\WorkflowEngine
  * @since 18.0.0
  */
 interface IEntity {
@@ -83,5 +82,4 @@ interface IEntity {
 	 * @since 18.0.0
 	 */
 	public function isLegitimatedForUserId(string $userId): bool;
-
 }

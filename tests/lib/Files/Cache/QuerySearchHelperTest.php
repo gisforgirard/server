@@ -39,7 +39,7 @@ class QuerySearchHelperTest extends TestCase {
 	/** @var  IQueryBuilder */
 	private $builder;
 
-	/** @var  IMimeTypeLoader|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IMimeTypeLoader|\PHPUnit\Framework\MockObject\MockObject */
 	private $mimetypeLoader;
 
 	/** @var  QuerySearchHelper */
@@ -200,7 +200,7 @@ class QuerySearchHelperTest extends TestCase {
 			'mimetype' => 'image/png'
 		]);
 
-		$fileIds = array_map(function($i) use ($fileId) {
+		$fileIds = array_map(function ($i) use ($fileId) {
 			return $fileId[$i];
 		}, $fileIds);
 

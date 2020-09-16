@@ -6,8 +6,10 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
@@ -45,23 +47,13 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use OCP\L10N\IFactory;
 
 class GroupsController extends AUserData {
 
 	/** @var ILogger */
 	private $logger;
 
-	/**
-	 * @param string $appName
-	 * @param IRequest $request
-	 * @param IUserManager $userManager
-	 * @param IConfig $config
-	 * @param IGroupManager $groupManager
-	 * @param IUserSession $userSession
-	 * @param AccountManager $accountManager
-	 * @param ILogger $logger
-	 * @param UsersController $userController
-	 */
 	public function __construct(string $appName,
 								IRequest $request,
 								IUserManager $userManager,
@@ -69,6 +61,7 @@ class GroupsController extends AUserData {
 								IGroupManager $groupManager,
 								IUserSession $userSession,
 								AccountManager $accountManager,
+								IFactory $l10nFactory,
 								ILogger $logger) {
 		parent::__construct($appName,
 			$request,
@@ -76,7 +69,9 @@ class GroupsController extends AUserData {
 			$config,
 			$groupManager,
 			$userSession,
-			$accountManager);
+			$accountManager,
+			$l10nFactory
+		);
 
 		$this->logger = $logger;
 	}
@@ -93,7 +88,7 @@ class GroupsController extends AUserData {
 	 */
 	public function getGroups(string $search = '', int $limit = null, int $offset = 0): DataResponse {
 		$groups = $this->groupManager->search($search, $limit, $offset);
-		$groups = array_map(function($group) {
+		$groups = array_map(function ($group) {
 			/** @var IGroup $group */
 			return $group->getGID();
 		}, $groups);
@@ -113,7 +108,7 @@ class GroupsController extends AUserData {
 	 */
 	public function getGroupsDetails(string $search = '', int $limit = null, int $offset = 0): DataResponse {
 		$groups = $this->groupManager->search($search, $limit, $offset);
-		$groups = array_map(function($group) {
+		$groups = array_map(function ($group) {
 			/** @var IGroup $group */
 			return [
 				'id' => $group->getGID(),
@@ -151,6 +146,8 @@ class GroupsController extends AUserData {
 	 * @throws OCSException
 	 */
 	public function getGroupUsers(string $groupId): DataResponse {
+		$groupId = urldecode($groupId);
+
 		$user = $this->userSession->getUser();
 		$isSubadminOfGroup = false;
 
@@ -163,10 +160,10 @@ class GroupsController extends AUserData {
 		}
 
 		// Check subadmin has access to this group
-		if($this->groupManager->isAdmin($user->getUID())
+		if ($this->groupManager->isAdmin($user->getUID())
 		   || $isSubadminOfGroup) {
 			$users = $this->groupManager->get($groupId)->getUsers();
-			$users =  array_map(function($user) {
+			$users =  array_map(function ($user) {
 				/** @var IUser $user */
 				return $user->getUID();
 			}, $users);
@@ -190,6 +187,7 @@ class GroupsController extends AUserData {
 	 * @throws OCSException
 	 */
 	public function getGroupUsersDetails(string $groupId, string $search = '', int $limit = null, int $offset = 0): DataResponse {
+		$groupId = urldecode($groupId);
 		$currentUser = $this->userSession->getUser();
 
 		// Check the group exists
@@ -201,7 +199,7 @@ class GroupsController extends AUserData {
 		}
 
 		// Check subadmin has access to this group
-		if($this->groupManager->isAdmin($currentUser->getUID()) || $isSubadminOfGroup) {
+		if ($this->groupManager->isAdmin($currentUser->getUID()) || $isSubadminOfGroup) {
 			$users = $group->searchUsers($search, $limit, $offset);
 
 			// Extract required number
@@ -219,7 +217,7 @@ class GroupsController extends AUserData {
 						// only showing its id
 						$usersDetails[$userId] = ['id' => $userId];
 					}
-				} catch(OCSNotFoundException $e) {
+				} catch (OCSNotFoundException $e) {
 					// continue if a users ceased to exist.
 				}
 			}
@@ -240,12 +238,12 @@ class GroupsController extends AUserData {
 	 */
 	public function addGroup(string $groupid): DataResponse {
 		// Validate name
-		if(empty($groupid)) {
+		if (empty($groupid)) {
 			$this->logger->error('Group name not supplied', ['app' => 'provisioning_api']);
 			throw new OCSException('Invalid group name', 101);
 		}
 		// Check if it exists
-		if($this->groupManager->groupExists($groupid)){
+		if ($this->groupManager->groupExists($groupid)) {
 			throw new OCSException('group exists', 102);
 		}
 		$this->groupManager->createGroup($groupid);
@@ -262,6 +260,8 @@ class GroupsController extends AUserData {
 	 * @throws OCSException
 	 */
 	public function updateGroup(string $groupId, string $key, string $value): DataResponse {
+		$groupId = urldecode($groupId);
+
 		if ($key === 'displayname') {
 			$group = $this->groupManager->get($groupId);
 			if ($group->setDisplayName($value)) {
@@ -282,10 +282,12 @@ class GroupsController extends AUserData {
 	 * @throws OCSException
 	 */
 	public function deleteGroup(string $groupId): DataResponse {
+		$groupId = urldecode($groupId);
+
 		// Check it exists
-		if(!$this->groupManager->groupExists($groupId)){
+		if (!$this->groupManager->groupExists($groupId)) {
 			throw new OCSException('', 101);
-		} else if($groupId === 'admin' || !$this->groupManager->get($groupId)->delete()){
+		} elseif ($groupId === 'admin' || !$this->groupManager->get($groupId)->delete()) {
 			// Cannot delete admin group
 			throw new OCSException('', 102);
 		}
@@ -301,7 +303,7 @@ class GroupsController extends AUserData {
 	public function getSubAdminsOfGroup(string $groupId): DataResponse {
 		// Check group exists
 		$targetGroup = $this->groupManager->get($groupId);
-		if($targetGroup === null) {
+		if ($targetGroup === null) {
 			throw new OCSException('Group does not exist', 101);
 		}
 
@@ -315,5 +317,4 @@ class GroupsController extends AUserData {
 
 		return new DataResponse($uids);
 	}
-
 }

@@ -39,8 +39,8 @@ const resizeMenu = () => {
 	const appList = $('#appmenu li')
 	const rightHeaderWidth = $('.header-right').outerWidth()
 	const headerWidth = $('header').outerWidth()
-	const usePercentualAppMenuLimit = 0.33
-	const minAppsDesktop = 8
+	const usePercentualAppMenuLimit = 0.67
+	const minAppsDesktop = 12
 	let availableWidth = headerWidth - $('#nextcloud').outerWidth() - (rightHeaderWidth > 210 ? rightHeaderWidth : 210)
 	const isMobile = $(window).width() < breakpointMobileWidth
 	if (!isMobile) {
@@ -99,14 +99,14 @@ const initLiveTimestamps = () => {
 }
 
 /**
+ * Set users locale to moment.js as soon as possible
+ */
+moment.locale(OC.getLocale())
+
+/**
  * Initializes core
  */
 export const initCore = () => {
-	/**
-	 * Set users locale to moment.js as soon as possible
-	 */
-	moment.locale(OC.getLocale())
-
 	const userAgent = window.navigator.userAgent
 	const msie = userAgent.indexOf('MSIE ')
 	const trident = userAgent.indexOf('Trident/')

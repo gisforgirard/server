@@ -2,9 +2,11 @@
 /**
  *
  *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Daniel Calviño Sánchez <danxuliu@gmail.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Matthew Setter <matthew@matthewsetter.com>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -85,12 +87,13 @@ class ChangePasswordController extends Controller {
 
 	/**
 	 * @NoAdminRequired
-	 * @NoSubadminRequired
+	 * @NoSubAdminRequired
 	 * @BruteForceProtection(action=changePersonalPassword)
 	 */
 	public function changePersonalPassword(string $oldpassword = '', string $newpassword = null): JSONResponse {
+		$loginName = $this->userSession->getLoginName();
 		/** @var IUser $user */
-		$user = $this->userManager->checkPassword($this->userId, $oldpassword);
+		$user = $this->userManager->checkPassword($loginName, $oldpassword);
 		if ($user === false) {
 			$response = new JSONResponse([
 				'status' => 'error',
@@ -108,8 +111,8 @@ class ChangePasswordController extends Controller {
 					'status' => 'error'
 				]);
 			}
-		// password policy app throws exception
-		} catch(HintException $e) {
+			// password policy app throws exception
+		} catch (HintException $e) {
 			return new JSONResponse([
 				'status' => 'error',
 				'data' => [
@@ -187,7 +190,9 @@ class ChangePasswordController extends Controller {
 				\OC::$server->getUserSession(),
 				new \OCA\Encryption\Session(\OC::$server->getSession()),
 				\OC::$server->getLogger(),
-				$util);
+				$util,
+				\OC::$server->getLockingProvider()
+			);
 			$recovery = new \OCA\Encryption\Recovery(
 				\OC::$server->getUserSession(),
 				$crypt,
@@ -221,8 +226,8 @@ class ChangePasswordController extends Controller {
 			} else { // now we know that everything is fine regarding the recovery password, let's try to change the password
 				try {
 					$result = $targetUser->setPassword($password, $recoveryPassword);
-				// password policy app throws exception
-				} catch(HintException $e) {
+					// password policy app throws exception
+				} catch (HintException $e) {
 					return new JSONResponse([
 						'status' => 'error',
 						'data' => [
@@ -256,8 +261,8 @@ class ChangePasswordController extends Controller {
 						],
 					]);
 				}
-			// password policy app throws exception
-			} catch(HintException $e) {
+				// password policy app throws exception
+			} catch (HintException $e) {
 				return new JSONResponse([
 					'status' => 'error',
 					'data' => [

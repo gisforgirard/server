@@ -5,7 +5,11 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author GretaD <gretadoci@gmail.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
@@ -35,14 +39,18 @@ use OC\AppFramework\Http;
 use OC\Encryption\Exceptions\ModuleDoesNotExistsException;
 use OC\ForbiddenException;
 use OC\Security\IdentityProof\Manager;
+use OCA\FederatedFileSharing\FederatedShareProvider;
 use OCA\Settings\BackgroundJobs\VerifyUserData;
+use OCA\Settings\Events\BeforeTemplateRenderedEvent;
 use OCA\User_LDAP\User_Proxy;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataResponse;
+use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\BackgroundJob\IJobList;
 use OCP\Encryption\IManager;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
@@ -52,6 +60,7 @@ use OCP\IUserManager;
 use OCP\IUserSession;
 use OCP\L10N\IFactory;
 use OCP\Mail\IMailer;
+use function in_array;
 
 class UsersController extends Controller {
 	/** @var IUserManager */
@@ -80,23 +89,28 @@ class UsersController extends Controller {
 	private $jobList;
 	/** @var IManager */
 	private $encryptionManager;
+	/** @var IEventDispatcher */
+	private $dispatcher;
 
 
-	public function __construct(string $appName,
-								IRequest $request,
-								IUserManager $userManager,
-								IGroupManager $groupManager,
-								IUserSession $userSession,
-								IConfig $config,
-								bool $isAdmin,
-								IL10N $l10n,
-								IMailer $mailer,
-								IFactory $l10nFactory,
-								IAppManager $appManager,
-								AccountManager $accountManager,
-								Manager $keyManager,
-								IJobList $jobList,
-								IManager $encryptionManager) {
+	public function __construct(
+		string $appName,
+		IRequest $request,
+		IUserManager $userManager,
+		IGroupManager $groupManager,
+		IUserSession $userSession,
+		IConfig $config,
+		bool $isAdmin,
+		IL10N $l10n,
+		IMailer $mailer,
+		IFactory $l10nFactory,
+		IAppManager $appManager,
+		AccountManager $accountManager,
+		Manager $keyManager,
+		IJobList $jobList,
+		IManager $encryptionManager,
+		IEventDispatcher $dispatcher
+	) {
 		parent::__construct($appName, $request);
 		$this->userManager = $userManager;
 		$this->groupManager = $groupManager;
@@ -111,6 +125,7 @@ class UsersController extends Controller {
 		$this->keyManager = $keyManager;
 		$this->jobList = $jobList;
 		$this->encryptionManager = $encryptionManager;
+		$this->dispatcher = $dispatcher;
 	}
 
 
@@ -169,7 +184,7 @@ class UsersController extends Controller {
 		$groupsInfo->setSorting($sortGroupsBy);
 		list($adminGroup, $groups) = $groupsInfo->get();
 
-		if(!$isLDAPUsed && $this->appManager->isEnabledForUser('user_ldap')) {
+		if (!$isLDAPUsed && $this->appManager->isEnabledForUser('user_ldap')) {
 			$isLDAPUsed = (bool)array_reduce($this->userManager->getBackends(), function ($ldapFound, $backend) {
 				return $ldapFound || $backend instanceof User_Proxy;
 			});
@@ -178,10 +193,10 @@ class UsersController extends Controller {
 		$disabledUsers = -1;
 		$userCount = 0;
 
-		if(!$isLDAPUsed) {
+		if (!$isLDAPUsed) {
 			if ($this->isAdmin) {
 				$disabledUsers = $this->userManager->countDisabledUsers();
-				$userCount = array_reduce($this->userManager->countUsers(), function($v, $w) {
+				$userCount = array_reduce($this->userManager->countUsers(), function ($v, $w) {
 					return $v + (int)$w;
 				}, 0);
 			} else {
@@ -190,7 +205,7 @@ class UsersController extends Controller {
 				$userGroups = $this->groupManager->getUserGroups($user);
 				$groupsNames = [];
 
-				foreach($groups as $key => $group) {
+				foreach ($groups as $key => $group) {
 					// $userCount += (int)$group['usercount'];
 					array_push($groupsNames, $group['name']);
 					// we prevent subadmins from looking up themselves
@@ -214,21 +229,18 @@ class UsersController extends Controller {
 		];
 
 		/* QUOTAS PRESETS */
-		$quotaPreset = $this->config->getAppValue('files', 'quota_preset', '1 GB, 5 GB, 10 GB');
-		$quotaPreset = explode(',', $quotaPreset);
-		foreach ($quotaPreset as &$preset) {
-			$preset = trim($preset);
-		}
-		$quotaPreset = array_diff($quotaPreset, array('default', 'none'));
+		$quotaPreset = $this->parseQuotaPreset($this->config->getAppValue('files', 'quota_preset', '1 GB, 5 GB, 10 GB'));
 		$defaultQuota = $this->config->getAppValue('files', 'default_quota', 'none');
 
-		\OC::$server->getEventDispatcher()->dispatch('OC\Settings\Users::loadAdditionalScripts');
+		$event = new BeforeTemplateRenderedEvent();
+		$this->dispatcher->dispatch('OC\Settings\Users::loadAdditionalScripts', $event);
+		$this->dispatcher->dispatchTyped($event);
 
 		/* LANGUAGES */
 		$languages = $this->l10nFactory->getLanguages();
 
 		/* FINAL DATA */
-		$serverData = array();
+		$serverData = [];
 		// groups
 		$serverData['groups'] = array_merge_recursive($adminGroup, [$disabledUsersGroup], $groups);
 		// Various data
@@ -238,13 +250,45 @@ class UsersController extends Controller {
 		$serverData['userCount'] = $userCount;
 		$serverData['languages'] = $languages;
 		$serverData['defaultLanguage'] = $this->config->getSystemValue('default_language', 'en');
+		$serverData['forceLanguage'] = $this->config->getSystemValue('force_language', false);
 		// Settings
 		$serverData['defaultQuota'] = $defaultQuota;
 		$serverData['canChangePassword'] = $canChangePassword;
 		$serverData['newUserGenerateUserID'] = $this->config->getAppValue('core', 'newUser.generateUserID', 'no') === 'yes';
 		$serverData['newUserRequireEmail'] = $this->config->getAppValue('core', 'newUser.requireEmail', 'no') === 'yes';
+		$serverData['newUserSendEmail'] = $this->config->getAppValue('core', 'newUser.sendEmail', 'yes') === 'yes';
 
 		return new TemplateResponse('settings', 'settings-vue', ['serverData' => $serverData]);
+	}
+
+	/**
+	 * @param string $key
+	 * @param string $value
+	 *
+	 * @return JSONResponse
+	 */
+	public function setPreference(string $key, string $value): JSONResponse {
+		$allowed = ['newUser.sendEmail'];
+		if (!in_array($key, $allowed, true)) {
+			return new JSONResponse([], Http::STATUS_FORBIDDEN);
+		}
+
+		$this->config->setAppValue('core', $key, $value);
+
+		return new JSONResponse([]);
+	}
+
+	/**
+	 * Parse the app value for quota_present
+	 *
+	 * @param string $quotaPreset
+	 * @return array
+	 */
+	protected function parseQuotaPreset(string $quotaPreset): array {
+		// 1 GB, 5 GB, 10 GB => [1 GB, 5 GB, 10 GB]
+		$presets = array_filter(array_map('trim', explode(',', $quotaPreset)));
+		// Drop default and none, Make array indexes numerically
+		return array_values(array_diff($presets, ['default', 'none']));
 	}
 
 	/**
@@ -281,7 +325,7 @@ class UsersController extends Controller {
 
 	/**
 	 * @NoAdminRequired
-	 * @NoSubadminRequired
+	 * @NoSubAdminRequired
 	 * @PasswordConfirmationRequired
 	 *
 	 * @param string $avatarScope
@@ -332,8 +376,7 @@ class UsersController extends Controller {
 			$data[AccountManager::PROPERTY_EMAIL] = ['value' => $email, 'scope' => $emailScope];
 		}
 		if ($this->appManager->isEnabledForUser('federatedfilesharing')) {
-			$federatedFileSharing = new \OCA\FederatedFileSharing\AppInfo\Application();
-			$shareProvider = $federatedFileSharing->getFederatedShareProvider();
+			$shareProvider = \OC::$server->query(FederatedShareProvider::class);
 			if ($shareProvider->isLookupServerUploadEnabled()) {
 				$data[AccountManager::PROPERTY_WEBSITE] = ['value' => $website, 'scope' => $websiteScope];
 				$data[AccountManager::PROPERTY_ADDRESS] = ['value' => $address, 'scope' => $addressScope];
@@ -410,7 +453,7 @@ class UsersController extends Controller {
 	 * Set the mail address of a user
 	 *
 	 * @NoAdminRequired
-	 * @NoSubadminRequired
+	 * @NoSubAdminRequired
 	 * @PasswordConfirmationRequired
 	 *
 	 * @param string $account
@@ -418,7 +461,6 @@ class UsersController extends Controller {
 	 * @return DataResponse
 	 */
 	public function getVerificationCode(string $account, bool $onlyVerificationCode): DataResponse {
-
 		$user = $this->userSession->getUser();
 
 		if ($user === null) {

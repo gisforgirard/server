@@ -5,6 +5,8 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2018, ownCloud GmbH
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
@@ -56,13 +58,13 @@ class RemoveInvalidShares extends Command {
 			->setDescription('Remove invalid dav shares');
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$query = $this->connection->getQueryBuilder();
 		$result = $query->selectDistinct('principaluri')
 			->from('dav_shares')
 			->execute();
 
-		while($row = $result->fetch()) {
+		while ($row = $result->fetch()) {
 			$principaluri = $row['principaluri'];
 			$p = $this->principalBackend->getPrincipalByPath($principaluri);
 			if ($p === null) {
@@ -71,6 +73,7 @@ class RemoveInvalidShares extends Command {
 		}
 
 		$result->closeCursor();
+		return 0;
 	}
 
 	/**

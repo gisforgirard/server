@@ -38,27 +38,26 @@ use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\IUserSession;
 use OCP\Template;
-use PHPUnit_Framework_MockObject_MockObject;
 use Test\TestCase;
 
 class TwoFactorChallengeControllerTest extends TestCase {
 
-	/** @var IRequest|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IRequest|\PHPUnit\Framework\MockObject\MockObject */
 	private $request;
 
-	/** @var Manager|PHPUnit_Framework_MockObject_MockObject */
+	/** @var Manager|\PHPUnit\Framework\MockObject\MockObject */
 	private $twoFactorManager;
 
-	/** @var IUserSession|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	private $userSession;
 
-	/** @var ISession|PHPUnit_Framework_MockObject_MockObject */
+	/** @var ISession|\PHPUnit\Framework\MockObject\MockObject */
 	private $session;
 
-	/** @var IURLGenerator|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IURLGenerator|\PHPUnit\Framework\MockObject\MockObject */
 	private $urlGenerator;
 
-	/** @var TwoFactorChallengeController|PHPUnit_Framework_MockObject_MockObject */
+	/** @var TwoFactorChallengeController|\PHPUnit\Framework\MockObject\MockObject */
 	private $controller;
 
 	protected function setUp(): void {
@@ -100,11 +99,11 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->twoFactorManager->expects($this->once())
 			->method('getProviderSet')
 			->with($user)
-			->will($this->returnValue($providerSet));
+			->willReturn($providerSet);
 
 		$expected = new StandaloneTemplateResponse('core', 'twofactorselectchallenge', [
 			'providers' => [
@@ -131,32 +130,32 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->twoFactorManager->expects($this->once())
 			->method('getProviderSet')
 			->with($user)
-			->will($this->returnValue($providerSet));
+			->willReturn($providerSet);
 		$provider->expects($this->once())
 			->method('getId')
-			->will($this->returnValue('u2f'));
+			->willReturn('u2f');
 		$backupProvider->expects($this->once())
 			->method('getId')
-			->will($this->returnValue('backup_codes'));
+			->willReturn('backup_codes');
 
 		$this->session->expects($this->once())
 			->method('exists')
 			->with('two_factor_auth_error')
-			->will($this->returnValue(true));
+			->willReturn(true);
 		$this->session->expects($this->exactly(2))
 			->method('remove')
 			->with($this->logicalOr($this->equalTo('two_factor_auth_error'), $this->equalTo('two_factor_auth_error_message')));
 		$provider->expects($this->once())
 			->method('getTemplate')
 			->with($user)
-			->will($this->returnValue($tmpl));
+			->willReturn($tmpl);
 		$tmpl->expects($this->once())
 			->method('fetchPage')
-			->will($this->returnValue('<html/>'));
+			->willReturn('<html/>');
 
 		$expected = new StandaloneTemplateResponse('core', 'twofactorshowchallenge', [
 			'error' => true,
@@ -177,15 +176,15 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->twoFactorManager->expects($this->once())
 			->method('getProviderSet')
 			->with($user)
-			->will($this->returnValue($providerSet));
+			->willReturn($providerSet);
 		$this->urlGenerator->expects($this->once())
 			->method('linkToRoute')
 			->with('core.TwoFactorChallenge.selectChallenge')
-			->will($this->returnValue('select/challenge/url'));
+			->willReturn('select/challenge/url');
 
 		$expected = new RedirectResponse('select/challenge/url');
 
@@ -198,16 +197,16 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->twoFactorManager->expects($this->once())
 			->method('getProvider')
 			->with($user, 'myprovider')
-			->will($this->returnValue($provider));
+			->willReturn($provider);
 
 		$this->twoFactorManager->expects($this->once())
 			->method('verifyChallenge')
 			->with('myprovider', $user, 'token')
-			->will($this->returnValue(true));
+			->willReturn(true);
 
 		$expected = new RedirectResponse(OC_Util::getDefaultPageUrl());
 		$this->assertEquals($expected, $this->controller->solveChallenge('myprovider', 'token'));
@@ -219,11 +218,11 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->twoFactorManager->expects($this->once())
 			->method('getProvider')
 			->with($user, 'myprovider')
-			->will($this->returnValue($provider));
+			->willReturn($provider);
 
 		$this->twoFactorManager->expects($this->once())
 			->method('verifyChallenge')
@@ -243,15 +242,15 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->twoFactorManager->expects($this->once())
 			->method('getProvider')
 			->with($user, 'myprovider')
-			->will($this->returnValue(null));
+			->willReturn(null);
 		$this->urlGenerator->expects($this->once())
 			->method('linkToRoute')
 			->with('core.TwoFactorChallenge.selectChallenge')
-			->will($this->returnValue('select/challenge/url'));
+			->willReturn('select/challenge/url');
 
 		$expected = new RedirectResponse('select/challenge/url');
 
@@ -264,16 +263,16 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->twoFactorManager->expects($this->once())
 			->method('getProvider')
 			->with($user, 'myprovider')
-			->will($this->returnValue($provider));
+			->willReturn($provider);
 
 		$this->twoFactorManager->expects($this->once())
 			->method('verifyChallenge')
 			->with('myprovider', $user, 'token')
-			->will($this->returnValue(false));
+			->willReturn(false);
 		$this->session->expects($this->once())
 			->method('set')
 			->with('two_factor_auth_error', true);
@@ -283,10 +282,10 @@ class TwoFactorChallengeControllerTest extends TestCase {
 				'challengeProviderId' => 'myprovider',
 				'redirect_url' => '/url',
 			])
-			->will($this->returnValue('files/index/url'));
+			->willReturn('files/index/url');
 		$provider->expects($this->once())
 			->method('getId')
-			->will($this->returnValue('myprovider'));
+			->willReturn('myprovider');
 
 		$expected = new RedirectResponse('files/index/url');
 		$this->assertEquals($expected, $this->controller->solveChallenge('myprovider', 'token', '/url'));
@@ -299,11 +298,11 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->twoFactorManager->expects($this->once())
 			->method('getProvider')
 			->with($user, 'myprovider')
-			->will($this->returnValue($provider));
+			->willReturn($provider);
 
 		$this->twoFactorManager->expects($this->once())
 			->method('verifyChallenge')
@@ -321,10 +320,10 @@ class TwoFactorChallengeControllerTest extends TestCase {
 				'challengeProviderId' => 'myprovider',
 				'redirect_url' => '/url',
 			])
-			->will($this->returnValue('files/index/url'));
+			->willReturn('files/index/url');
 		$provider->expects($this->once())
 			->method('getId')
-			->will($this->returnValue('myprovider'));
+			->willReturn('myprovider');
 
 		$expected = new RedirectResponse('files/index/url');
 		$this->assertEquals($expected, $this->controller->solveChallenge('myprovider', 'token', '/url'));
@@ -334,7 +333,7 @@ class TwoFactorChallengeControllerTest extends TestCase {
 		$user = $this->createMock(IUser::class);
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$provider = $this->createMock(IActivatableAtLogin::class);
 		$this->twoFactorManager->expects($this->once())
 			->method('getLoginSetupProviders')
@@ -363,7 +362,7 @@ class TwoFactorChallengeControllerTest extends TestCase {
 		$user = $this->createMock(IUser::class);
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$provider = $this->createMock(IActivatableAtLogin::class);
 		$provider->expects($this->any())
 			->method('getId')
@@ -389,7 +388,7 @@ class TwoFactorChallengeControllerTest extends TestCase {
 		$user = $this->createMock(IUser::class);
 		$this->userSession->expects($this->once())
 			->method('getUser')
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$provider = $this->createMock(IActivatableAtLogin::class);
 		$provider->expects($this->any())
 			->method('getId')
@@ -443,5 +442,4 @@ class TwoFactorChallengeControllerTest extends TestCase {
 
 		$this->assertEquals($expected, $response);
 	}
-
 }

@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -32,6 +33,7 @@
 // This means that they should be used by apps instead of the internal ownCloud classes
 
 namespace OCP\Files;
+
 use OCP\Files\Search\ISearchQuery;
 
 /**
@@ -109,11 +111,12 @@ interface Folder extends Node {
 	 * Create a new file
 	 *
 	 * @param string $path relative path of the new file
+	 * @param string|resource|null $content content for the new file, since 19.0.0
 	 * @return \OCP\Files\File
 	 * @throws \OCP\Files\NotPermittedException
 	 * @since 6.0.0
 	 */
-	public function newFile($path);
+	public function newFile($path, $content = null);
 
 	/**
 	 * search for files with the name matching $query

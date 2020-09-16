@@ -4,8 +4,9 @@
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Clark Tomlinson <fallen013@gmail.com>
- * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
@@ -26,7 +27,6 @@
 
 namespace OCA\Encryption\Tests;
 
-
 use OCA\Encryption\Session;
 use OCP\ISession;
 use Test\TestCase;
@@ -37,10 +37,10 @@ class SessionTest extends TestCase {
 	 * @var Session
 	 */
 	private $instance;
-	/** @var \OCP\ISession|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\ISession|\PHPUnit\Framework\MockObject\MockObject */
 	private $sessionMock;
 
-	
+
 	public function testThatGetPrivateKeyThrowsExceptionWhenNotSet() {
 		$this->expectException(\OCA\Encryption\Exceptions\PrivateKeyMissingException::class);
 		$this->expectExceptionMessage('Private Key missing for user: please try to log-out and log-in again');
@@ -54,7 +54,6 @@ class SessionTest extends TestCase {
 	public function testSetAndGetPrivateKey() {
 		$this->instance->setPrivateKey('dummyPrivateKey');
 		$this->assertEquals('dummyPrivateKey', $this->instance->getPrivateKey());
-
 	}
 
 	/**
@@ -120,7 +119,7 @@ class SessionTest extends TestCase {
 		$this->instance->getDecryptAllKey();
 	}
 
-	
+
 	public function testSetAndGetStatusWillSetAndReturn() {
 		// Check if get status will return 0 if it has not been set before
 		$this->assertEquals(0, $this->instance->getStatus());
@@ -142,7 +141,7 @@ class SessionTest extends TestCase {
 	 * @param bool $expected
 	 */
 	public function testIsReady($status, $expected) {
-		/** @var Session | \PHPUnit_Framework_MockObject_MockObject $instance */
+		/** @var Session | \PHPUnit\Framework\MockObject\MockObject $instance */
 		$instance = $this->getMockBuilder(Session::class)
 			->setConstructorArgs([$this->sessionMock])
 			->setMethods(['getStatus'])->getMock();
@@ -187,7 +186,7 @@ class SessionTest extends TestCase {
 		return null;
 	}
 
-	
+
 	public function testClearWillRemoveValues() {
 		$this->instance->setPrivateKey('privateKey');
 		$this->instance->setStatus('initStatus');
@@ -197,22 +196,22 @@ class SessionTest extends TestCase {
 		$this->assertEmpty(self::$tempStorage);
 	}
 
-	
+
 	protected function setUp(): void {
 		parent::setUp();
 		$this->sessionMock = $this->createMock(ISession::class);
 
 		$this->sessionMock->expects($this->any())
 			->method('set')
-			->will($this->returnCallback([$this, "setValueTester"]));
+			->willReturnCallback([$this, "setValueTester"]);
 
 		$this->sessionMock->expects($this->any())
 			->method('get')
-			->will($this->returnCallback([$this, "getValueTester"]));
+			->willReturnCallback([$this, "getValueTester"]);
 
 		$this->sessionMock->expects($this->any())
 			->method('remove')
-			->will($this->returnCallback([$this, "removeValueTester"]));
+			->willReturnCallback([$this, "removeValueTester"]);
 
 
 		$this->instance = new Session($this->sessionMock);

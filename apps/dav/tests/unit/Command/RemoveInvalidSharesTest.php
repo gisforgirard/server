@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2018, ownCloud GmbH
  *
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
@@ -22,7 +23,6 @@
 
 namespace OCA\DAV\Tests\Unit\Command;
 
-
 use OCA\DAV\Command\RemoveInvalidShares;
 use OCA\DAV\Connector\Sabre\Principal;
 use OCP\Migration\IOutput;
@@ -37,7 +37,6 @@ use Test\TestCase;
  * @group DB
  */
 class RemoveInvalidSharesTest extends TestCase {
-
 	protected function setUp(): void {
 		parent::setUp();
 		$db = \OC::$server->getDatabaseConnection();
@@ -52,10 +51,10 @@ class RemoveInvalidSharesTest extends TestCase {
 
 	public function test() {
 		$db = \OC::$server->getDatabaseConnection();
-		/** @var Principal | \PHPUnit_Framework_MockObject_MockObject $principal */
+		/** @var Principal | \PHPUnit\Framework\MockObject\MockObject $principal */
 		$principal = $this->createMock(Principal::class);
 
-		/** @var IOutput | \PHPUnit_Framework_MockObject_MockObject $output */
+		/** @var IOutput | \PHPUnit\Framework\MockObject\MockObject $output */
 		$output = $this->createMock(IOutput::class);
 
 		$repair = new RemoveInvalidShares($db, $principal);

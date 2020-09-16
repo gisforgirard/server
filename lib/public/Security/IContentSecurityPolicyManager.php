@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -22,12 +23,12 @@
  */
 
 namespace OCP\Security;
+
 use OCP\AppFramework\Http\EmptyContentSecurityPolicy;
 
 /**
  * Used for Content Security Policy manipulations
  *
- * @package OCP\Security
  * @since 9.0.0
  * @deprecated 17.0.0 listen to the AddContentSecurityPolicyEvent to add a policy
  */

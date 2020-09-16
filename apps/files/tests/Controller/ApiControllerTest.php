@@ -57,7 +57,7 @@ class ApiControllerTest extends TestCase {
 	private $request;
 	/** @var TagService */
 	private $tagService;
-	/** @var IPreview|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IPreview|\PHPUnit\Framework\MockObject\MockObject */
 	private $preview;
 	/** @var ApiController */
 	private $apiController;
@@ -65,7 +65,7 @@ class ApiControllerTest extends TestCase {
 	private $shareManager;
 	/** @var \OCP\IConfig */
 	private $config;
-	/** @var Folder|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Folder|\PHPUnit\Framework\MockObject\MockObject */
 	private $userFolder;
 
 	protected function setUp(): void {
@@ -77,11 +77,11 @@ class ApiControllerTest extends TestCase {
 		$this->user = $this->createMock(IUser::class);
 		$this->user->expects($this->any())
 			->method('getUID')
-			->will($this->returnValue('user1'));
+			->willReturn('user1');
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession->expects($this->any())
 			->method('getUser')
-			->will($this->returnValue($this->user));
+			->willReturn($this->user);
 		$this->tagService = $this->getMockBuilder(TagService::class)
 			->disableOriginalConstructor()
 			->getMock();
@@ -246,5 +246,4 @@ class ApiControllerTest extends TestCase {
 
 		$this->assertEquals($expected, $actual);
 	}
-
 }

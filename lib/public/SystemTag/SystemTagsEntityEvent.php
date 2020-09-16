@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -32,12 +33,10 @@ use OCP\EventDispatcher\Event;
 /**
  * Class SystemTagsEntityEvent
  *
- * @package OCP\SystemTag
  * @since 9.1.0
  */
 class SystemTagsEntityEvent extends Event {
-
-	const EVENT_ENTITY = 'OCP\SystemTag\ISystemTagManager::registerEntity';
+	public const EVENT_ENTITY = 'OCP\SystemTag\ISystemTagManager::registerEntity';
 
 	/** @var string */
 	protected $event;

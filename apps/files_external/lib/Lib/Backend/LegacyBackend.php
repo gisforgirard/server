@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -29,10 +30,9 @@ use OCA\Files_External\Lib\LegacyDependencyCheckPolyfill;
 use OCA\Files_External\Lib\MissingDependency;
 
 /**
- * Legacy compatibility for OC_Mount_Config::registerBackend()
+ * Legacy compatibility for OCA\Files_External\MountConfig::registerBackend()
  */
 class LegacyBackend extends Backend {
-
 	use LegacyDependencyCheckPolyfill {
 		LegacyDependencyCheckPolyfill::checkDependencies as doCheckDependencies;
 	}
@@ -101,5 +101,4 @@ class LegacyBackend extends Backend {
 		}
 		return [];
 	}
-
 }

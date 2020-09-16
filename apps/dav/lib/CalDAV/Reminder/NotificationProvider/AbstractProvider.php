@@ -6,7 +6,9 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2019, Thomas Citharel
  * @copyright Copyright (c) 2019, Georg Ehrke
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -44,7 +46,7 @@ use Sabre\VObject\Property;
  *
  * @package OCA\DAV\CalDAV\Reminder\NotificationProvider
  */
-abstract class AbstractProvider implements INotificationProvider  {
+abstract class AbstractProvider implements INotificationProvider {
 
 	/** @var string */
 	public const NOTIFICATION_TYPE = '';
@@ -53,7 +55,7 @@ abstract class AbstractProvider implements INotificationProvider  {
 	protected $logger;
 
 	/** @var L10NFactory */
-	private $l10nFactory;
+	protected $l10nFactory;
 
 	/** @var IL10N[] */
 	private $l10ns;

@@ -31,7 +31,6 @@ namespace OCP\Federation;
  *
  * @since 14.0.0
  *
- * @package OCP\Federation
  */
 interface ICloudFederationProviderManager {
 
@@ -105,6 +104,4 @@ interface ICloudFederationProviderManager {
 	 * @since 14.0.0
 	 */
 	public function isReady();
-
-
 }

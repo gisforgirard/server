@@ -3,7 +3,9 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Bart Visscher <bartv@thisnet.nl>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -47,19 +49,19 @@ interface INavigationManager {
 	 * Navigation entries of the app navigation
 	 * @since 16.0.0
 	 */
-	const TYPE_APPS = 'link';
+	public const TYPE_APPS = 'link';
 
 	/**
 	 * Navigation entries of the settings navigation
 	 * @since 16.0.0
 	 */
-	const TYPE_SETTINGS = 'settings';
+	public const TYPE_SETTINGS = 'settings';
 
 	/**
 	 * Navigation entries for public page footer navigation
 	 * @since 16.0.0
 	 */
-	const TYPE_GUEST = 'guest';
+	public const TYPE_GUEST = 'guest';
 
 	/**
 	 * Creates a new navigation entry
@@ -79,6 +81,13 @@ interface INavigationManager {
 	 * @since 6.0.0
 	 */
 	public function setActiveEntry($appId);
+
+	/**
+	 * Get the current navigation entry of the currently running app
+	 * @return string
+	 * @since 20.0.0
+	 */
+	public function getActiveEntry();
 
 	/**
 	 * Get a list of navigation entries

@@ -3,11 +3,14 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  * @copyright Copyright (c) 2017 Georg Ehrke
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author dartcafe <github@dartcafe.de>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Citharel <tcit@tcit.fr>
+ * @author Thomas Citharel <nextcloud@tcit.fr>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
  * @license AGPL-3.0
@@ -47,9 +50,7 @@ use Sabre\DAVACL\IACL;
  * @package OCA\DAV\Tests\unit\CalDAV
  */
 class CalDavBackendTest extends AbstractCalDavBackend {
-
 	public function testCalendarOperations() {
-
 		$calendarId = $this->createTestCalendar();
 
 		// update it's display name
@@ -57,7 +58,7 @@ class CalDavBackendTest extends AbstractCalDavBackend {
 			'{DAV:}displayname' => 'Unit test',
 			'{urn:ietf:params:xml:ns:caldav}calendar-description' => 'Calendar used for unit testing'
 		]);
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::updateCalendar');
 		$this->backend->updateCalendar($calendarId, $patch);
@@ -70,7 +71,7 @@ class CalDavBackendTest extends AbstractCalDavBackend {
 		$this->assertEquals('User\'s displayname', $calendars[0]['{http://nextcloud.com/ns}owner-displayname']);
 
 		// delete the address book
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::deleteCalendar');
 		$this->backend->deleteCalendar($calendars[0]['id']);
@@ -125,14 +126,14 @@ class CalDavBackendTest extends AbstractCalDavBackend {
 	 */
 	public function testCalendarSharing($userCanRead, $userCanWrite, $groupCanRead, $groupCanWrite, $add) {
 
-		/** @var IL10N|\PHPUnit_Framework_MockObject_MockObject $l10n */
+		/** @var IL10N|\PHPUnit\Framework\MockObject\MockObject $l10n */
 		$l10n = $this->createMock(IL10N::class);
 		$l10n
 			->expects($this->any())
 			->method('t')
-			->will($this->returnCallback(function ($text, $parameters = array()) {
+			->willReturnCallback(function ($text, $parameters = []) {
 				return vsprintf($text, $parameters);
-			}));
+			});
 
 		$config = $this->createMock(IConfig::class);
 
@@ -148,7 +149,7 @@ class CalDavBackendTest extends AbstractCalDavBackend {
 		$calendars = $this->backend->getCalendarsForUser(self::UNIT_TEST_USER);
 		$this->assertCount(1, $calendars);
 		$calendar = new Calendar($this->backend, $calendars[0], $l10n, $config);
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::updateShares');
 		$this->backend->updateShares($calendar, $add, []);
@@ -181,7 +182,7 @@ END:VEVENT
 END:VCALENDAR
 EOD;
 
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::createCalendarObject');
 		$this->backend->createCalendarObject($calendarId, $uri, $calData);
@@ -195,7 +196,7 @@ EOD;
 		$this->assertAccess($userCanWrite, self::UNIT_TEST_USER1, '{DAV:}write', $acl);
 
 		// delete the address book
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::deleteCalendar');
 		$this->backend->deleteCalendar($calendars[0]['id']);
@@ -204,7 +205,6 @@ EOD;
 	}
 
 	public function testCalendarObjectsOperations() {
-
 		$calendarId = $this->createTestCalendar();
 
 		// create a card
@@ -226,7 +226,7 @@ END:VEVENT
 END:VCALENDAR
 EOD;
 
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::createCalendarObject');
 		$this->backend->createCalendarObject($calendarId, $uri, $calData);
@@ -264,7 +264,7 @@ DTEND;VALUE=DATE-TIME:20130912T140000Z
 END:VEVENT
 END:VCALENDAR
 EOD;
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::updateCalendarObject');
 		$this->backend->updateCalendarObject($calendarId, $uri, $calData);
@@ -272,7 +272,7 @@ EOD;
 		$this->assertEquals($calData, $calendarObject['calendardata']);
 
 		// delete the card
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::deleteCalendarObject');
 		$this->backend->deleteCalendarObject($calendarId, $uri);
@@ -280,7 +280,7 @@ EOD;
 		$this->assertCount(0, $calendarObjects);
 	}
 
-	
+
 	public function testMultipleCalendarObjectsWithSameUID() {
 		$this->expectException(\Sabre\DAV\Exception\BadRequest::class);
 		$this->expectExceptionMessage('Calendar object with uid already exists in this calendar collection.');
@@ -311,7 +311,6 @@ EOD;
 	}
 
 	public function testMultiCalendarObjects() {
-
 		$calendarId = $this->createTestCalendar();
 
 		// create an event
@@ -368,17 +367,17 @@ END:VCALENDAR
 EOD;
 
 		$uri0 = static::getUniqueID('card');
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::createCalendarObject');
 		$this->backend->createCalendarObject($calendarId, $uri0, $calData[0]);
 		$uri1 = static::getUniqueID('card');
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::createCalendarObject');
 		$this->backend->createCalendarObject($calendarId, $uri1, $calData[1]);
 		$uri2 = static::getUniqueID('card');
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::createCalendarObject');
 		$this->backend->createCalendarObject($calendarId, $uri2, $calData[2]);
@@ -390,7 +389,7 @@ EOD;
 		// get the cards
 		$calendarObjects = $this->backend->getMultipleCalendarObjects($calendarId, [$uri1, $uri2]);
 		$this->assertCount(2, $calendarObjects);
-		foreach($calendarObjects as $card) {
+		foreach ($calendarObjects as $card) {
 			$this->assertArrayHasKey('id', $card);
 			$this->assertArrayHasKey('uri', $card);
 			$this->assertArrayHasKey('lastmodified', $card);
@@ -399,7 +398,7 @@ EOD;
 			$this->assertArrayHasKey('classification', $card);
 		}
 
-		usort($calendarObjects, function($a, $b) {
+		usort($calendarObjects, function ($a, $b) {
 			return $a['id'] - $b['id'];
 		});
 
@@ -407,15 +406,15 @@ EOD;
 		$this->assertEquals($calData[2], $calendarObjects[1]['calendardata']);
 
 		// delete the card
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::deleteCalendarObject');
 		$this->backend->deleteCalendarObject($calendarId, $uri0);
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::deleteCalendarObject');
 		$this->backend->deleteCalendarObject($calendarId, $uri1);
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::deleteCalendarObject');
 		$this->backend->deleteCalendarObject($calendarId, $uri2);
@@ -440,10 +439,10 @@ EOD;
 			'comp-filters' => $compFilter
 		]);
 
-		$expectedEventsInResult = array_map(function($index) use($events) {
+		$expectedEventsInResult = array_map(function ($index) use ($events) {
 			return $events[$index];
 		}, $expectedEventsInResult);
-		$this->assertEquals($expectedEventsInResult, $result, '', 0.0, 10, true);
+		$this->assertEqualsCanonicalizing($expectedEventsInResult, $result);
 	}
 
 	public function testGetCalendarObjectByUID() {
@@ -500,7 +499,7 @@ EOD;
 	}
 
 	public function testPublications() {
-		$this->dispatcher->expects($this->at(0))
+		$this->legacyDispatcher->expects($this->at(0))
 			->method('dispatch')
 			->with('\OCA\DAV\CalDAV\CalDavBackend::createCalendar');
 
@@ -508,7 +507,7 @@ EOD;
 
 		$calendarInfo = $this->backend->getCalendarsForUser(self::UNIT_TEST_USER)[0];
 
-		/** @var IL10N|\PHPUnit_Framework_MockObject_MockObject $l10n */
+		/** @var IL10N|\PHPUnit\Framework\MockObject\MockObject $l10n */
 		$l10n = $this->createMock(IL10N::class);
 		$config = $this->createMock(IConfig::class);
 
@@ -546,8 +545,8 @@ EOD;
 		$this->assertEquals($id, $subscriptions[0]['id']);
 
 		$patch = new PropPatch([
-				'{DAV:}displayname' => 'Unit test',
-				'{http://apple.com/ns/ical/}calendar-color' => '#ac0606',
+			'{DAV:}displayname' => 'Unit test',
+			'{http://apple.com/ns/ical/}calendar-color' => '#ac0606',
 		]);
 		$this->backend->updateSubscription($id, $patch);
 		$patch->commit();
@@ -607,21 +606,21 @@ DTSTART;TZID=Europe/Warsaw:20170325T150000
 DTEND;TZID=Europe/Warsaw:20170325T160000
 TRANSP:OPAQUE
 DESCRIPTION:Magiczna treść uzyskana za pomocą magicznego proszku.\n\nę
- żźćńłóÓŻŹĆŁĘ€śśśŚŚ\n               \,\,))))))))\;\,\n  
+ żźćńłóÓŻŹĆŁĘ€śśśŚŚ\n               \,\,))))))))\;\,\n
            __))))))))))))))\,\n \\|/       -\\(((((''''((((((((.\n -*-==///
- ///((''  .     `))))))\,\n /|\\      ))| o    \;-.    '(((((              
-                     \,(\,\n          ( `|    /  )    \;))))'              
+ ///((''  .     `))))))\,\n /|\\      ))| o    \;-.    '(((((
+                     \,(\,\n          ( `|    /  )    \;))))'
                   \,_))^\;(~\n             |   |   |   \,))((((_     _____-
  -----~~~-.        %\,\;(\;(>'\;'~\n             o_)\;   \;    )))(((` ~---
  ~  `::           \\      %%~~)(v\;(`('~\n                   \;    ''''````
-          `:       `:::|\\\,__\,%%    )\;`'\; ~\n                  |   _   
-              )     /      `:|`----'     `-'\n            ______/\\/~    | 
+          `:       `:::|\\\,__\,%%    )\;`'\; ~\n                  |   _
+              )     /      `:|`----'     `-'\n            ______/\\/~    |
                  /        /\n          /~\;\;.____/\;\;'  /          ___--\
- ,-(   `\;\;\;/\n         / //  _\;______\;'------~~~~~    /\;\;/\\    /\n 
-        //  | |                        / \;   \\\;\;\,\\\n       (<_  | \; 
-                      /'\,/-----'  _>\n        \\_| ||_                    
-  //~\;~~~~~~~~~\n            `\\_|                   (\,~~  -Tua Xiong\n  
-                                   \\~\\\n                                 
+ ,-(   `\;\;\;/\n         / //  _\;______\;'------~~~~~    /\;\;/\\    /\n
+        //  | |                        / \;   \\\;\;\,\\\n       (<_  | \;
+                      /'\,/-----'  _>\n        \\_| ||_
+  //~\;~~~~~~~~~\n            `\\_|                   (\,~~  -Tua Xiong\n
+                                   \\~\\\n
      ~~\n\n
 SEQUENCE:1
 X-MOZ-GENERATION:1
@@ -807,7 +806,7 @@ EOD;
 	/**
 	 * @dataProvider searchDataProvider
 	 */
-	public function testSearch($isShared, $count) {
+	public function testSearch(bool $isShared, array $searchOptions, int $count) {
 		$calendarId = $this->createTestCalendar();
 
 		$uris = [];
@@ -901,15 +900,16 @@ EOD;
 		];
 
 		$result = $this->backend->search($calendarInfo, 'Test',
-			['SUMMARY', 'LOCATION', 'ATTENDEE'], [], null, null);
+			['SUMMARY', 'LOCATION', 'ATTENDEE'], $searchOptions, null, null);
 
 		$this->assertCount($count, $result);
 	}
 
 	public function searchDataProvider() {
 		return [
-			[false, 4],
-			[true, 2],
+			[false, [], 4],
+			[true, ['timerange' => ['start' => new DateTime('2013-09-12 13:00:00'), 'end' => new DateTime('2013-09-12 14:00:00')]], 2],
+			[true, ['timerange' => ['start' => new DateTime('2013-09-12 15:00:00'), 'end' => new DateTime('2013-09-12 16:00:00')]], 0],
 		];
 	}
 
@@ -985,8 +985,7 @@ EOD;
 		$this->assertEquals(null, $this->backend->getCalendarObject($subscriptionId, $uri, CalDavBackend::CALENDAR_TYPE_SUBSCRIPTION));
 	}
 
-	public function testCalendarMovement()
-	{
+	public function testCalendarMovement() {
 		$this->backend->createCalendar(self::UNIT_TEST_USER, 'Example', []);
 
 		$this->assertCount(1, $this->backend->getCalendarsForUser(self::UNIT_TEST_USER));
@@ -1000,5 +999,283 @@ EOD;
 		$calendarInfoUser1 = $this->backend->getCalendarsForUser(self::UNIT_TEST_USER1)[0];
 		$this->assertEquals($calendarInfoUser['id'], $calendarInfoUser1['id']);
 		$this->assertEquals($calendarInfoUser['uri'], $calendarInfoUser1['uri']);
+	}
+
+	public function testSearchPrincipal(): void {
+		$myPublic = <<<EOD
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dmfs.org//mimedir.icalendar//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Berlin:20160419T130000
+SUMMARY:My Test (public)
+CLASS:PUBLIC
+TRANSP:OPAQUE
+STATUS:CONFIRMED
+DTEND;TZID=Europe/Berlin:20160419T140000
+LAST-MODIFIED:20160419T074202Z
+DTSTAMP:20160419T074202Z
+CREATED:20160419T074202Z
+UID:2e468c48-7860-492e-bc52-92fa0daeeccf.1461051722310-1
+END:VEVENT
+END:VCALENDAR
+EOD;
+		$myPrivate = <<<EOD
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dmfs.org//mimedir.icalendar//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Berlin:20160419T130000
+SUMMARY:My Test (private)
+CLASS:PRIVATE
+TRANSP:OPAQUE
+STATUS:CONFIRMED
+DTEND;TZID=Europe/Berlin:20160419T140000
+LAST-MODIFIED:20160419T074202Z
+DTSTAMP:20160419T074202Z
+CREATED:20160419T074202Z
+UID:2e468c48-7860-492e-bc52-92fa0daeeccf.1461051722310-2
+END:VEVENT
+END:VCALENDAR
+EOD;
+		$myConfidential = <<<EOD
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dmfs.org//mimedir.icalendar//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Berlin:20160419T130000
+SUMMARY:My Test (confidential)
+CLASS:CONFIDENTIAL
+TRANSP:OPAQUE
+STATUS:CONFIRMED
+DTEND;TZID=Europe/Berlin:20160419T140000
+LAST-MODIFIED:20160419T074202Z
+DTSTAMP:20160419T074202Z
+CREATED:20160419T074202Z
+UID:2e468c48-7860-492e-bc52-92fa0daeeccf.1461051722310-3
+END:VEVENT
+END:VCALENDAR
+EOD;
+
+		$sharerPublic = <<<EOD
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dmfs.org//mimedir.icalendar//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Berlin:20160419T130000
+SUMMARY:Sharer Test (public)
+CLASS:PUBLIC
+TRANSP:OPAQUE
+STATUS:CONFIRMED
+DTEND;TZID=Europe/Berlin:20160419T140000
+LAST-MODIFIED:20160419T074202Z
+DTSTAMP:20160419T074202Z
+CREATED:20160419T074202Z
+UID:2e468c48-7860-492e-bc52-92fa0daeeccf.1461051722310-4
+END:VEVENT
+END:VCALENDAR
+EOD;
+		$sharerPrivate = <<<EOD
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dmfs.org//mimedir.icalendar//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Berlin:20160419T130000
+SUMMARY:Sharer Test (private)
+CLASS:PRIVATE
+TRANSP:OPAQUE
+STATUS:CONFIRMED
+DTEND;TZID=Europe/Berlin:20160419T140000
+LAST-MODIFIED:20160419T074202Z
+DTSTAMP:20160419T074202Z
+CREATED:20160419T074202Z
+UID:2e468c48-7860-492e-bc52-92fa0daeeccf.1461051722310-5
+END:VEVENT
+END:VCALENDAR
+EOD;
+		$sharerConfidential = <<<EOD
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//dmfs.org//mimedir.icalendar//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+X-LIC-LOCATION:Europe/Berlin
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+DTSTART;TZID=Europe/Berlin:20160419T130000
+SUMMARY:Sharer Test (confidential)
+CLASS:CONFIDENTIAL
+TRANSP:OPAQUE
+STATUS:CONFIRMED
+DTEND;TZID=Europe/Berlin:20160419T140000
+LAST-MODIFIED:20160419T074202Z
+DTSTAMP:20160419T074202Z
+CREATED:20160419T074202Z
+UID:2e468c48-7860-492e-bc52-92fa0daeeccf.1461051722310-6
+END:VEVENT
+END:VCALENDAR
+EOD;
+
+		$l10n = $this->createMock(IL10N::class);
+		$l10n
+			->expects($this->any())
+			->method('t')
+			->willReturnCallback(function ($text, $parameters = []) {
+				return vsprintf($text, $parameters);
+			});
+		$config = $this->createMock(IConfig::class);
+		$this->userManager->expects($this->any())
+			->method('userExists')
+			->willReturn(true);
+		$this->groupManager->expects($this->any())
+			->method('groupExists')
+			->willReturn(true);
+
+		$me = self::UNIT_TEST_USER;
+		$sharer = self::UNIT_TEST_USER1;
+		$this->backend->createCalendar($me, 'calendar-uri-me', []);
+		$this->backend->createCalendar($sharer, 'calendar-uri-sharer', []);
+
+		$myCalendars = $this->backend->getCalendarsForUser($me);
+		$this->assertCount(1, $myCalendars);
+
+		$sharerCalendars = $this->backend->getCalendarsForUser($sharer);
+		$this->assertCount(1, $sharerCalendars);
+		$sharerCalendar = new Calendar($this->backend, $sharerCalendars[0], $l10n, $config);
+		$this->backend->updateShares($sharerCalendar, [
+			[
+				'href' => 'principal:' . $me,
+				'readOnly' => false,
+			],
+		], []);
+
+		$this->assertCount(2, $this->backend->getCalendarsForUser($me));
+
+		$this->backend->createCalendarObject($myCalendars[0]['id'], 'event0.ics', $myPublic);
+		$this->backend->createCalendarObject($myCalendars[0]['id'], 'event1.ics', $myPrivate);
+		$this->backend->createCalendarObject($myCalendars[0]['id'], 'event2.ics', $myConfidential);
+
+		$this->backend->createCalendarObject($sharerCalendars[0]['id'], 'event3.ics', $sharerPublic);
+		$this->backend->createCalendarObject($sharerCalendars[0]['id'], 'event4.ics', $sharerPrivate);
+		$this->backend->createCalendarObject($sharerCalendars[0]['id'], 'event5.ics', $sharerConfidential);
+
+		$mySearchResults = $this->backend->searchPrincipalUri($me, 'Test', ['VEVENT'], ['SUMMARY'], []);
+		$sharerSearchResults = $this->backend->searchPrincipalUri($sharer, 'Test', ['VEVENT'], ['SUMMARY'], []);
+
+		$this->assertCount(4, $mySearchResults);
+		$this->assertCount(3, $sharerSearchResults);
+
+		$this->assertEquals($myPublic, $mySearchResults[0]['calendardata']);
+		$this->assertEquals($myPrivate, $mySearchResults[1]['calendardata']);
+		$this->assertEquals($myConfidential, $mySearchResults[2]['calendardata']);
+		$this->assertEquals($sharerPublic, $mySearchResults[3]['calendardata']);
+
+		$this->assertEquals($sharerPublic, $sharerSearchResults[0]['calendardata']);
+		$this->assertEquals($sharerPrivate, $sharerSearchResults[1]['calendardata']);
+		$this->assertEquals($sharerConfidential, $sharerSearchResults[2]['calendardata']);
 	}
 }

@@ -6,9 +6,10 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2019, Thomas Citharel
  * @copyright Copyright (c) 2019, Georg Ehrke
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Citharel <tcit@tcit.fr>
+ * @author Thomas Citharel <nextcloud@tcit.fr>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -93,14 +94,19 @@ class PushProvider extends AbstractProvider {
 
 		$eventDetails = $this->extractEventDetails($vevent);
 		$eventDetails['calendar_displayname'] = $calendarDisplayName;
+		$eventUUID = (string) $vevent->UID;
+		if (!$eventUUID) {
+			return;
+		};
+		$eventUUIDHash = hash('sha256', $eventUUID, false);
 
-		foreach($users as $user) {
+		foreach ($users as $user) {
 			/** @var INotification $notification */
 			$notification = $this->manager->createNotification();
 			$notification->setApp(Application::APP_ID)
 				->setUser($user->getUID())
 				->setDateTime($this->timeFactory->getDateTime())
-				->setObject(Application::APP_ID, (string) $vevent->UID)
+				->setObject(Application::APP_ID, $eventUUIDHash)
 				->setSubject('calendar_reminder', [
 					'title' => $eventDetails['title'],
 					'start_atom' => $eventDetails['start_atom']

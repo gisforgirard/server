@@ -5,6 +5,8 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -28,12 +30,11 @@
 
 namespace OCA\Settings\Tests\Settings\Admin;
 
-use OCA\Settings\Admin\Sharing;
+use OCA\Settings\Settings\Admin\Sharing;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Constants;
 use OCP\IConfig;
 use OCP\IL10N;
-use OCP\L10N\IFactory;
 use OCP\Share\IManager;
 use Test\TestCase;
 
@@ -42,9 +43,9 @@ class SharingTest extends TestCase {
 	private $admin;
 	/** @var IConfig */
 	private $config;
-	/** @var  IL10N|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IL10N|\PHPUnit\Framework\MockObject\MockObject */
 	private $l10n;
-	/** @var  IManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $shareManager;
 
 	protected function setUp(): void {
@@ -52,15 +53,11 @@ class SharingTest extends TestCase {
 		$this->config = $this->getMockBuilder(IConfig::class)->getMock();
 		$this->l10n = $this->getMockBuilder(IL10N::class)->getMock();
 
-		$l10Factory = $this->createMock(IFactory::class);
-		$l10Factory->method('get')
-			->willReturn($this->l10n);
-
 		$this->shareManager = $this->getMockBuilder(IManager::class)->getMock();
 
 		$this->admin = new Sharing(
 			$this->config,
-			$l10Factory,
+			$this->l10n,
 			$this->shareManager
 		);
 	}
@@ -99,55 +96,60 @@ class SharingTest extends TestCase {
 		$this->config
 			->expects($this->at(6))
 			->method('getAppValue')
+			->with('core', 'shareapi_restrict_user_enumeration_to_group', 'no')
+			->willReturn('no');
+		$this->config
+			->expects($this->at(7))
+			->method('getAppValue')
 			->with('core', 'shareapi_enabled', 'yes')
 			->willReturn('yes');
 		$this->config
-			->expects($this->at(7))
+			->expects($this->at(8))
 			->method('getAppValue')
 			->with('core', 'shareapi_default_expire_date', 'no')
 			->willReturn('no');
 		$this->config
-			->expects($this->at(8))
+			->expects($this->at(9))
 			->method('getAppValue')
 			->with('core', 'shareapi_expire_after_n_days', '7')
 			->willReturn('7');
 		$this->config
-			->expects($this->at(9))
+			->expects($this->at(10))
 			->method('getAppValue')
 			->with('core', 'shareapi_enforce_expire_date', 'no')
 			->willReturn('no');
 		$this->config
-			->expects($this->at(10))
+			->expects($this->at(11))
 			->method('getAppValue')
 			->with('core', 'shareapi_exclude_groups', 'no')
 			->willReturn('no');
 		$this->config
-			->expects($this->at(11))
+			->expects($this->at(12))
 			->method('getAppValue')
 			->with('core', 'shareapi_public_link_disclaimertext', null)
 			->willReturn('Lorem ipsum');
 		$this->config
-			->expects($this->at(12))
+			->expects($this->at(13))
 			->method('getAppValue')
 			->with('core', 'shareapi_enable_link_password_by_default', 'no')
 			->willReturn('yes');
 		$this->config
-			->expects($this->at(13))
+			->expects($this->at(14))
 			->method('getAppValue')
 			->with('core', 'shareapi_default_permissions', Constants::PERMISSION_ALL)
 			->willReturn(Constants::PERMISSION_ALL);
 		$this->config
-			->expects($this->at(14))
+			->expects($this->at(15))
 			->method('getAppValue')
 			->with('core', 'shareapi_default_internal_expire_date', 'no')
 			->willReturn('no');
 		$this->config
-			->expects($this->at(15))
+			->expects($this->at(16))
 			->method('getAppValue')
 			->with('core', 'shareapi_internal_expire_after_n_days', '7')
 			->willReturn('7');
 		$this->config
-			->expects($this->at(16))
+			->expects($this->at(17))
 			->method('getAppValue')
 			->with('core', 'shareapi_enforce_internal_expire_date', 'no')
 			->willReturn('no');
@@ -161,6 +163,7 @@ class SharingTest extends TestCase {
 				'allowPublicUpload'               => 'yes',
 				'allowResharing'                  => 'yes',
 				'allowShareDialogUserEnumeration' => 'yes',
+				'restrictUserEnumerationToGroup'  => 'no',
 				'enforceLinkPassword'             => false,
 				'onlyShareWithGroupMembers'       => false,
 				'shareAPIEnabled'                 => 'yes',
@@ -217,55 +220,60 @@ class SharingTest extends TestCase {
 		$this->config
 			->expects($this->at(6))
 			->method('getAppValue')
+			->with('core', 'shareapi_restrict_user_enumeration_to_group', 'no')
+			->willReturn('no');
+		$this->config
+			->expects($this->at(7))
+			->method('getAppValue')
 			->with('core', 'shareapi_enabled', 'yes')
 			->willReturn('yes');
 		$this->config
-			->expects($this->at(7))
+			->expects($this->at(8))
 			->method('getAppValue')
 			->with('core', 'shareapi_default_expire_date', 'no')
 			->willReturn('no');
 		$this->config
-			->expects($this->at(8))
+			->expects($this->at(9))
 			->method('getAppValue')
 			->with('core', 'shareapi_expire_after_n_days', '7')
 			->willReturn('7');
 		$this->config
-			->expects($this->at(9))
+			->expects($this->at(10))
 			->method('getAppValue')
 			->with('core', 'shareapi_enforce_expire_date', 'no')
 			->willReturn('no');
 		$this->config
-			->expects($this->at(10))
+			->expects($this->at(11))
 			->method('getAppValue')
 			->with('core', 'shareapi_exclude_groups', 'no')
 			->willReturn('yes');
 		$this->config
-			->expects($this->at(11))
+			->expects($this->at(12))
 			->method('getAppValue')
 			->with('core', 'shareapi_public_link_disclaimertext', null)
 			->willReturn('Lorem ipsum');
 		$this->config
-			->expects($this->at(12))
+			->expects($this->at(13))
 			->method('getAppValue')
 			->with('core', 'shareapi_enable_link_password_by_default', 'no')
 			->willReturn('yes');
 		$this->config
-			->expects($this->at(13))
+			->expects($this->at(14))
 			->method('getAppValue')
 			->with('core', 'shareapi_default_permissions', Constants::PERMISSION_ALL)
 			->willReturn(Constants::PERMISSION_ALL);
 		$this->config
-			->expects($this->at(14))
+			->expects($this->at(15))
 			->method('getAppValue')
 			->with('core', 'shareapi_default_internal_expire_date', 'no')
 			->willReturn('no');
 		$this->config
-			->expects($this->at(15))
+			->expects($this->at(16))
 			->method('getAppValue')
 			->with('core', 'shareapi_internal_expire_after_n_days', '7')
 			->willReturn('7');
 		$this->config
-			->expects($this->at(16))
+			->expects($this->at(17))
 			->method('getAppValue')
 			->with('core', 'shareapi_enforce_internal_expire_date', 'no')
 			->willReturn('no');
@@ -280,6 +288,7 @@ class SharingTest extends TestCase {
 				'allowPublicUpload'               => 'yes',
 				'allowResharing'                  => 'yes',
 				'allowShareDialogUserEnumeration' => 'yes',
+				'restrictUserEnumerationToGroup'  => 'no',
 				'enforceLinkPassword'             => false,
 				'onlyShareWithGroupMembers'       => false,
 				'shareAPIEnabled'                 => 'yes',

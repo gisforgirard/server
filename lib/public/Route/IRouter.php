@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Bart Visscher <bartv@thisnet.nl>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -30,7 +31,6 @@ namespace OCP\Route;
 /**
  * Interface IRouter
  *
- * @package OCP\Route
  * @since 7.0.0
  * @deprecated 9.0.0
  */
@@ -91,7 +91,7 @@ interface IRouter {
 	 * @since 7.0.0
 	 * @deprecated 9.0.0
 	 */
-	public function create($name, $pattern, array $defaults = array(), array $requirements = array());
+	public function create($name, $pattern, array $defaults = [], array $requirements = []);
 
 	/**
 	 * Find the route matching $url.
@@ -122,6 +122,5 @@ interface IRouter {
 	 * @since 7.0.0
 	 * @deprecated 9.0.0
 	 */
-	public function generate($name, $parameters = array(), $absolute = false);
-
+	public function generate($name, $parameters = [], $absolute = false);
 }

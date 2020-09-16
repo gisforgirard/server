@@ -56,11 +56,7 @@ class Jail extends Wrapper {
 	}
 
 	public function getUnjailedPath($path) {
-		if ($path === '') {
-			return $this->rootPath;
-		} else {
-			return Filesystem::normalizePath($this->rootPath . '/' . $path);
-		}
+		return trim(Filesystem::normalizePath($this->rootPath . '/' . $path), '/');
 	}
 
 	/**
@@ -538,5 +534,9 @@ class Jail extends Wrapper {
 			fclose($target);
 			return $count;
 		}
+	}
+
+	public function getDirectoryContent($directory): \Traversable {
+		return $this->getWrapperStorage()->getDirectoryContent($this->getUnjailedPath($directory));
 	}
 }

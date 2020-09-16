@@ -34,25 +34,26 @@
 				<span class="error">{{ directoryPickerError }}</span>
 			</p>
 			<p class="new-owner-row">
-				<label>
+				<label for="targetUser">
 					<span>{{ t('files', 'New owner') }}</span>
-					<Multiselect
-						v-model="selectedUser"
-						:options="formatedUserSuggestions"
-						:multiple="false"
-						:searchable="true"
-						:placeholder="t('files', 'Search users')"
-						:preselect-first="true"
-						:preserve-search="true"
-						:loading="loadingUsers"
-						track-by="user"
-						label="displayName"
-						:internal-search="false"
-						:clear-on-select="false"
-						:user-select="true"
-						class="middle-align"
-						@search-change="findUserDebounced" />
 				</label>
+				<Multiselect
+					id="targetUser"
+					v-model="selectedUser"
+					:options="formatedUserSuggestions"
+					:multiple="false"
+					:searchable="true"
+					:placeholder="t('files', 'Search users')"
+					:preselect-first="true"
+					:preserve-search="true"
+					:loading="loadingUsers"
+					track-by="user"
+					label="displayName"
+					:internal-search="false"
+					:clear-on-select="false"
+					:user-select="true"
+					class="middle-align"
+					@search-change="findUserDebounced" />
 			</p>
 			<p>
 				<input type="submit"
@@ -69,8 +70,8 @@
 import axios from '@nextcloud/axios'
 import debounce from 'debounce'
 import { generateOcsUrl } from '@nextcloud/router'
-import { getFilePickerBuilder } from '@nextcloud/dialogs'
-import { Multiselect } from '@nextcloud/vue/dist/Components/Multiselect'
+import { getFilePickerBuilder, showSuccess } from '@nextcloud/dialogs'
+import Multiselect from '@nextcloud/vue/dist/Components/Multiselect'
 import Vue from 'vue'
 
 import logger from '../logger'
@@ -95,6 +96,9 @@ export default {
 			loadingUsers: false,
 			selectedUser: null,
 			userSuggestions: {},
+			config: {
+				minSearchStringLength: parseInt(OC.config['sharing.minSearchStringLength'], 10) || 0,
+			},
 		}
 	},
 	computed: {
@@ -127,6 +131,7 @@ export default {
 	},
 	created() {
 		this.findUserDebounced = debounce(this.findUser, 300)
+		this.findUser('')
 	},
 	methods: {
 		start() {
@@ -151,7 +156,7 @@ export default {
 		async findUser(query) {
 			this.query = query.trim()
 
-			if (query.length < 3) {
+			if (query.length < this.config.minSearchStringLength) {
 				return
 			}
 
@@ -205,12 +210,16 @@ export default {
 
 					this.directory = undefined
 					this.selectedUser = null
-					OCP.Toast.success(t('files', 'Ownership transfer request sent'))
+					showSuccess(t('files', 'Ownership transfer request sent'))
 				})
 				.catch(error => {
 					logger.error('Could not send ownership transfer request', { error })
 
-					this.submitError = error.message || t('files', 'Unknown error')
+					if (error?.response?.status === 403) {
+						this.submitError = t('files', 'Cannot transfer ownership of a file or folder you don\'t own')
+					} else {
+						this.submitError = error.message || t('files', 'Unknown error')
+					}
 				})
 		},
 	},
@@ -231,16 +240,15 @@ p {
 	label {
 		display: flex;
 		align-items: center;
-		flex-grow: 1;
 
 		span {
 			margin-right: 8px;
 		}
+	}
 
-		.multiselect {
-			flex-grow: 1;
-			max-width: 280px;
-		}
+	.multiselect {
+		flex-grow: 1;
+		max-width: 280px;
 	}
 }
 .transfer-select-row {

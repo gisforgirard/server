@@ -4,6 +4,7 @@
  *
  * @author Björn Schießle <bjoern@schiessle.org>
  * @author Clark Tomlinson <fallen013@gmail.com>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
  *
  * @license AGPL-3.0
  *
@@ -23,11 +24,10 @@
 
 namespace OCA\Encryption;
 
-
 use OCA\Encryption\Hooks\Contracts\IHook;
 
 class HookManager {
-
+	/** @var IHook[] */
 	private $hookInstances = [];
 
 	/**
@@ -43,7 +43,6 @@ class HookManager {
 				}
 				$this->hookInstances[] = $instance;
 			}
-
 		} elseif ($instances instanceof IHook) {
 			$this->hookInstances[] = $instances;
 		}
@@ -54,12 +53,8 @@ class HookManager {
 		foreach ($this->hookInstances as $instance) {
 			/**
 			 * Fire off the add hooks method of each instance stored in cache
-			 *
-			 * @var $instance IHook
 			 */
 			$instance->addHooks();
 		}
-
 	}
-
 }

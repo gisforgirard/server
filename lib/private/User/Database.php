@@ -72,20 +72,19 @@ use OCP\User\Backend\IGetHomeBackend;
 use OCP\User\Backend\IGetRealUIDBackend;
 use OCP\User\Backend\ISetDisplayNameBackend;
 use OCP\User\Backend\ISetPasswordBackend;
-use Symfony\Component\EventDispatcher\GenericEvent;
 
 /**
  * Class for user management in a SQL Database (e.g. MySQL, SQLite)
  */
-class Database extends ABackend
-	implements ICreateUserBackend,
-	           ISetPasswordBackend,
-	           ISetDisplayNameBackend,
-	           IGetDisplayNameBackend,
-	           ICheckPasswordBackend,
-	           IGetHomeBackend,
-	           ICountUsersBackend,
-	           IGetRealUIDBackend {
+class Database extends ABackend implements
+	ICreateUserBackend,
+			   ISetPasswordBackend,
+			   ISetDisplayNameBackend,
+			   IGetDisplayNameBackend,
+			   ICheckPasswordBackend,
+			   IGetHomeBackend,
+			   ICountUsersBackend,
+			   IGetRealUIDBackend {
 	/** @var CappedMemoryCache */
 	private $cache;
 
@@ -294,14 +293,14 @@ class Database extends ABackend
 	/**
 	 * Check if the password is correct
 	 *
-	 * @param string $uid The username
+	 * @param string $loginName The loginname
 	 * @param string $password The password
 	 * @return string
 	 *
 	 * Check if the password is correct without logging in the user
 	 * returns the user id or false
 	 */
-	public function checkPassword(string $uid, string $password) {
+	public function checkPassword(string $loginName, string $password) {
 		$this->fixDI();
 
 		$qb = $this->dbConn->getQueryBuilder();
@@ -309,7 +308,7 @@ class Database extends ABackend
 			->from($this->table)
 			->where(
 				$qb->expr()->eq(
-					'uid_lower', $qb->createNamedParameter(mb_strtolower($uid))
+					'uid_lower', $qb->createNamedParameter(mb_strtolower($loginName))
 				)
 			);
 		$result = $qb->execute();
@@ -321,11 +320,10 @@ class Database extends ABackend
 			$newHash = '';
 			if (\OC::$server->getHasher()->verify($password, $storedHash, $newHash)) {
 				if (!empty($newHash)) {
-					$this->updatePassword($uid, $newHash);
+					$this->updatePassword($loginName, $newHash);
 				}
 				return (string)$row['uid'];
 			}
-
 		}
 
 		return false;

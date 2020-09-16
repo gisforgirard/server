@@ -27,9 +27,10 @@ $.widget('oc.ocdialog', {
 		height: 'auto',
 		closeButton: true,
 		closeOnEscape: true,
+		closeCallback: null,
 		modal: false,
 	},
-	_create: function() {
+	_create() {
 		const self = this
 
 		this.originalCss = {
@@ -106,11 +107,11 @@ $.widget('oc.ocdialog', {
 		this._setOptions(this.options)
 		this._createOverlay()
 	},
-	_init: function() {
+	_init() {
 		this.$dialog.focus()
 		this._trigger('open')
 	},
-	_setOption: function(key, value) {
+	_setOption(key, value) {
 		const self = this
 		switch (key) {
 		case 'title':
@@ -169,6 +170,7 @@ $.widget('oc.ocdialog', {
 				const $closeButton = $('<a class="oc-dialog-close"></a>')
 				this.$dialog.prepend($closeButton)
 				$closeButton.on('click', function() {
+					self.options.closeCallback && self.options.closeCallback()
 					self.close()
 				})
 			} else {
@@ -188,11 +190,11 @@ $.widget('oc.ocdialog', {
 		// this._super(key, value);
 		$.Widget.prototype._setOption.apply(this, arguments)
 	},
-	_setOptions: function(options) {
+	_setOptions(options) {
 		// this._super(options);
 		$.Widget.prototype._setOptions.apply(this, arguments)
 	},
-	_setSizes: function() {
+	_setSizes() {
 		let lessHeight = 0
 		if (this.$title) {
 			lessHeight += this.$title.outerHeight(true)
@@ -201,18 +203,23 @@ $.widget('oc.ocdialog', {
 			lessHeight += this.$buttonrow.outerHeight(true)
 		}
 		this.element.css({
-			'height': 'calc(100% - ' + lessHeight + 'px)',
+			height: 'calc(100% - ' + lessHeight + 'px)',
 		})
 	},
-	_createOverlay: function() {
+	_createOverlay() {
 		if (!this.options.modal) {
 			return
 		}
 
 		const self = this
+		let contentDiv = $('#content')
+		if (contentDiv.length === 0) {
+			// nextcloud-vue compatibility
+			contentDiv = $('.content')
+		}
 		this.overlay = $('<div>')
 			.addClass('oc-dialog-dim')
-			.appendTo($('#content'))
+			.appendTo(contentDiv)
 		this.overlay.on('click keydown keyup', function(event) {
 			if (event.target !== self.$dialog.get(0) && self.$dialog.find($(event.target)).length === 0) {
 				event.preventDefault()
@@ -221,7 +228,7 @@ $.widget('oc.ocdialog', {
 			}
 		})
 	},
-	_destroyOverlay: function() {
+	_destroyOverlay() {
 		if (!this.options.modal) {
 			return
 		}
@@ -232,16 +239,16 @@ $.widget('oc.ocdialog', {
 			this.overlay = null
 		}
 	},
-	widget: function() {
+	widget() {
 		return this.$dialog
 	},
-	setEnterCallback: function(callback) {
+	setEnterCallback(callback) {
 		this.enterCallback = callback
 	},
-	unsetEnterCallback: function() {
+	unsetEnterCallback() {
 		this.enterCallback = null
 	},
-	close: function() {
+	close() {
 		this._destroyOverlay()
 		const self = this
 		// Ugly hack to catch remaining keyup events.
@@ -252,7 +259,7 @@ $.widget('oc.ocdialog', {
 		self.$dialog.remove()
 		this.destroy()
 	},
-	destroy: function() {
+	destroy() {
 		if (this.$title) {
 			this.$title.remove()
 		}

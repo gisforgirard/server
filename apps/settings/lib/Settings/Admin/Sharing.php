@@ -4,7 +4,7 @@
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bjoern Schiessle <bjoern@schiessle.org>
- * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -27,14 +27,13 @@
  *
  */
 
-namespace OCA\Settings\Admin;
+namespace OCA\Settings\Settings\Admin;
 
 use OC\Share\Share;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\Constants;
 use OCP\IConfig;
 use OCP\IL10N;
-use OCP\L10N\IFactory;
 use OCP\Settings\ISettings;
 use OCP\Share\IManager;
 use OCP\Util;
@@ -52,9 +51,9 @@ class Sharing implements ISettings {
 	/**
 	 * @param IConfig $config
 	 */
-	public function __construct(IConfig $config, IFactory $l, IManager $shareManager) {
+	public function __construct(IConfig $config, IL10N $l, IManager $shareManager) {
 		$this->config = $config;
-		$this->l = $l->get('lib');
+		$this->l = $l;
 		$this->shareManager = $shareManager;
 	}
 
@@ -73,6 +72,7 @@ class Sharing implements ISettings {
 			'allowPublicUpload'                    => $this->config->getAppValue('core', 'shareapi_allow_public_upload', 'yes'),
 			'allowResharing'                       => $this->config->getAppValue('core', 'shareapi_allow_resharing', 'yes'),
 			'allowShareDialogUserEnumeration'      => $this->config->getAppValue('core', 'shareapi_allow_share_dialog_user_enumeration', 'yes'),
+			'restrictUserEnumerationToGroup'       => $this->config->getAppValue('core', 'shareapi_restrict_user_enumeration_to_group', 'no'),
 			'enforceLinkPassword'                  => Util::isPublicLinkPasswordRequired(),
 			'onlyShareWithGroupMembers'            => $this->shareManager->shareWithGroupMembersOnly(),
 			'shareAPIEnabled'                      => $this->config->getAppValue('core', 'shareapi_enabled', 'yes'),

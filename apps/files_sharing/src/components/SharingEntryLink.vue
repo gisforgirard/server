@@ -26,7 +26,9 @@
 			:class="isEmailShareType ? 'icon-mail-white' : 'icon-public-white'"
 			class="sharing-entry__avatar" />
 		<div class="sharing-entry__desc">
-			<h5>{{ title }}</h5>
+			<h5 :title="title">
+				{{ title }}
+			</h5>
 		</div>
 
 		<!-- clipboard -->
@@ -104,8 +106,8 @@
 				:lang="lang"
 				icon=""
 				type="date"
-				:not-before="dateTomorrow"
-				:not-after="dateMaxEnforced">
+				value-type="format"
+				:disabled-date="disabledDate">
 				<!-- let's not submit when picked, the user
 					might want to still edit or copy the password -->
 				{{ t('files_sharing', 'Enter a date') }}
@@ -124,23 +126,41 @@
 			@close="onMenuClose">
 			<template v-if="share">
 				<template v-if="share.canEdit">
+					<!-- Custom Label -->
+					<ActionInput
+						ref="label"
+						v-tooltip.auto="{
+							content: errors.label,
+							show: errors.label,
+							trigger: 'manual',
+							defaultContainer: '.app-sidebar'
+						}"
+						:class="{ error: errors.label }"
+						:disabled="saving"
+						:placeholder="t('files_sharing', 'Share label')"
+						:aria-label="t('files_sharing', 'Share label')"
+						:value="share.newLabel || share.label"
+						icon="icon-edit"
+						maxlength="255"
+						@update:value="onLabelChange"
+						@submit="onLabelSubmit" />
 					<!-- folder -->
 					<template v-if="isFolder && fileHasCreatePermission && config.isPublicUploadEnabled">
-						<ActionRadio :checked="share.permissions === publicUploadRValue"
+						<ActionRadio :checked="sharePermissions === publicUploadRValue"
 							:value="publicUploadRValue"
 							:name="randomId"
 							:disabled="saving"
 							@change="togglePermissions">
 							{{ t('files_sharing', 'Read only') }}
 						</ActionRadio>
-						<ActionRadio :checked="share.permissions === publicUploadRWValue"
+						<ActionRadio :checked="sharePermissions === publicUploadRWValue"
 							:value="publicUploadRWValue"
 							:disabled="saving"
 							:name="randomId"
 							@change="togglePermissions">
 							{{ t('files_sharing', 'Allow upload and editing') }}
 						</ActionRadio>
-						<ActionRadio :checked="share.permissions === publicUploadWValue"
+						<ActionRadio :checked="sharePermissions === publicUploadWValue"
 							:value="publicUploadWValue"
 							:disabled="saving"
 							:name="randomId"
@@ -198,9 +218,9 @@
 					<!-- password protected by Talk -->
 					<ActionCheckbox v-if="isPasswordProtectedByTalkAvailable"
 						:checked.sync="isPasswordProtectedByTalk"
-						:disabled="saving"
+						:disabled="!canTogglePasswordProtectedByTalkAvailable || saving"
 						class="share-link-password-talk-checkbox"
-						@change="queueUpdate('sendPasswordByTalk')">
+						@change="onPasswordProtectedByTalkChange">
 						{{ t('files_sharing', 'Video verification') }}
 					</ActionCheckbox>
 
@@ -227,10 +247,10 @@
 						:first-day-of-week="firstDay"
 						:lang="lang"
 						:value="share.expireDate"
+						value-type="format"
 						icon="icon-calendar-dark"
 						type="date"
-						:not-before="dateTomorrow"
-						:not-after="dateMaxEnforced"
+						:disabled-date="disabledDate"
 						@update:value="onExpirationChange">
 						{{ t('files_sharing', 'Enter a date') }}
 					</ActionInput>
@@ -298,6 +318,7 @@
 <script>
 import { generateUrl } from '@nextcloud/router'
 import axios from '@nextcloud/axios'
+import Vue from 'vue'
 
 import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
 import ActionCheckbox from '@nextcloud/vue/dist/Components/ActionCheckbox'
@@ -358,6 +379,15 @@ export default {
 
 	computed: {
 		/**
+		 * Return the current share permissions
+		 * We always ignore the SHARE permission as this is used for the
+		 * federated sharing.
+		 * @returns {number}
+		 */
+		sharePermissions() {
+			return this.share.permissions & ~OC.PERMISSION_SHARE
+		},
+		/**
 		 * Generate a unique random id for this SharingEntryLink only
 		 * This allows ActionRadios to have the same name prop
 		 * but not to impact others SharingEntryLink
@@ -381,7 +411,9 @@ export default {
 					})
 				}
 				if (this.share.label && this.share.label.trim() !== '') {
-					return this.share.label
+					return t('files_sharing', 'Share link ({label})', {
+						label: this.share.label.trim(),
+					})
 				}
 				if (this.isEmailShareType) {
 					return this.share.shareWith
@@ -395,15 +427,19 @@ export default {
 		 * @returns {boolean}
 		 */
 		hasExpirationDate: {
-			get: function() {
-				return this.config.isDefaultExpireDateEnforced || !!this.share.expireDate
+			get() {
+				return this.config.isDefaultExpireDateEnforced
+					|| !!this.share.expireDate
 			},
-			set: function(enabled) {
-				this.share.expireDate = enabled
-					? this.config.defaultExpirationDateString !== ''
-						? this.config.defaultExpirationDateString
-						: moment().format('YYYY-MM-DD')
+			set(enabled) {
+				let dateString = moment(this.config.defaultExpirationDateString)
+				if (!dateString.isValid()) {
+					dateString = moment()
+				}
+				this.share.state.expiration = enabled
+					? dateString.format('YYYY-MM-DD')
 					: ''
+				console.debug('Expiration date status', enabled, this.share.expireDate)
 			},
 		},
 
@@ -417,14 +453,14 @@ export default {
 		 * @returns {boolean}
 		 */
 		isPasswordProtected: {
-			get: function() {
+			get() {
 				return this.config.enforcePasswordForPublicLink
 					|| !!this.share.password
 			},
-			set: async function(enabled) {
+			async set(enabled) {
 				// TODO: directly save after generation to make sure the share is always protected
-				this.share.password = enabled ? await this.generatePassword() : ''
-				this.share.newPassword = this.share.password
+				Vue.set(this.share, 'password', enabled ? await this.generatePassword() : '')
+				Vue.set(this.share, 'newPassword', this.share.password)
 			},
 		},
 
@@ -433,7 +469,7 @@ export default {
 		 * @returns {boolean}
 		 */
 		isTalkEnabled() {
-			return OC.appswebroots['spreed'] !== undefined
+			return OC.appswebroots.spreed !== undefined
 		},
 
 		/**
@@ -449,10 +485,10 @@ export default {
 		 * @returns {boolean}
 		 */
 		isPasswordProtectedByTalk: {
-			get: function() {
+			get() {
 				return this.share.sendPasswordByTalk
 			},
-			set: async function(enabled) {
+			async set(enabled) {
 				this.share.sendPasswordByTalk = enabled
 			},
 		},
@@ -465,6 +501,20 @@ export default {
 			return this.share
 				? this.share.type === this.SHARE_TYPES.SHARE_TYPE_EMAIL
 				: false
+		},
+
+		canTogglePasswordProtectedByTalkAvailable() {
+			if (!this.isPasswordProtected) {
+				// Makes no sense
+				return false
+			} else if (this.isEmailShareType && !this.hasUnsavedPassword) {
+				// For email shares we need a new password in order to enable or
+				// disable
+				return false
+			}
+
+			// Anything else should be fine
+			return true
 		},
 
 		/**
@@ -485,10 +535,10 @@ export default {
 		 * @returns {boolean}
 		 */
 		canUpdate: {
-			get: function() {
+			get() {
 				return this.share.hasUpdatePermission
 			},
-			set: function(enabled) {
+			set(enabled) {
 				this.share.permissions = enabled
 					? OC.PERMISSION_READ | OC.PERMISSION_UPDATE
 					: OC.PERMISSION_READ
@@ -658,7 +708,11 @@ export default {
 				// Execute the copy link method
 				// freshly created share component
 				// ! somehow does not works on firefox !
-				component.copyLink()
+				if (update || !this.config.enforcePasswordForPublicLink) {
+					// Only copy the link when the password was not forced,
+					// otherwise the user needs to copy/paste the password before finishing the share.
+					component.copyLink()
+				}
 
 			} catch ({ response }) {
 				const message = response.data.ocs.meta.message
@@ -682,6 +736,25 @@ export default {
 			const permissions = parseInt(event.target.value, 10)
 			this.share.permissions = permissions
 			this.queueUpdate('permissions')
+		},
+
+		/**
+		 * Label changed, let's save it to a different key
+		 * @param {String} label the share label
+		 */
+		onLabelChange(label) {
+			this.$set(this.share, 'newLabel', label.trim())
+		},
+
+		/**
+		 * When the note change, we trim, save and dispatch
+		 */
+		onLabelSubmit() {
+			if (typeof this.share.newLabel === 'string') {
+				this.share.label = this.share.newLabel
+				this.$delete(this.share, 'newLabel')
+				this.queueUpdate('label')
+			}
 		},
 
 		/**
@@ -779,6 +852,22 @@ export default {
 		},
 
 		/**
+		 * Update the password along with "sendPasswordByTalk".
+		 *
+		 * If the password was modified the new password is sent; otherwise
+		 * updating a mail share would fail, as in that case it is required that
+		 * a new password is set when enabling or disabling
+		 * "sendPasswordByTalk".
+		 */
+		onPasswordProtectedByTalkChange() {
+			if (this.hasUnsavedPassword) {
+				this.share.password = this.share.newPassword.trim()
+			}
+
+			this.queueUpdate('sendPasswordByTalk', 'password')
+		},
+
+		/**
 		 * Save potential changed data on menu close
 		 */
 		onMenuClose() {
@@ -812,6 +901,13 @@ export default {
 		justify-content: space-between;
 		padding: 8px;
 		line-height: 1.2em;
+		overflow: hidden;
+
+		h5 {
+			text-overflow: ellipsis;
+			overflow: hidden;
+			white-space: nowrap;
+		}
 	}
 
 	&:not(.sharing-entry--share) &__actions {

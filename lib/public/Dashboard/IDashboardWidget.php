@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright 2018, Maxence Lange <maxence@artificial-owl.com>
  *
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Maxence Lange <maxence@artificial-owl.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -27,7 +28,6 @@ declare(strict_types=1);
 
 namespace OCP\Dashboard;
 
-
 use OCP\Dashboard\Model\IWidgetConfig;
 use OCP\Dashboard\Model\IWidgetRequest;
 use OCP\Dashboard\Model\WidgetSetup;
@@ -46,8 +46,8 @@ use OCP\Dashboard\Model\WidgetTemplate;
  * Multiple widget can be defined in the same appinfo/info.xml.
  *
  * @since 15.0.0
+ * @deprecated 20.0.0
  *
- * @package OCP\Dashboard
  */
 interface IDashboardWidget {
 
@@ -55,6 +55,7 @@ interface IDashboardWidget {
 	 * Should returns the (unique) Id of the widget.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return string
 	 */
@@ -65,6 +66,7 @@ interface IDashboardWidget {
 	 * Should returns the [display] name of the widget.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return string
 	 */
@@ -76,6 +78,7 @@ interface IDashboardWidget {
 	 * This description is displayed in the listing of the available widgets.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return string
 	 */
@@ -89,6 +92,7 @@ interface IDashboardWidget {
 	 * @see WidgetTemplate
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return WidgetTemplate
 	 */
@@ -102,6 +106,7 @@ interface IDashboardWidget {
 	 * @see WidgetSetup
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return WidgetSetup
 	 */
@@ -120,6 +125,7 @@ interface IDashboardWidget {
 	 * @see IWidgetConfig
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param IWidgetConfig $settings
 	 */
@@ -135,9 +141,9 @@ interface IDashboardWidget {
 	 * @see IWidgetRequest
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param IWidgetRequest $request
 	 */
 	public function requestWidget(IWidgetRequest $request);
-
 }

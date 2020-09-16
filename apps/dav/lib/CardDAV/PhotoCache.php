@@ -3,7 +3,10 @@
  *
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Jacob Neplokh <me@jacobneplokh.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -34,13 +37,14 @@ use OCP\Files\SimpleFS\ISimpleFile;
 use OCP\Files\SimpleFS\ISimpleFolder;
 use OCP\ILogger;
 use Sabre\CardDAV\Card;
+use Sabre\VObject\Parameter;
 use Sabre\VObject\Property\Binary;
 use Sabre\VObject\Reader;
 
 class PhotoCache {
 
 	/** @var array  */
-	protected const ALLOWED_CONTENT_TYPES = [
+	public const ALLOWED_CONTENT_TYPES = [
 		'image/png' => 'png',
 		'image/jpeg' => 'jpg',
 		'image/gif' => 'gif',
@@ -108,7 +112,7 @@ class PhotoCache {
 		$data = $this->getPhoto($card);
 
 		if ($data === false || !isset($data['Content-Type'])) {
-			$folder->newFile('nophoto');
+			$folder->newFile('nophoto', '');
 			return;
 		}
 
@@ -116,7 +120,7 @@ class PhotoCache {
 		$extension = self::ALLOWED_CONTENT_TYPES[$contentType] ?? null;
 
 		if ($extension === null) {
-			$folder->newFile('nophoto');
+			$folder->newFile('nophoto', '');
 			return;
 		}
 
@@ -163,7 +167,6 @@ class PhotoCache {
 				$file = $folder->newFile($path);
 				$file->putContent($photo->data());
 			} catch (NotPermittedException $e) {
-
 			}
 		}
 
@@ -179,7 +182,7 @@ class PhotoCache {
 		try {
 			return $this->appData->getFolder($hash);
 		} catch (NotFoundException $e) {
-			if($createIfNotExists) {
+			if ($createIfNotExists) {
 				return $this->appData->newFolder($hash);
 			} else {
 				throw $e;

@@ -6,9 +6,11 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2019, Thomas Citharel
  * @copyright Copyright (c) 2019, Georg Ehrke
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Citharel <tcit@tcit.fr>
+ * @author Thomas Citharel <nextcloud@tcit.fr>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -36,33 +38,31 @@ use OCP\ILogger;
 use OCP\IURLGenerator;
 use OCP\IUser;
 use OCP\L10N\IFactory as L10NFactory;
-use OCP\Mail\IAttachment;
 use OCP\Mail\IEMailTemplate;
 use OCP\Mail\IMailer;
 use OCP\Mail\IMessage;
+use PHPUnit\Framework\MockObject\MockObject;
 use Sabre\VObject\Component\VCalendar;
-use Test\TestCase;
 
 class EmailProviderTest extends AbstractNotificationProviderTest {
+	public const USER_EMAIL = 'frodo@hobb.it';
 
-	const USER_EMAIL = 'frodo@hobb.it';
-
-	/** @var ILogger|\PHPUnit\Framework\MockObject\MockObject */
+	/** @var ILogger|MockObject */
 	protected $logger;
 
-	/** @var L10NFactory|\PHPUnit\Framework\MockObject\MockObject */
+	/** @var L10NFactory|MockObject */
 	protected $l10nFactory;
 
-	/** @var IL10N|\PHPUnit\Framework\MockObject\MockObject */
+	/** @var IL10N|MockObject */
 	protected $l10n;
 
-	/** @var IURLGenerator|\PHPUnit\Framework\MockObject\MockObject */
+	/** @var IURLGenerator|MockObject */
 	protected $urlGenerator;
 
-	/** @var IConfig|\PHPUnit\Framework\MockObject\MockObject */
+	/** @var IConfig|MockObject */
 	protected $config;
 
-	/** @var IMailer|\PHPUnit\Framework\MockObject\MockObject */
+	/** @var IMailer|MockObject */
 	private $mailer;
 
 	protected function setUp(): void {
@@ -103,55 +103,43 @@ class EmailProviderTest extends AbstractNotificationProviderTest {
 
 		$users = [$user1, $user2, $user3, $user4];
 
-		$this->config->expects($this->at(0))
-			->method('getUserValue')
-			->with('uid1', 'core', 'lang', null)
-			->willReturn(null);
-		$this->config->expects($this->at(1))
-			->method('getUserValue')
-			->with('uid2', 'core', 'lang', null)
-			->willReturn('de');
-		$this->config->expects($this->at(2))
-			->method('getUserValue')
-			->with('uid3', 'core', 'lang', null)
-			->willReturn('de');
-
 		$enL10N = $this->createMock(IL10N::class);
 		$enL10N->method('t')
-			->will($this->returnArgument(0));
+			->willReturnArgument(0);
 		$enL10N->method('l')
-			->will($this->returnArgument(0));
+			->willReturnArgument(0);
 
 		$deL10N = $this->createMock(IL10N::class);
 		$deL10N->method('t')
-			->will($this->returnArgument(0));
+			->willReturnArgument(0);
 		$deL10N->method('l')
-			->will($this->returnArgument(0));
+			->willReturnArgument(0);
 
-		$this->l10nFactory->expects($this->at(0))
+		$this->l10nFactory
+			->method('getUserLanguage')
+			->willReturnMap([
+				[$user1, 'en'],
+				[$user2, 'de'],
+				[$user3, 'de'],
+			]);
+
+		$this->l10nFactory
 			->method('findLanguage')
-			->with()
 			->willReturn('en');
 
-		$this->l10nFactory->expects($this->at(1))
+		$this->l10nFactory
 			->method('languageExists')
-			->with('dav', 'en')
-			->willReturn(true);
+			->willReturnMap([
+				['dav', 'en', true],
+				['dav', 'de', true],
+			]);
 
-		$this->l10nFactory->expects($this->at(2))
+		$this->l10nFactory
 			->method('get')
-			->with('dav', 'en')
-			->willReturn($enL10N);
-
-		$this->l10nFactory->expects($this->at(3))
-			->method('languageExists')
-			->with('dav', 'de')
-			->willReturn(true);
-
-		$this->l10nFactory->expects($this->at(4))
-			->method('get')
-			->with('dav', 'de')
-			->willReturn($deL10N);
+			->willReturnMap([
+				['dav', 'en', null, $enL10N],
+				['dav', 'de', null, $deL10N],
+			]);
 
 		$template1 = $this->getTemplateMock();
 		$message11 = $this->getMessageMock('uid1@example.com', $template1);
@@ -225,55 +213,43 @@ class EmailProviderTest extends AbstractNotificationProviderTest {
 
 		$users = [$user1, $user2, $user3, $user4];
 
-		$this->config->expects($this->at(0))
-			->method('getUserValue')
-			->with('uid1', 'core', 'lang', null)
-			->willReturn(null);
-		$this->config->expects($this->at(1))
-			->method('getUserValue')
-			->with('uid2', 'core', 'lang', null)
-			->willReturn('de');
-		$this->config->expects($this->at(2))
-			->method('getUserValue')
-			->with('uid3', 'core', 'lang', null)
-			->willReturn('de');
-
 		$enL10N = $this->createMock(IL10N::class);
 		$enL10N->method('t')
-			->will($this->returnArgument(0));
+			->willReturnArgument(0);
 		$enL10N->method('l')
-			->will($this->returnArgument(0));
+			->willReturnArgument(0);
 
 		$deL10N = $this->createMock(IL10N::class);
 		$deL10N->method('t')
-			->will($this->returnArgument(0));
+			->willReturnArgument(0);
 		$deL10N->method('l')
-			->will($this->returnArgument(0));
+			->willReturnArgument(0);
 
-		$this->l10nFactory->expects($this->at(0))
+		$this->l10nFactory
+			->method('getUserLanguage')
+			->willReturnMap([
+				[$user1, 'en'],
+				[$user2, 'de'],
+				[$user3, 'de'],
+			]);
+
+		$this->l10nFactory
 			->method('findLanguage')
-			->with()
 			->willReturn('en');
 
-		$this->l10nFactory->expects($this->at(1))
+		$this->l10nFactory
 			->method('languageExists')
-			->with('dav', 'de')
-			->willReturn(true);
+			->willReturnMap([
+				['dav', 'en', true],
+				['dav', 'de', true],
+			]);
 
-		$this->l10nFactory->expects($this->at(2))
+		$this->l10nFactory
 			->method('get')
-			->with('dav', 'de')
-			->willReturn($enL10N);
-
-		$this->l10nFactory->expects($this->at(3))
-			->method('languageExists')
-			->with('dav', 'en')
-			->willReturn(true);
-
-		$this->l10nFactory->expects($this->at(4))
-			->method('get')
-			->with('dav', 'en')
-			->willReturn($deL10N);
+			->willReturnMap([
+				['dav', 'en', null, $enL10N],
+				['dav', 'de', null, $deL10N],
+			]);
 
 		$template1 = $this->getTemplateMock();
 		$message11 = $this->getMessageMock('foo1@example.org', $template1);

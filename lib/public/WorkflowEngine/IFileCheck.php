@@ -27,13 +27,11 @@ declare(strict_types=1);
 
 namespace OCP\WorkflowEngine;
 
-
 use OCP\Files\Storage\IStorage;
 
 /**
  * Interface IFileCheck
  *
- * @package OCP\WorkflowEngine
  * @since 18.0.0
  */
 interface IFileCheck extends IEntityCheck {
@@ -44,5 +42,4 @@ interface IFileCheck extends IEntityCheck {
 	 * @since 18.0.0
 	 */
 	public function setFileInfo(IStorage $storage, string $path, bool $isDir = false): void;
-
 }

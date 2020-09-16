@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Lukas Reschke <lukas@statuscode.ch>
@@ -59,21 +60,21 @@ use Test\TestCase;
 class User_LDAPTest extends TestCase {
 	/** @var User_LDAP */
 	protected $backend;
-	/** @var Access|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Access|\PHPUnit\Framework\MockObject\MockObject */
 	protected $access;
-	/** @var  OfflineUser|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  OfflineUser|\PHPUnit\Framework\MockObject\MockObject */
 	protected $offlineUser;
-	/** @var IConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	protected $config;
-	/** @var INotificationManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var INotificationManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $notificationManager;
-	/** @var Session|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Session|\PHPUnit\Framework\MockObject\MockObject */
 	protected $session;
-	/** @var UserPluginManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var UserPluginManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $pluginManager;
-	/** @var Connection|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Connection|\PHPUnit\Framework\MockObject\MockObject */
 	protected $connection;
-	/** @var Manager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Manager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $userManager;
 
 	protected function setUp(): void {
@@ -107,8 +108,8 @@ class User_LDAPTest extends TestCase {
 	private function prepareMockForUserExists() {
 		$this->access->expects($this->any())
 			   ->method('username2dn')
-			   ->will($this->returnCallback(function($uid) {
-					switch ($uid) {
+			   ->willReturnCallback(function ($uid) {
+			   	switch ($uid) {
 						case 'gunslinger':
 							return 'dnOfRoland,dc=test';
 							break;
@@ -124,7 +125,7 @@ class User_LDAPTest extends TestCase {
 						default:
 							return false;
 					}
-			   }));
+			   });
 
 		$this->access->method('fetchUsersByLoginName')
 			->willReturn([]);
@@ -138,50 +139,54 @@ class User_LDAPTest extends TestCase {
 	private function prepareAccessForCheckPassword($noDisplayName = false) {
 		$this->connection->expects($this->any())
 			   ->method('__get')
-			   ->will($this->returnCallback(function($name) {
-					if($name === 'ldapLoginFilter') {
-						return '%uid';
-					}
-					return null;
-			   }));
+			   ->willReturnCallback(function ($name) {
+			   	if ($name === 'ldapLoginFilter') {
+			   		return '%uid';
+			   	}
+			   	return null;
+			   });
 
 		$this->access->expects($this->any())
 			   ->method('fetchListOfUsers')
-			   ->will($this->returnCallback(function($filter) {
-					if($filter === 'roland') {
-						return array(array('dn' => ['dnOfRoland,dc=test']));
-					}
-					return array();
-			   }));
+			   ->willReturnCallback(function ($filter) {
+			   	if ($filter === 'roland') {
+			   		return [['dn' => ['dnOfRoland,dc=test']]];
+			   	}
+			   	return [];
+			   });
 		$this->access->expects($this->any())
 			->method('fetchUsersByLoginName')
-			->will($this->returnCallback(function($uid) {
-				if($uid === 'roland') {
-					return array(array('dn' => ['dnOfRoland,dc=test']));
+			->willReturnCallback(function ($uid) {
+				if ($uid === 'roland') {
+					return [['dn' => ['dnOfRoland,dc=test']]];
 				}
-				return array();
-			}));
+				return [];
+			});
 
 		$retVal = 'gunslinger';
-		if($noDisplayName === true) {
+		if ($noDisplayName === true) {
 			$retVal = false;
 		}
 		$this->access->expects($this->any())
 			   ->method('dn2username')
 			   ->with($this->equalTo('dnOfRoland,dc=test'))
-			   ->will($this->returnValue($retVal));
+			   ->willReturn($retVal);
 		$this->access->expects($this->any())
 			   ->method('stringResemblesDN')
 			   ->with($this->equalTo('dnOfRoland,dc=test'))
-			   ->will($this->returnValue(true));
+			   ->willReturn(true);
 		$this->access->expects($this->any())
 			   ->method('areCredentialsValid')
-			   ->will($this->returnCallback(function($dn, $pwd) {
-					if($pwd === 'dt19') {
-						return true;
-					}
-					return false;
-			   }));
+			   ->willReturnCallback(function ($dn, $pwd) {
+			   	if ($pwd === 'dt19') {
+			   		return true;
+			   	}
+			   	return false;
+			   });
+
+		$this->userManager->expects($this->any())
+			->method('getAttributes')
+			->willReturn(['dn', 'uid', 'mail', 'displayname']);
 	}
 
 	public function testCheckPasswordUidReturn() {
@@ -297,10 +302,10 @@ class User_LDAPTest extends TestCase {
 		$mapping = $this->createMock(UserMapping::class);
 		$mapping->expects($this->once())
 			->method('unmap')
-			->will($this->returnValue(true));
+			->willReturn(true);
 		$this->access->expects($this->once())
 			->method('getUserMapper')
-			->will($this->returnValue($mapping));
+			->willReturn($mapping);
 		$this->connection->expects($this->any())
 			->method('getConnectionResource')
 			->willReturn('this is an ldap link');
@@ -362,43 +367,47 @@ class User_LDAPTest extends TestCase {
 	private function prepareAccessForGetUsers() {
 		$this->access->expects($this->once())
 			   ->method('escapeFilterPart')
-			   ->will($this->returnCallback(function($search) {
-				   return $search;
-			   }));
+			   ->willReturnCallback(function ($search) {
+			   	return $search;
+			   });
 		$this->access->expects($this->any())
 			   ->method('getFilterPartForUserSearch')
-			   ->will($this->returnCallback(function($search) {
-					return $search;
-			   }));
+			   ->willReturnCallback(function ($search) {
+			   	return $search;
+			   });
 		$this->access->expects($this->any())
 			   ->method('combineFilterWithAnd')
-			   ->will($this->returnCallback(function($param) {
-					return $param[2];
-			   }));
+			   ->willReturnCallback(function ($param) {
+			   	return $param[2];
+			   });
 		$this->access->expects($this->any())
 			   ->method('fetchListOfUsers')
-			   ->will($this->returnCallback(function($search, $a, $l, $o) {
-					$users = array('gunslinger', 'newyorker', 'ladyofshadows');
-					if(empty($search)) {
-						$result = $users;
-					} else {
-						$result = array();
-						foreach($users as $user) {
-							if(stripos($user,  $search) !== false) {
-								$result[] = $user;
-							}
-						}
-					}
-					if(!is_null($l) || !is_null($o)) {
-						$result = array_slice($result, $o, $l);
-					}
-					return $result;
-			   }));
+			   ->willReturnCallback(function ($search, $a, $l, $o) {
+			   	$users = ['gunslinger', 'newyorker', 'ladyofshadows'];
+			   	if (empty($search)) {
+			   		$result = $users;
+			   	} else {
+			   		$result = [];
+			   		foreach ($users as $user) {
+			   			if (stripos($user,  $search) !== false) {
+			   				$result[] = $user;
+			   			}
+			   		}
+			   	}
+			   	if (!is_null($l) || !is_null($o)) {
+			   		$result = array_slice($result, $o, $l);
+			   	}
+			   	return $result;
+			   });
 		$this->access->expects($this->any())
 			   ->method('nextcloudUserNames')
-			   ->will($this->returnArgument(0));
+			   ->willReturnArgument(0);
 		$this->access->method('fetchUsersByLoginName')
 			->willReturn([]);
+
+		$this->access->userManager->expects($this->any())
+			->method('getAttributes')
+			->willReturn(['dn', 'uid', 'mail', 'displayname']);
 	}
 
 	public function testGetUsersNoParam() {
@@ -443,7 +452,7 @@ class User_LDAPTest extends TestCase {
 
 	private function getUsers($search = '', $limit = null, $offset = null) {
 		$users = \OC::$server->getUserManager()->search($search, $limit, $offset);
-		$uids = array_map(function(IUser $user) {
+		$uids = array_map(function (IUser $user) {
 			return $user->getUID();
 		}, $users);
 		return $uids;
@@ -543,12 +552,12 @@ class User_LDAPTest extends TestCase {
 
 		$this->access->expects($this->any())
 			->method('readAttribute')
-			->will($this->returnCallback(function($dn) {
-				if($dn === 'dnOfRoland,dc=test') {
-					return array();
+			->willReturnCallback(function ($dn) {
+				if ($dn === 'dnOfRoland,dc=test') {
+					return [];
 				}
 				return false;
-			}));
+			});
 
 		//test for never-existing user
 		/** @noinspection PhpUnhandledExceptionInspection */
@@ -568,12 +577,12 @@ class User_LDAPTest extends TestCase {
 
 		$this->access->expects($this->any())
 			->method('readAttribute')
-			->will($this->returnCallback(function($dn) {
-				if($dn === 'dnOfRoland,dc=test') {
-					return array();
+			->willReturnCallback(function ($dn) {
+				if ($dn === 'dnOfRoland,dc=test') {
+					return [];
 				}
 				return false;
-			}));
+			});
 		$this->userManager->expects($this->atLeastOnce())
 			->method('get')
 			->willReturn($user);
@@ -600,27 +609,27 @@ class User_LDAPTest extends TestCase {
 
 		$this->connection->expects($this->any())
 			->method('__get')
-			->will($this->returnCallback(function($name) {
-				if($name === 'homeFolderNamingRule') {
+			->willReturnCallback(function ($name) {
+				if ($name === 'homeFolderNamingRule') {
 					return 'attr:testAttribute';
 				}
 				return null;
-			}));
+			});
 
 		$this->access->expects($this->any())
 			->method('readAttribute')
-			->will($this->returnCallback(function($dn, $attr) {
+			->willReturnCallback(function ($dn, $attr) {
 				switch ($dn) {
 					case 'dnOfRoland,dc=test':
-						if($attr === 'testAttribute') {
-							return array('/tmp/rolandshome/');
+						if ($attr === 'testAttribute') {
+							return ['/tmp/rolandshome/'];
 						}
-						return array();
+						return [];
 						break;
 					default:
 						return false;
 				}
-			}));
+			});
 
 		$user = $this->createMock(User::class);
 		$user->expects($this->any())
@@ -652,27 +661,27 @@ class User_LDAPTest extends TestCase {
 
 		$this->connection->expects($this->any())
 			->method('__get')
-			->will($this->returnCallback(function($name) {
-				if($name === 'homeFolderNamingRule') {
+			->willReturnCallback(function ($name) {
+				if ($name === 'homeFolderNamingRule') {
 					return 'attr:testAttribute';
 				}
 				return null;
-			}));
+			});
 
 		$this->access->expects($this->any())
 			->method('readAttribute')
-			->will($this->returnCallback(function($dn, $attr) {
+			->willReturnCallback(function ($dn, $attr) {
 				switch ($dn) {
 					case 'dnOfLadyOfShadows,dc=test':
-						if($attr === 'testAttribute') {
-							return array('susannah/');
+						if ($attr === 'testAttribute') {
+							return ['susannah/'];
 						}
-						return array();
+						return [];
 						break;
 					default:
 						return false;
 				}
-			}));
+			});
 
 		$user = $this->createMock(User::class);
 		$user->expects($this->any())
@@ -703,24 +712,24 @@ class User_LDAPTest extends TestCase {
 
 		$this->connection->expects($this->any())
 			->method('__get')
-			->will($this->returnCallback(function($name) {
-				if($name === 'homeFolderNamingRule') {
+			->willReturnCallback(function ($name) {
+				if ($name === 'homeFolderNamingRule') {
 					return 'attr:testAttribute';
 				}
 				return null;
-			}));
+			});
 		$this->access->expects($this->any())
 			->method('readAttribute')
-			->will($this->returnCallback(function($dn, $attr) {
+			->willReturnCallback(function ($dn, $attr) {
 				switch ($dn) {
 					default:
 						return false;
 				}
-			}));
+			});
 		$this->access->connection->expects($this->any())
 			->method('getFromCache')
-			->willReturnCallback(function($key) {
-				if($key === 'userExistsnewyorker') {
+			->willReturnCallback(function ($key) {
+				if ($key === 'userExistsnewyorker') {
 					return true;
 				}
 				return null;
@@ -751,26 +760,26 @@ class User_LDAPTest extends TestCase {
 
 		$this->connection->expects($this->any())
 				->method('__get')
-				->will($this->returnCallback(function($name) {
-					if($name === 'homeFolderNamingRule') {
+				->willReturnCallback(function ($name) {
+					if ($name === 'homeFolderNamingRule') {
 						return 'attr:testAttribute';
 					}
 					return null;
-				}));
+				});
 
 		$this->access->expects($this->any())
 				->method('readAttribute')
-				->will($this->returnValue([]));
+				->willReturn([]);
 
 		$userMapper = $this->createMock(UserMapping::class);
 
 		$this->access->expects($this->any())
 				->method('getUserMapper')
-				->will($this->returnValue($userMapper));
+				->willReturn($userMapper);
 
 		$this->config->expects($this->any())
 			->method('getUserValue')
-			->will($this->returnValue(true));
+			->willReturn(true);
 
 		$offlineUser = $this->createMock(OfflineUser::class);
 		$offlineUser->expects($this->atLeastOnce())
@@ -797,9 +806,9 @@ class User_LDAPTest extends TestCase {
 
 		$this->connection->expects($this->any())
 			->method('getFromCache')
-			->will($this->returnCallback(function($uid) {
+			->willReturnCallback(function ($uid) {
 				return true;
-			}));
+			});
 
 		/** @noinspection PhpUnhandledExceptionInspection */
 		$this->assertEquals($this->backend->getHome('uid'),'result');
@@ -808,28 +817,28 @@ class User_LDAPTest extends TestCase {
 	private function prepareAccessForGetDisplayName() {
 		$this->connection->expects($this->any())
 			   ->method('__get')
-			   ->will($this->returnCallback(function($name) {
-					if($name === 'ldapUserDisplayName') {
-						return 'displayname';
-					}
-					return null;
-			   }));
+			   ->willReturnCallback(function ($name) {
+			   	if ($name === 'ldapUserDisplayName') {
+			   		return 'displayname';
+			   	}
+			   	return null;
+			   });
 
 		$this->access->expects($this->any())
 			   ->method('readAttribute')
-			   ->will($this->returnCallback(function($dn, $attr) {
-					switch ($dn) {
+			   ->willReturnCallback(function ($dn, $attr) {
+			   	switch ($dn) {
 						case 'dnOfRoland,dc=test':
-							if($attr === 'displayname') {
-								return array('Roland Deschain');
+							if ($attr === 'displayname') {
+								return ['Roland Deschain'];
 							}
-							return array();
+							return [];
 							break;
 
 						default:
 							return false;
 				   }
-			   }));
+			   });
 		$this->access->method('fetchUsersByLoginName')
 			->willReturn([]);
 	}
@@ -841,9 +850,9 @@ class User_LDAPTest extends TestCase {
 
 		$this->connection->expects($this->any())
 			->method('getConnectionResource')
-			->will($this->returnCallback(function() {
+			->willReturnCallback(function () {
 				return true;
-			}));
+			});
 
 		$user1 = $this->createMock(User::class);
 		$user1->expects($this->once())
@@ -863,14 +872,16 @@ class User_LDAPTest extends TestCase {
 		$mapper = $this->createMock(UserMapping::class);
 		$mapper->expects($this->any())
 			->method('getUUIDByDN')
-			->willReturnCallback(function($dn) { return $dn; });
+			->willReturnCallback(function ($dn) {
+				return $dn;
+			});
 
 		$this->userManager->expects($this->any())
 			->method('get')
-			->willReturnCallback(function($uid) use ($user1, $user2) {
-				if($uid === 'gunslinger') {
+			->willReturnCallback(function ($uid) use ($user1, $user2) {
+				if ($uid === 'gunslinger') {
 					return $user1;
-				} else if($uid === 'newyorker') {
+				} elseif ($uid === 'newyorker') {
 					return $user2;
 				}
 				return null;
@@ -880,7 +891,9 @@ class User_LDAPTest extends TestCase {
 			->willReturn($mapper);
 		$this->access->expects($this->any())
 			->method('getUserDnByUuid')
-			->willReturnCallback(function($uuid) { return $uuid . '1'; });
+			->willReturnCallback(function ($uuid) {
+				return $uuid . '1';
+			});
 
 		//with displayName
 		$result = $backend->getDisplayName('gunslinger');
@@ -894,7 +907,7 @@ class User_LDAPTest extends TestCase {
 	public function testGetDisplayNamePublicAPI() {
 		$this->access->expects($this->any())
 			->method('username2dn')
-			->will($this->returnCallback(function($uid) {
+			->willReturnCallback(function ($uid) {
 				switch ($uid) {
 					case 'gunslinger':
 						return 'dnOfRoland,dc=test';
@@ -911,16 +924,16 @@ class User_LDAPTest extends TestCase {
 					default:
 						return false;
 				}
-			}));
+			});
 		$this->prepareAccessForGetDisplayName();
 		$backend = new UserLDAP($this->access, $this->config, $this->notificationManager, $this->session, $this->pluginManager);
 		$this->prepareMockForUserExists();
 
 		$this->connection->expects($this->any())
 			->method('getConnectionResource')
-			->will($this->returnCallback(function() {
+			->willReturnCallback(function () {
 				return true;
-			}));
+			});
 
 		\OC_User::useBackend($backend);
 
@@ -942,14 +955,16 @@ class User_LDAPTest extends TestCase {
 		$mapper = $this->createMock(UserMapping::class);
 		$mapper->expects($this->any())
 			->method('getUUIDByDN')
-			->willReturnCallback(function($dn) { return $dn; });
+			->willReturnCallback(function ($dn) {
+				return $dn;
+			});
 
 		$this->userManager->expects($this->any())
 			->method('get')
-			->willReturnCallback(function($uid) use ($user1, $user2) {
-				if($uid === 'gunslinger') {
+			->willReturnCallback(function ($uid) use ($user1, $user2) {
+				if ($uid === 'gunslinger') {
 					return $user1;
-				} else if($uid === 'newyorker') {
+				} elseif ($uid === 'newyorker') {
 					return $user2;
 				}
 				return null;
@@ -959,7 +974,9 @@ class User_LDAPTest extends TestCase {
 			->willReturn($mapper);
 		$this->access->expects($this->any())
 			->method('getUserDnByUuid')
-			->willReturnCallback(function($uuid) { return $uuid . '1'; });
+			->willReturnCallback(function ($uuid) {
+				return $uuid . '1';
+			});
 
 		//with displayName
 		$result = \OC::$server->getUserManager()->get('gunslinger')->getDisplayName();
@@ -989,7 +1006,7 @@ class User_LDAPTest extends TestCase {
 	public function testCountUsers() {
 		$this->access->expects($this->once())
 			   ->method('countUsers')
-			   ->will($this->returnValue(5));
+			   ->willReturn(5);
 
 		$backend = new UserLDAP($this->access, $this->config, $this->notificationManager, $this->session, $this->pluginManager);
 
@@ -1000,7 +1017,7 @@ class User_LDAPTest extends TestCase {
 	public function testCountUsersFailing() {
 		$this->access->expects($this->once())
 			   ->method('countUsers')
-			   ->will($this->returnValue(false));
+			   ->willReturn(false);
 
 		$backend = new UserLDAP($this->access, $this->config, $this->notificationManager, $this->session, $this->pluginManager);
 
@@ -1056,6 +1073,9 @@ class User_LDAPTest extends TestCase {
 			->method('get')
 			->with($dn)
 			->willReturn($user);
+		$this->userManager->expects($this->any())
+			->method('getAttributes')
+			->willReturn(['dn', 'uid', 'mail', 'displayname']);
 
 		$name = $backend->loginName2UserName($loginName);
 		$this->assertSame($username, $name);
@@ -1083,6 +1103,10 @@ class User_LDAPTest extends TestCase {
 		$this->connection->expects($this->once())
 			->method('writeToCache')
 			->with($this->equalTo('loginName2UserName-'.$loginName), false);
+
+		$this->userManager->expects($this->any())
+			->method('getAttributes')
+			->willReturn(['dn', 'uid', 'mail', 'displayname']);
 
 		$backend = new UserLDAP($this->access, $this->config, $this->notificationManager, $this->session, $this->pluginManager);
 		$name = $backend->loginName2UserName($loginName);
@@ -1117,6 +1141,9 @@ class User_LDAPTest extends TestCase {
 			->method('get')
 			->with($dn)
 			->willReturn($offlineUser);
+		$this->userManager->expects($this->any())
+			->method('getAttributes')
+			->willReturn(['dn', 'uid', 'mail', 'displayname']);
 
 		$backend = new UserLDAP($this->access, $this->config, $this->notificationManager, $this->session, $this->pluginManager);
 		$name = $backend->loginName2UserName($loginName);
@@ -1134,56 +1161,56 @@ class User_LDAPTest extends TestCase {
 	private function prepareAccessForSetPassword($enablePasswordChange = true) {
 		$this->connection->expects($this->any())
 			   ->method('__get')
-			   ->will($this->returnCallback(function($name) use (&$enablePasswordChange) {
-					if($name === 'ldapLoginFilter') {
-						return '%uid';
-					}
-					if($name === 'turnOnPasswordChange') {
-						return $enablePasswordChange?1:0;
-					}
-					return null;
-			   }));
+			   ->willReturnCallback(function ($name) use (&$enablePasswordChange) {
+			   	if ($name === 'ldapLoginFilter') {
+			   		return '%uid';
+			   	}
+			   	if ($name === 'turnOnPasswordChange') {
+			   		return $enablePasswordChange?1:0;
+			   	}
+			   	return null;
+			   });
 		$this->connection->expects($this->any())
 			   ->method('getFromCache')
-			   ->will($this->returnCallback(function($uid) {
-					if($uid === 'userExists'.'roland') {
-						return true;
-					}
-					return null;
-			   }));
+			   ->willReturnCallback(function ($uid) {
+			   	if ($uid === 'userExists'.'roland') {
+			   		return true;
+			   	}
+			   	return null;
+			   });
 
 		$this->access->expects($this->any())
 			   ->method('fetchListOfUsers')
-			   ->will($this->returnCallback(function($filter) {
-					if($filter === 'roland') {
-						return array(array('dn' => ['dnOfRoland,dc=test']));
-					}
-					return array();
-			   }));
+			   ->willReturnCallback(function ($filter) {
+			   	if ($filter === 'roland') {
+			   		return [['dn' => ['dnOfRoland,dc=test']]];
+			   	}
+			   	return [];
+			   });
 		$this->access->expects($this->any())
 			->method('fetchUsersByLoginName')
-			->will($this->returnCallback(function($uid) {
-				if($uid === 'roland') {
-					return array(array('dn' => ['dnOfRoland,dc=test']));
+			->willReturnCallback(function ($uid) {
+				if ($uid === 'roland') {
+					return [['dn' => ['dnOfRoland,dc=test']]];
 				}
-				return array();
-			}));
+				return [];
+			});
 		$this->access->expects($this->any())
 			   ->method('dn2username')
 			   ->with($this->equalTo('dnOfRoland,dc=test'))
-			   ->will($this->returnValue('roland'));
+			   ->willReturn('roland');
 		$this->access->expects($this->any())
 			   ->method('stringResemblesDN')
 			   ->with($this->equalTo('dnOfRoland,dc=test'))
-			   ->will($this->returnValue(true));
+			   ->willReturn(true);
 		$this->access->expects($this->any())
 			   ->method('setPassword')
-			   ->will($this->returnCallback(function($uid, $password) {
-					if(strlen($password) <= 5) {
-						throw new HintException('Password fails quality checking policy', '', 19);
-					}
-					return true;
-			   }));
+			   ->willReturnCallback(function ($uid, $password) {
+			   	if (strlen($password) <= 5) {
+			   		throw new HintException('Password fails quality checking policy', '', 19);
+			   	}
+			   	return true;
+			   });
 	}
 
 

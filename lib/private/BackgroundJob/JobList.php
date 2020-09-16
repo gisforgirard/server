@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Lukas Reschke <lukas@statuscode.ch>
@@ -307,18 +308,6 @@ class JobList implements IJobList {
 			->set('reserved_at', $query->expr()->literal(0, IQueryBuilder::PARAM_INT))
 			->where($query->expr()->eq('id', $query->createNamedParameter($job->getId(), IQueryBuilder::PARAM_INT)));
 		$query->execute();
-	}
-
-	/**
-	 * get the id of the last ran job
-	 *
-	 * @return int
-	 * @deprecated 9.1.0 - The functionality behind the value is deprecated, it
-	 *    only tells you which job finished last, but since we now allow multiple
-	 *    executors to run in parallel, it's not used to calculate the next job.
-	 */
-	public function getLastJob() {
-		return (int) $this->config->getAppValue('backgroundjob', 'lastjob', 0);
 	}
 
 	/**

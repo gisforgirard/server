@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016 Lukas Reschke <lukas@statuscode.ch>
  *
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -35,13 +36,13 @@ use Test\TestCase;
 class AdminTest extends TestCase {
 	/** @var Admin */
 	private $admin;
-	/** @var IManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $encryptionManager;
-	/** @var GlobalStoragesService|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var GlobalStoragesService|\PHPUnit\Framework\MockObject\MockObject */
 	private $globalStoragesService;
-	/** @var BackendService|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var BackendService|\PHPUnit\Framework\MockObject\MockObject */
 	private $backendService;
-	/** @var GlobalAuth|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var GlobalAuth|\PHPUnit\Framework\MockObject\MockObject */
 	private $globalAuth;
 
 	protected function setUp(): void {
@@ -95,7 +96,7 @@ class AdminTest extends TestCase {
 			'storages'             => ['a', 'b', 'c'],
 			'backends'             => ['d', 'e', 'f'],
 			'authMechanisms'       => ['g', 'h', 'i'],
-			'dependencies'         => \OC_Mount_Config::dependencyMessage($this->backendService->getBackends()),
+			'dependencies'         => \OCA\Files_External\MountConfig::dependencyMessage($this->backendService->getBackends()),
 			'allowUserMounting'    => true,
 			'globalCredentials'    => 'asdf:asdf',
 			'globalCredentialsUid' => '',

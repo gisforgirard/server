@@ -25,7 +25,6 @@
 
 namespace OCA\Encryption\Tests\Command;
 
-
 use OCA\Encryption\Command\EnableMasterKey;
 use OCA\Encryption\Util;
 use OCP\IConfig;
@@ -39,19 +38,19 @@ class TestEnableMasterKey extends TestCase {
 	/** @var  EnableMasterKey */
 	protected $enableMasterKey;
 
-	/** @var  Util | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  Util | \PHPUnit\Framework\MockObject\MockObject */
 	protected $util;
 
-	/** @var \OCP\IConfig | \PHPUnit_Framework_MockObject_MockObject  */
+	/** @var \OCP\IConfig | \PHPUnit\Framework\MockObject\MockObject  */
 	protected $config;
 
-	/** @var \Symfony\Component\Console\Helper\QuestionHelper | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var \Symfony\Component\Console\Helper\QuestionHelper | \PHPUnit\Framework\MockObject\MockObject */
 	protected $questionHelper;
 
-	/** @var  \Symfony\Component\Console\Output\OutputInterface | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  \Symfony\Component\Console\Output\OutputInterface | \PHPUnit\Framework\MockObject\MockObject */
 	protected $output;
 
-	/** @var  \Symfony\Component\Console\Input\InputInterface | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  \Symfony\Component\Console\Input\InputInterface | \PHPUnit\Framework\MockObject\MockObject */
 	protected $input;
 
 	protected function setUp(): void {
@@ -78,7 +77,6 @@ class TestEnableMasterKey extends TestCase {
 	 * @param string $answer
 	 */
 	public function testExecute($isAlreadyEnabled, $answer) {
-
 		$this->util->expects($this->once())->method('isMasterKeyEnabled')
 			->willReturn($isAlreadyEnabled);
 
@@ -93,7 +91,6 @@ class TestEnableMasterKey extends TestCase {
 			} else {
 				$this->questionHelper->expects($this->once())->method('ask')->willReturn(false);
 				$this->config->expects($this->never())->method('setAppValue');
-
 			}
 		}
 

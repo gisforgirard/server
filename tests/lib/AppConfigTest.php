@@ -8,6 +8,7 @@
  */
 
 namespace Test;
+
 use OCP\IConfig;
 
 /**
@@ -307,7 +308,7 @@ class AppConfigTest extends TestCase {
 	}
 
 	public function testGetFilteredValues() {
-		/** @var \OC\AppConfig|\PHPUnit_Framework_MockObject_MockObject $config */
+		/** @var \OC\AppConfig|\PHPUnit\Framework\MockObject\MockObject $config */
 		$config = $this->getMockBuilder(\OC\AppConfig::class)
 			->setConstructorArgs([\OC::$server->getDatabaseConnection()])
 			->setMethods(['getValues'])

@@ -213,8 +213,8 @@
 			<div class="userActions" />
 		</div>
 
-		<user-row v-for="(user, key) in filteredUsers"
-			:key="key"
+		<user-row v-for="user in filteredUsers"
+			:key="user.id"
 			:external-actions="externalActions"
 			:groups="groups"
 			:languages="languages"
@@ -241,10 +241,15 @@
 </template>
 
 <script>
-import userRow from './UserList/UserRow'
-import { Multiselect, Actions, ActionButton } from '@nextcloud/vue'
+import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import InfiniteLoading from 'vue-infinite-loading'
 import Vue from 'vue'
+
+import Multiselect from '@nextcloud/vue/dist/Components/Multiselect'
+import Actions from '@nextcloud/vue/dist/Components/Actions'
+import ActionButton from '@nextcloud/vue/dist/Components/ActionButton'
+
+import userRow from './UserList/UserRow'
 
 const unlimitedQuota = {
 	id: 'none',
@@ -312,13 +317,16 @@ export default {
 		settings() {
 			return this.$store.getters.getServerData
 		},
+		selectedGroupDecoded() {
+			return decodeURIComponent(this.selectedGroup)
+		},
 		filteredUsers() {
 			if (this.selectedGroup === 'disabled') {
 				return this.users.filter(user => user.enabled === false)
 			}
 			if (!this.settings.isAdmin) {
 				// we don't want subadmins to edit themselves
-				return this.users.filter(user => user.enabled !== false && user.id !== OC.getCurrentUser().uid)
+				return this.users.filter(user => user.enabled !== false)
 			}
 			return this.users.filter(user => user.enabled !== false)
 		},
@@ -382,7 +390,7 @@ export default {
 	},
 	watch: {
 		// watch url change and group select
-		selectedGroup: function(val, old) {
+		selectedGroup(val, old) {
 			// if selected is the disabled group but it's empty
 			this.redirectIfDisabled()
 			this.$store.commit('resetUsers')
@@ -392,7 +400,7 @@ export default {
 
 		// make sure the infiniteLoading state is changed if we manually
 		// add/remove data from the store
-		usersCount: function(val, old) {
+		usersCount(val, old) {
 			// deleting the last user, reset the list
 			if (val === 0 && old === 1) {
 				this.$refs.infiniteLoading.stateChanger.reset()
@@ -404,6 +412,7 @@ export default {
 			}
 		},
 	},
+
 	mounted() {
 		if (!this.settings.canChangePassword) {
 			OC.Notification.showTemporary(t('settings', 'Password change is disabled because the master key is disabled'))
@@ -417,13 +426,19 @@ export default {
 		/**
 		 * Register search
 		 */
-		this.userSearch = new OCA.Search(this.search, this.resetSearch)
+		subscribe('nextcloud:unified-search:search', this.search)
+		subscribe('nextcloud:unified-search:reset', this.resetSearch)
 
 		/**
 		 * If disabled group but empty, redirect
 		 */
 		this.redirectIfDisabled()
 	},
+	beforeDestroy() {
+		unsubscribe('nextcloud:unified-search:search', this.search)
+		unsubscribe('nextcloud:unified-search:reset', this.resetSearch)
+	},
+
 	methods: {
 		onScroll(event) {
 			this.scrolled = event.target.scrollTo > 0
@@ -462,13 +477,13 @@ export default {
 		},
 
 		/* SEARCH */
-		search(query) {
+		search({ query }) {
 			this.searchQuery = query
 			this.$store.commit('resetUsers')
 			this.$refs.infiniteLoading.stateChanger.reset()
 		},
 		resetSearch() {
-			this.search('')
+			this.search({ query: '' })
 		},
 
 		resetForm() {
@@ -575,3 +590,8 @@ export default {
 	},
 }
 </script>
+<style scoped>
+	.row::v-deep .multiselect__single {
+		z-index: auto !important;
+	}
+</style>

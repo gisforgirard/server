@@ -2,7 +2,9 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -41,7 +43,7 @@ use Test\Traits\UserTrait;
 class UserGlobalStoragesServiceTest extends GlobalStoragesServiceTest {
 	use UserTrait;
 
-	/** @var \OCP\IGroupManager|\PHPUnit_Framework_MockObject_MockObject groupManager */
+	/** @var \OCP\IGroupManager|\PHPUnit\Framework\MockObject\MockObject groupManager */
 	protected $groupManager;
 
 	/**
@@ -56,9 +58,9 @@ class UserGlobalStoragesServiceTest extends GlobalStoragesServiceTest {
 
 	protected $user;
 
-	const USER_ID = 'test_user';
-	const GROUP_ID = 'test_group';
-	const GROUP_ID2 = 'test_group2';
+	public const USER_ID = 'test_user';
+	public const GROUP_ID = 'test_group';
+	public const GROUP_ID2 = 'test_group2';
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -66,16 +68,16 @@ class UserGlobalStoragesServiceTest extends GlobalStoragesServiceTest {
 		$this->globalStoragesService = $this->service;
 
 		$this->user = new \OC\User\User(self::USER_ID, null, \OC::$server->getEventDispatcher());
-		/** @var \OCP\IUserSession|\PHPUnit_Framework_MockObject_MockObject $userSession */
+		/** @var \OCP\IUserSession|\PHPUnit\Framework\MockObject\MockObject $userSession */
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession
 			->expects($this->any())
 			->method('getUser')
-			->will($this->returnValue($this->user));
+			->willReturn($this->user);
 
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->groupManager->method('isInGroup')
-			->will($this->returnCallback(function ($userId, $groupId) {
+			->willReturnCallback(function ($userId, $groupId) {
 				if ($userId === self::USER_ID) {
 					switch ($groupId) {
 						case self::GROUP_ID:
@@ -84,15 +86,15 @@ class UserGlobalStoragesServiceTest extends GlobalStoragesServiceTest {
 					}
 				}
 				return false;
-			}));
+			});
 		$this->groupManager->method('getUserGroupIds')
-			->will($this->returnCallback(function (IUser $user) {
+			->willReturnCallback(function (IUser $user) {
 				if ($user->getUID() === self::USER_ID) {
 					return [self::GROUP_ID, self::GROUP_ID2];
 				} else {
 					return [];
 				}
-			}));
+			});
 
 		$this->service = new UserGlobalStoragesService(
 			$this->backendService,
@@ -152,10 +154,8 @@ class UserGlobalStoragesServiceTest extends GlobalStoragesServiceTest {
 				$this->service->getStorage($newStorage->getId());
 				$this->fail('Failed asserting that storage can\'t be accessed by id');
 			} catch (NotFoundException $e) {
-
 			}
 		}
-
 	}
 
 
@@ -226,7 +226,7 @@ class UserGlobalStoragesServiceTest extends GlobalStoragesServiceTest {
 	public function testDeleteUnexistingStorage() {
 		$this->expectException(\DomainException::class);
 
-	    $this->actualDeletedUnexistingStorageTest();
+		$this->actualDeletedUnexistingStorageTest();
 	}
 
 	public function getUniqueStoragesProvider() {

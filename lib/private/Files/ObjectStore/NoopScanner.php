@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -25,11 +26,11 @@
  */
 
 namespace OC\Files\ObjectStore;
+
 use OC\Files\Cache\Scanner;
 use OC\Files\Storage\Storage;
 
 class NoopScanner extends Scanner {
-
 	public function __construct(Storage $storage) {
 		//we don't need the storage, so do nothing here
 	}
@@ -43,8 +44,8 @@ class NoopScanner extends Scanner {
 	 * @param array|null $cacheData existing data in the cache for the file to be scanned
 	 * @return array an array of metadata of the scanned file
 	 */
-	public function scanFile($file, $reuseExisting = 0, $parentId = -1, $cacheData = null, $lock = true) {
-		return array();
+	public function scanFile($file, $reuseExisting = 0, $parentId = -1, $cacheData = null, $lock = true, $data = null) {
+		return [];
 	}
 
 	/**
@@ -56,7 +57,7 @@ class NoopScanner extends Scanner {
 	 * @return array with the meta data of the scanned file or folder
 	 */
 	public function scan($path, $recursive = self::SCAN_RECURSIVE, $reuse = -1, $lock = true) {
-		return array();
+		return [];
 	}
 
 	/**
@@ -68,7 +69,7 @@ class NoopScanner extends Scanner {
 	 * @param array $folderData existing cache data for the folder to be scanned
 	 * @return int the size of the scanned folder or -1 if the size is unknown at this stage
 	 */
-	protected function scanChildren($path, $recursive = self::SCAN_RECURSIVE, $reuse = -1, $folderData = null, $lock = true) {
+	protected function scanChildren($path, $recursive = self::SCAN_RECURSIVE, $reuse = -1, $folderId = null, $lock = true) {
 		return 0;
 	}
 

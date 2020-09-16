@@ -23,7 +23,6 @@
 
 namespace OC\Core\Command\TwoFactorAuth;
 
-use OC\Authentication\TwoFactorAuth\Manager;
 use OC\Authentication\TwoFactorAuth\ProviderManager;
 use OCP\IUserManager;
 use Symfony\Component\Console\Input\InputArgument;
@@ -53,7 +52,7 @@ class Disable extends Base {
 		$this->addArgument('provider_id', InputArgument::REQUIRED);
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$uid = $input->getArgument('uid');
 		$providerId = $input->getArgument('provider_id');
 		$user = $this->userManager->get($uid);
@@ -69,5 +68,4 @@ class Disable extends Base {
 			return 2;
 		}
 	}
-
 }

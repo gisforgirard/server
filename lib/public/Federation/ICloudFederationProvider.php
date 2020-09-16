@@ -37,7 +37,6 @@ use OCP\Share\Exceptions\ShareNotFound;
  *
  * @since 14.0.0
  *
- * @package OCP\Federation
  */
 
 interface ICloudFederationProvider {
@@ -88,5 +87,4 @@ interface ICloudFederationProvider {
 	 * @since 14.0.0
 	 */
 	public function getSupportedShareTypes();
-
 }

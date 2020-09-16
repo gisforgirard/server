@@ -27,7 +27,6 @@ namespace OCP\AppFramework\Http\Template;
 /**
  * Interface IMenuAction
  *
- * @package OCP\AppFramework\Http\Template
  * @since 14.0
  */
 interface IMenuAction {
@@ -61,5 +60,4 @@ interface IMenuAction {
 	 * @return string
 	 */
 	public function render(): string;
-
 }

@@ -2,9 +2,10 @@
 /**
  * @copyright Copyright (c) 2016 Thomas Citharel <tcit@tcit.fr>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Citharel <tcit@tcit.fr>
+ * @author Thomas Citharel <nextcloud@tcit.fr>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
  * @license GNU AGPL version 3 or any later version
@@ -40,7 +41,7 @@ use Sabre\HTTP\RequestInterface;
 use Sabre\HTTP\ResponseInterface;
 
 class PublishPlugin extends ServerPlugin {
-	const NS_CALENDARSERVER = 'http://calendarserver.org/ns/';
+	public const NS_CALENDARSERVER = 'http://calendarserver.org/ns/';
 
 	/**
 	 * Reference to SabreDAV server object.
@@ -95,7 +96,7 @@ class PublishPlugin extends ServerPlugin {
 	 *
 	 * @return string
 	 */
-	public function getPluginName()	{
+	public function getPluginName() {
 		return 'oc-calendar-publishing';
 	}
 
@@ -128,11 +129,16 @@ class PublishPlugin extends ServerPlugin {
 				}
 			});
 
-			$propFind->handle('{'.self::NS_CALENDARSERVER.'}allowed-sharing-modes', function() use ($node) {
+			$propFind->handle('{'.self::NS_CALENDARSERVER.'}allowed-sharing-modes', function () use ($node) {
 				$canShare = (!$node->isSubscription() && $node->canWrite());
 				$canPublish = (!$node->isSubscription() && $node->canWrite());
 
-				return new AllowedSharingModes($canShare, $canPublish);
+				if ($this->config->getAppValue('dav', 'limitAddressBookAndCalendarSharingToOwner', 'no') === 'yes') {
+					$canShare &= ($node->getOwner() === $node->getPrincipalURI());
+					$canPublish &= ($node->getOwner() === $node->getPrincipalURI());
+				}
+
+				return new AllowedSharingModes((bool)$canShare, (bool)$canPublish);
 			});
 		}
 	}
@@ -176,7 +182,7 @@ class PublishPlugin extends ServerPlugin {
 
 		switch ($documentType) {
 
-			case '{'.self::NS_CALENDARSERVER.'}publish-calendar' :
+			case '{'.self::NS_CALENDARSERVER.'}publish-calendar':
 
 			// We can only deal with IShareableCalendar objects
 			if (!$node instanceof Calendar) {
@@ -189,7 +195,14 @@ class PublishPlugin extends ServerPlugin {
 
 			// If there's no ACL support, we allow everything
 			if ($acl) {
+				/** @var \Sabre\DAVACL\Plugin $acl */
 				$acl->checkPrivileges($path, '{DAV:}write');
+
+				$limitSharingToOwner = $this->config->getAppValue('dav', 'limitAddressBookAndCalendarSharingToOwner', 'no') === 'yes';
+				$isOwner = $acl->getCurrentUserPrincipal() === $node->getOwner();
+				if ($limitSharingToOwner && !$isOwner) {
+					return;
+				}
 			}
 
 			$node->setPublishStatus(true);
@@ -204,7 +217,7 @@ class PublishPlugin extends ServerPlugin {
 			// Breaking the event chain
 			return false;
 
-			case '{'.self::NS_CALENDARSERVER.'}unpublish-calendar' :
+			case '{'.self::NS_CALENDARSERVER.'}unpublish-calendar':
 
 			// We can only deal with IShareableCalendar objects
 			if (!$node instanceof Calendar) {
@@ -217,7 +230,14 @@ class PublishPlugin extends ServerPlugin {
 
 			// If there's no ACL support, we allow everything
 			if ($acl) {
+				/** @var \Sabre\DAVACL\Plugin $acl */
 				$acl->checkPrivileges($path, '{DAV:}write');
+
+				$limitSharingToOwner = $this->config->getAppValue('dav', 'limitAddressBookAndCalendarSharingToOwner', 'no') === 'yes';
+				$isOwner = $acl->getCurrentUserPrincipal() === $node->getOwner();
+				if ($limitSharingToOwner && !$isOwner) {
+					return;
+				}
 			}
 
 			$node->setPublishStatus(false);

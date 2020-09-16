@@ -5,6 +5,7 @@
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -38,10 +39,9 @@ use OCP\Files\NotFoundException;
 use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\ILogger;
-use OCP\Util;
 
 abstract class Fetcher {
-	const INVALIDATE_AFTER_SECONDS = 300;
+	public const INVALIDATE_AFTER_SECONDS = 3600;
 
 	/** @var IAppData */
 	protected $appData;
@@ -97,7 +97,7 @@ abstract class Fetcher {
 		}
 
 		$options = [
-			'timeout' => 10,
+			'timeout' => 60,
 		];
 
 		if ($ETag !== '') {
@@ -129,9 +129,10 @@ abstract class Fetcher {
 	/**
 	 * Returns the array with the categories on the appstore server
 	 *
+	 * @param bool [$allowUnstable] Allow unstable releases
 	 * @return array
 	 */
-	public function get() {
+	public function get($allowUnstable = false) {
 		$appstoreenabled = $this->config->getSystemValue('appstoreenabled', true);
 		$internetavailable = $this->config->getSystemValue('has_internet_connection', true);
 
@@ -148,12 +149,14 @@ abstract class Fetcher {
 			// File does already exists
 			$file = $rootFolder->getFile($this->fileName);
 			$jsonBlob = json_decode($file->getContent(), true);
-			if (is_array($jsonBlob)) {
+
+			// Always get latests apps info if $allowUnstable
+			if (!$allowUnstable && is_array($jsonBlob)) {
 
 				// No caching when the version has been updated
 				if (isset($jsonBlob['ncversion']) && $jsonBlob['ncversion'] === $this->getVersion()) {
 
-					// If the timestamp is older than 300 seconds request the files new
+					// If the timestamp is older than 3600 seconds request the files new
 					if ((int)$jsonBlob['timestamp'] > ($this->timeFactory->getTime() - self::INVALIDATE_AFTER_SECONDS)) {
 						return $jsonBlob['data'];
 					}
@@ -171,7 +174,12 @@ abstract class Fetcher {
 
 		// Refresh the file content
 		try {
-			$responseJson = $this->fetch($ETag, $content);
+			$responseJson = $this->fetch($ETag, $content, $allowUnstable);
+			// Don't store the apps request file
+			if ($allowUnstable) {
+				return $responseJson['data'];
+			}
+
 			$file->putContent(json_encode($responseJson));
 			return json_decode($file->getContent(), true)['data'];
 		} catch (ConnectException $e) {

@@ -2,7 +2,9 @@
 /**
  * @copyright Copyright (c) 2017 Georg Ehrke <oc.list@georgehrke.com>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -33,13 +35,13 @@ use Test\TestCase;
 
 class EnablePluginTest extends TestCase {
 
-	/** @var \Sabre\DAV\Server|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \Sabre\DAV\Server|\PHPUnit\Framework\MockObject\MockObject */
 	protected $server;
 
-	/** @var \OCP\IConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	protected $config;
 
-	/** @var BirthdayService |\PHPUnit_Framework_MockObject_MockObject */
+	/** @var BirthdayService |\PHPUnit\Framework\MockObject\MockObject */
 	protected $birthdayService;
 
 	/** @var \OCA\DAV\CalDAV\BirthdayCalendar\EnablePlugin $plugin */
@@ -92,11 +94,11 @@ class EnablePluginTest extends TestCase {
 
 		$this->server->expects($this->once())
 			->method('getRequestUri')
-			->will($this->returnValue('/bar/foo'));
+			->willReturn('/bar/foo');
 		$this->server->tree->expects($this->once())
 			->method('getNodeForPath')
 			->with('/bar/foo')
-			->will($this->returnValue($calendar));
+			->willReturn($calendar);
 
 		$this->config->expects($this->never())
 			->method('setUserValue');
@@ -112,25 +114,25 @@ class EnablePluginTest extends TestCase {
 
 		$this->server->expects($this->once())
 			->method('getRequestUri')
-			->will($this->returnValue('/bar/foo'));
+			->willReturn('/bar/foo');
 		$this->server->tree->expects($this->once())
 			->method('getNodeForPath')
 			->with('/bar/foo')
-			->will($this->returnValue($calendarHome));
+			->willReturn($calendarHome);
 
 		$this->request->expects($this->at(0))
 			->method('getBodyAsString')
-			->will($this->returnValue('<nc:disable-birthday-calendar xmlns:nc="http://nextcloud.com/ns"/>'));
+			->willReturn('<nc:disable-birthday-calendar xmlns:nc="http://nextcloud.com/ns"/>');
 
 		$this->request->expects($this->at(1))
 			->method('getUrl')
-			->will($this->returnValue('url_abc'));
+			->willReturn('url_abc');
 
 		$this->server->xml->expects($this->once())
 			->method('parse')
-			->will($this->returnCallback(function($requestBody, $url, &$documentType) {
+			->willReturnCallback(function ($requestBody, $url, &$documentType) {
 				$documentType =  '{http://nextcloud.com/ns}disable-birthday-calendar';
-			}));
+			});
 
 		$this->config->expects($this->never())
 			->method('setUserValue');
@@ -146,29 +148,29 @@ class EnablePluginTest extends TestCase {
 
 		$this->server->expects($this->once())
 			->method('getRequestUri')
-			->will($this->returnValue('/bar/foo'));
+			->willReturn('/bar/foo');
 		$this->server->tree->expects($this->once())
 			->method('getNodeForPath')
 			->with('/bar/foo')
-			->will($this->returnValue($calendarHome));
+			->willReturn($calendarHome);
 
 		$calendarHome->expects($this->once())
 			->method('getOwner')
-			->will($this->returnValue('principals/users/BlaBlub'));
+			->willReturn('principals/users/BlaBlub');
 
 		$this->request->expects($this->at(0))
 			->method('getBodyAsString')
-			->will($this->returnValue('<nc:enable-birthday-calendar xmlns:nc="http://nextcloud.com/ns"/>'));
+			->willReturn('<nc:enable-birthday-calendar xmlns:nc="http://nextcloud.com/ns"/>');
 
 		$this->request->expects($this->at(1))
 			->method('getUrl')
-			->will($this->returnValue('url_abc'));
+			->willReturn('url_abc');
 
 		$this->server->xml->expects($this->once())
 			->method('parse')
-			->will($this->returnCallback(function($requestBody, $url, &$documentType) {
+			->willReturnCallback(function ($requestBody, $url, &$documentType) {
 				$documentType = '{http://nextcloud.com/ns}enable-birthday-calendar';
-			}));
+			});
 
 		$this->config->expects($this->once())
 			->method('setUserValue')

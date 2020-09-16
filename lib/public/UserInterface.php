@@ -37,7 +37,6 @@ namespace OCP;
 /**
  * TODO actually this is a IUserBackend
  *
- * @package OCP
  * @since 4.5.0
  */
 interface UserInterface {
@@ -106,5 +105,4 @@ interface UserInterface {
 	 * @since 4.5.0
 	 */
 	public function hasUserListings();
-
 }

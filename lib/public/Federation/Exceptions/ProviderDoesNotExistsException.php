@@ -28,7 +28,6 @@ use OC\HintException;
 /**
  * Class ProviderDoesNotExistsException
  *
- * @package OCP\Federation\Exceptions
  *
  * @since 14.0.0
  */
@@ -47,5 +46,4 @@ class ProviderDoesNotExistsException extends HintException {
 		$hint = $l->t('Cloud Federation Provider with ID: "%s" does not exist.', [$providerId]);
 		parent::__construct($message, $hint);
 	}
-
 }

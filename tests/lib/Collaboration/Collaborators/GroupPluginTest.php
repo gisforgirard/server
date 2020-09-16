@@ -23,7 +23,6 @@
 
 namespace Test\Collaboration\Collaborators;
 
-
 use OC\Collaboration\Collaborators\GroupPlugin;
 use OC\Collaboration\Collaborators\SearchResult;
 use OCP\Collaboration\Collaborators\ISearchResult;
@@ -32,17 +31,17 @@ use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserSession;
-use OCP\Share;
+use OCP\Share\IShare;
 use Test\TestCase;
 
 class GroupPluginTest extends TestCase {
-	/** @var  IConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	protected $config;
 
-	/** @var  IGroupManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IGroupManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $groupManager;
 
-	/** @var  IUserSession|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	protected $session;
 
 	/** @var  ISearchResult */
@@ -57,7 +56,7 @@ class GroupPluginTest extends TestCase {
 	/** @var int */
 	protected $offset = 0;
 
-	/** @var  IUser|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IUser|\PHPUnit\Framework\MockObject\MockObject */
 	protected $user;
 
 	protected function setUp(): void {
@@ -102,7 +101,7 @@ class GroupPluginTest extends TestCase {
 	 * @param string $gid
 	 * @param null $displayName
 	 * @param bool $hide
-	 * @return IGroup|\PHPUnit_Framework_MockObject_MockObject
+	 * @return IGroup|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	protected function getGroupMock($gid, $displayName = null, $hide = false) {
 		$group = $this->createMock(IGroup::class);
@@ -136,7 +135,7 @@ class GroupPluginTest extends TestCase {
 				[$this->getGroupMock('test1')],
 				[],
 				[],
-				[['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']]],
+				[['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']]],
 				true,
 				false,
 			],
@@ -146,7 +145,7 @@ class GroupPluginTest extends TestCase {
 				[$this->getGroupMock('test1', 'Test One')],
 				[],
 				[],
-				[['label' => 'Test One', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']]],
+				[['label' => 'Test One', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']]],
 				true,
 				false,
 			],
@@ -156,7 +155,7 @@ class GroupPluginTest extends TestCase {
 				[$this->getGroupMock('test1', 'Test One')],
 				[],
 				[],
-				[['label' => 'Test One', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']]],
+				[['label' => 'Test One', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']]],
 				true,
 				false,
 			],
@@ -165,7 +164,7 @@ class GroupPluginTest extends TestCase {
 				'Test One', false, true,
 				[$this->getGroupMock('test1', 'Test One')],
 				[],
-				[['label' => 'Test One', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']]],
+				[['label' => 'Test One', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']]],
 				[],
 				true,
 				false,
@@ -186,8 +185,8 @@ class GroupPluginTest extends TestCase {
 					$this->getGroupMock('test1'),
 				],
 				[],
-				[['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']]],
-				[['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']]],
+				[['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']]],
+				[['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']]],
 				false,
 				false,
 			],
@@ -198,7 +197,7 @@ class GroupPluginTest extends TestCase {
 					$this->getGroupMock('test1'),
 				],
 				[],
-				[['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']]],
+				[['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']]],
 				[],
 				true,
 				false,
@@ -212,8 +211,8 @@ class GroupPluginTest extends TestCase {
 				[],
 				[],
 				[
-					['label' => 'test0', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test0']],
-					['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']],
+					['label' => 'test0', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test0']],
+					['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']],
 				],
 				false,
 				null,
@@ -238,11 +237,11 @@ class GroupPluginTest extends TestCase {
 				],
 				[],
 				[
-					['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']],
+					['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']],
 				],
 				[
-					['label' => 'test0', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test0']],
-					['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']],
+					['label' => 'test0', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test0']],
+					['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']],
 				],
 				false,
 				$this->getGroupMock('test'),
@@ -255,7 +254,7 @@ class GroupPluginTest extends TestCase {
 				],
 				[],
 				[
-					['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']],
+					['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']],
 				],
 				[],
 				true,
@@ -271,7 +270,7 @@ class GroupPluginTest extends TestCase {
 				],
 				[$this->getGroupMock('test1')],
 				[],
-				[['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']]],
+				[['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']]],
 				false,
 				false,
 			],
@@ -294,7 +293,7 @@ class GroupPluginTest extends TestCase {
 					$this->getGroupMock('test1'),
 				],
 				[$this->getGroupMock('test')],
-				[['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']]],
+				[['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']]],
 				[],
 				false,
 				false,
@@ -306,7 +305,7 @@ class GroupPluginTest extends TestCase {
 					$this->getGroupMock('test1'),
 				],
 				[$this->getGroupMock('test')],
-				[['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']]],
+				[['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']]],
 				[],
 				true,
 				false,
@@ -319,7 +318,7 @@ class GroupPluginTest extends TestCase {
 				],
 				[$this->getGroupMock('test1')],
 				[],
-				[['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']]],
+				[['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']]],
 				false,
 				false,
 			],
@@ -342,8 +341,8 @@ class GroupPluginTest extends TestCase {
 					$this->getGroupMock('test1'),
 				],
 				[$this->getGroupMock('test'), $this->getGroupMock('test0'), $this->getGroupMock('test1')],
-				[['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']]],
-				[['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']]],
+				[['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']]],
+				[['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']]],
 				false,
 				false,
 			],
@@ -354,7 +353,7 @@ class GroupPluginTest extends TestCase {
 					$this->getGroupMock('test1'),
 				],
 				[$this->getGroupMock('test'), $this->getGroupMock('test0'), $this->getGroupMock('test1')],
-				[['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']]],
+				[['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']]],
 				[],
 				true,
 				false,
@@ -368,8 +367,8 @@ class GroupPluginTest extends TestCase {
 				[$this->getGroupMock('test'), $this->getGroupMock('test0'), $this->getGroupMock('test1')],
 				[],
 				[
-					['label' => 'test0', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test0']],
-					['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']],
+					['label' => 'test0', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test0']],
+					['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']],
 				],
 				false,
 				null,
@@ -394,11 +393,11 @@ class GroupPluginTest extends TestCase {
 				],
 				[$this->getGroupMock('test'), $this->getGroupMock('test0'), $this->getGroupMock('test1')],
 				[
-					['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']],
+					['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']],
 				],
 				[
-					['label' => 'test0', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test0']],
-					['label' => 'test1', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test1']],
+					['label' => 'test0', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test0']],
+					['label' => 'test1', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test1']],
 				],
 				false,
 				$this->getGroupMock('test'),
@@ -411,7 +410,7 @@ class GroupPluginTest extends TestCase {
 				],
 				[$this->getGroupMock('test'), $this->getGroupMock('test0'), $this->getGroupMock('test1')],
 				[
-					['label' => 'test', 'value' => ['shareType' => Share::SHARE_TYPE_GROUP, 'shareWith' => 'test']],
+					['label' => 'test', 'value' => ['shareType' => IShare::TYPE_GROUP, 'shareWith' => 'test']],
 				],
 				[],
 				true,
@@ -430,7 +429,6 @@ class GroupPluginTest extends TestCase {
 				false,
 			],
 		];
-
 	}
 
 	/**
@@ -460,12 +458,10 @@ class GroupPluginTest extends TestCase {
 		$this->config->expects($this->any())
 			->method('getAppValue')
 			->willReturnCallback(
-				function($appName, $key, $default)
-				use ($shareWithGroupOnly, $shareeEnumeration)
-				{
+				function ($appName, $key, $default) use ($shareWithGroupOnly, $shareeEnumeration) {
 					if ($appName === 'core' && $key === 'shareapi_only_share_with_group_members') {
 						return $shareWithGroupOnly ? 'yes' : 'no';
-					} else if ($appName === 'core' && $key === 'shareapi_allow_share_dialog_user_enumeration') {
+					} elseif ($appName === 'core' && $key === 'shareapi_allow_share_dialog_user_enumeration') {
 						return $shareeEnumeration ? 'yes' : 'no';
 					}
 					return $default;

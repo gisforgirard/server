@@ -5,7 +5,6 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
- * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -33,7 +32,6 @@
 namespace OC\Settings;
 
 use Closure;
-use OC\Settings\Personal\PersonalInfo;
 use OCP\AppFramework\QueryException;
 use OCP\IL10N;
 use OCP\ILogger;
@@ -108,7 +106,7 @@ class Manager implements IManager {
 			return $this->sections[$type];
 		}
 
-		foreach ($this->sectionClasses[$type] as $index => $class) {
+		foreach (array_unique($this->sectionClasses[$type]) as $index => $class) {
 			try {
 				/** @var ISection $section */
 				$section = \OC::$server->query($class);
@@ -125,7 +123,7 @@ class Manager implements IManager {
 			$sectionID = $section->getID();
 
 			if (isset($this->sections[$type][$sectionID])) {
-				$this->log->logException(new \InvalidArgumentException('Section with the same ID already registered'), ['level' => ILogger::INFO]);
+				$this->log->logException(new \InvalidArgumentException('Section with the same ID already registered: ' . $sectionID . ', class: ' . $class), ['level' => ILogger::INFO]);
 				continue;
 			}
 
@@ -228,65 +226,19 @@ class Manager implements IManager {
 	}
 
 	/**
-	 * @param string $section
-	 * @param Closure $filter
-	 *
-	 * @return ISection[]
-	 */
-	private function getBuiltInAdminSettings($section, Closure $filter = null): array {
-		$forms = [];
-
-		if ($section === 'overview') {
-			/** @var ISettings $form */
-			$form = $this->container->query(\OCA\Settings\Admin\Overview::class);
-			if ($filter === null || $filter($form)) {
-				$forms[$form->getPriority()] = [$form];
-			}
-		}
-		if ($section === 'server') {
-			/** @var ISettings $form */
-			$form = $this->container->query(\OCA\Settings\Admin\Server::class);
-			if ($filter === null || $filter($form)) {
-				$forms[$form->getPriority()] = [$form];
-			}
-			$form = $this->container->query(\OCA\Settings\Admin\Mail::class);
-			if ($filter === null || $filter($form)) {
-				$forms[$form->getPriority()] = [$form];
-			}
-		}
-		if ($section === 'security') {
-			/** @var ISettings $form */
-			$form = $this->container->query(\OCA\Settings\Admin\Security::class);
-			if ($filter === null || $filter($form)) {
-				$forms[$form->getPriority()] = [$form];
-			}
-		}
-		if ($section === 'sharing') {
-			/** @var ISettings $form */
-			$form = $this->container->query(\OCA\Settings\Admin\Sharing::class);
-			if ($filter === null || $filter($form)) {
-				$forms[$form->getPriority()] = [$form];
-			}
-		}
-
-		return $forms;
-	}
-
-	/**
 	 * @inheritdoc
 	 */
 	public function getAdminSettings($section, bool $subAdminOnly = false): array {
 		if ($subAdminOnly) {
-			$subAdminSettingsFilter = function(ISettings $settings) {
+			$subAdminSettingsFilter = function (ISettings $settings) {
 				return $settings instanceof ISubAdminSettings;
 			};
-			$settings = $this->getBuiltInAdminSettings($section, $subAdminSettingsFilter);
 			$appSettings = $this->getSettings('admin', $section, $subAdminSettingsFilter);
 		} else {
-			$settings = $this->getBuiltInAdminSettings($section);
 			$appSettings = $this->getSettings('admin', $section);
 		}
 
+		$settings = [];
 		foreach ($appSettings as $setting) {
 			if (!isset($settings[$setting->getPriority()])) {
 				$settings[$setting->getPriority()] = [];
@@ -309,7 +261,8 @@ class Manager implements IManager {
 		$sections = [];
 
 		$legacyForms = \OC_App::getForms('personal');
-		if (!empty($legacyForms) && $this->hasLegacyPersonalSettingsToRender($legacyForms)) {
+		if ((!empty($legacyForms) && $this->hasLegacyPersonalSettingsToRender($legacyForms))
+			|| count($this->getPersonalSettings('additional')) > 1) {
 			$sections[98] = [new Section('additional', $this->l->t('Additional settings'), 0, $this->url->imagePath('core', 'actions/settings-dark.svg'))];
 		}
 

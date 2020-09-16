@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -24,7 +25,6 @@
 
 namespace OCA\Files_Versions\Tests\Controller;
 
-use OC\User\User;
 use OCA\Files_Versions\Controller\PreviewController;
 use OCA\Files_Versions\Versions\IVersionManager;
 use OCP\AppFramework\Http;
@@ -44,25 +44,25 @@ use Test\TestCase;
 
 class PreviewControllerTest extends TestCase {
 
-	/** @var IRootFolder|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IRootFolder|\PHPUnit\Framework\MockObject\MockObject */
 	private $rootFolder;
 
 	/** @var string */
 	private $userId;
 
-	/** @var IMimeTypeDetector|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IMimeTypeDetector|\PHPUnit\Framework\MockObject\MockObject */
 	private $mimeTypeDetector;
 
-	/** @var IPreview|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IPreview|\PHPUnit\Framework\MockObject\MockObject */
 	private $previewManager;
 
-	/** @var PreviewController|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var PreviewController|\PHPUnit\Framework\MockObject\MockObject */
 	private $controller;
 
-	/** @var IUserSession|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	private $userSession;
 
-	/** @var IVersionManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IVersionManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $versionManager;
 
 	protected function setUp(): void {
@@ -183,5 +183,4 @@ class PreviewControllerTest extends TestCase {
 
 		$this->assertEquals($expected, $res);
 	}
-
 }

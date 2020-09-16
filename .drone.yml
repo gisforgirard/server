@@ -4,35 +4,13 @@ name: jsunit
 steps:
 - name: jsunit
   image: nextcloudci/jsunit:jsunit-5
+  environment:
+      CODECOV_TOKEN:
+          from_secret: CODECOV_TOKEN
   commands:
     - ./autotest-js.sh
     - curl -o codecov.sh https://codecov.io/bash
-    - sh -c "if [ '$DRONE_BUILD_EVENT' = 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -P $DRONE_PULL_REQUEST -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5; fi"
-    - sh -c "if [ '$DRONE_BUILD_EVENT' != 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5; fi"
-
-trigger:
-  branch:
-    - master
-    - stable*
-  event:
-    - pull_request
-    - push
-
----
-kind: pipeline
-name: webpack-build
-
-steps:
-- name: build
-  image: nextcloudci/node:node-4
-  commands:
-    - npm ci
-    - npm run build
-- name: changes
-  image: nextcloudci/node:node-4
-  commands:
-    - git status
-    - bash -c "[[ ! \"`git status --porcelain `\" ]] || ( echo 'Uncommited changes in webpack build' && exit 1 )"
+    - bash codecov.sh -C $DRONE_COMMIT
 
 trigger:
   branch:
@@ -65,49 +43,15 @@ trigger:
     - pull_request
     - push
 
----
-kind: pipeline
-name: handlebars
-
-steps:
-- name: handlebars
-  image: node
-  commands:
-    - npm i
-    - ./build/compile-handlebars-templates.sh
-
-trigger:
-  branch:
-    - master
-    - stable*
-  event:
-    - pull_request
-    - push
-
----
-kind: pipeline
-name: syntax-and-phan
-
-steps:
-- name: submodules
-  image: docker:git
-  commands:
-    - git submodule update --init
-- name: syntax-php7.2
-  image: nextcloudci/php7.2:php7.2-13
-  commands:
-    - composer install
-    - ./lib/composer/bin/parallel-lint --exclude lib/composer/jakub-onderka/ --exclude 3rdparty/symfony/polyfill-php70/Resources/stubs/ --exclude 3rdparty/patchwork/utf8/src/Patchwork/Utf8/Bootup/ --exclude lib/composer/composer/autoload_static.php --exclude 3rdparty/composer/autoload_static.php --exclude 3rdparty/doctrine/cache/lib/Doctrine/Common/Cache/RiakCache.php .
-- name: syntax-php7.3
-  image: nextcloudci/php7.3:php7.3-4
-  commands:
-    - composer install
-    - ./lib/composer/bin/parallel-lint --exclude lib/composer/jakub-onderka/ --exclude 3rdparty/symfony/polyfill-php70/Resources/stubs/ --exclude 3rdparty/patchwork/utf8/src/Patchwork/Utf8/Bootup/ --exclude 3rdparty/paragonie/random_compat/lib/ --exclude lib/composer/composer/autoload_static.php --exclude 3rdparty/composer/autoload_static.php --exclude 3rdparty/doctrine/cache/lib/Doctrine/Common/Cache/RiakCache.php .
-- name: syntax-php7.4
-  image: nextcloudci/php7.4:2
-  commands:
-    - composer install
-    - ./lib/composer/bin/parallel-lint --exclude lib/composer/jakub-onderka/ --exclude 3rdparty/symfony/polyfill-php70/Resources/stubs/ --exclude 3rdparty/patchwork/utf8/src/Patchwork/Utf8/Bootup/ --exclude 3rdparty/paragonie/random_compat/lib/ --exclude lib/composer/composer/autoload_static.php --exclude 3rdparty/composer/autoload_static.php --exclude 3rdparty/doctrine/cache/lib/Doctrine/Common/Cache/RiakCache.php .
+#---
+#kind: pipeline
+#name: syntax-and-phan
+#
+#steps:
+#- name: submodules
+#  image: docker:git
+#  commands:
+#    - git submodule update --init
 #- name: phan
 #  image: nextcloudci/php7.2:php7.2-13
 #  commands:
@@ -115,14 +59,14 @@ steps:
 #    - composer require --dev "phan/phan:0.11.1"
 #    - ./lib/composer/phan/phan/phan -k build/.phan/config.php
 #    - php ./build/.phan/plugin-checker.php
-
-trigger:
-  branch:
-    - master
-    - stable*
-  event:
-    - pull_request
-    - push
+#
+#trigger:
+#  branch:
+#    - master
+#    - stable*
+#  event:
+#    - pull_request
+#    - push
 
 ---
 kind: pipeline
@@ -328,15 +272,15 @@ steps:
   commands:
     - git submodule update --init
 - name: nodb-php7.2
-  image: nextcloudci/php7.2:php7.2-13
+  image: nextcloudci/php7.2:latest
   commands:
     - NOCOVERAGE=true TEST_SELECTION=NODB ./autotest.sh sqlite
 - name: nodb-php7.3
-  image: nextcloudci/php7.3:php7.3-4
+  image: nextcloudci/php7.3:latest
   commands:
     - NOCOVERAGE=true TEST_SELECTION=NODB ./autotest.sh sqlite
 - name: nodb-php7.4
-  image: nextcloudci/php7.4:2
+  image: nextcloudci/php7.4:latest
   commands:
     - NOCOVERAGE=true TEST_SELECTION=NODB ./autotest.sh sqlite
 
@@ -1419,6 +1363,37 @@ trigger:
 
 ---
 kind: pipeline
+name: integration-sharing-v1-video-verification
+
+steps:
+- name: submodules
+  image: docker:git
+  commands:
+    - git submodule update --init
+- name: install-talk
+  image: docker:git
+  commands:
+    # JavaScript files are not used in integration tests so it is not needed to
+    # build them.
+    - git clone --depth 1 https://github.com/nextcloud/spreed apps/spreed
+- name: integration-sharing-v1-video-verification
+  image: nextcloudci/integration-php7.3:integration-php7.3-2
+  commands:
+    - bash tests/drone-run-integration-tests.sh || exit 0
+    - ./occ maintenance:install --admin-pass=admin --data-dir=/dev/shm/nc_int
+    - cd build/integration
+    - ./run.sh sharing_features/sharing-v1-video-verification.feature
+
+trigger:
+  branch:
+    - master
+    - stable*
+  event:
+    - pull_request
+    - push
+
+---
+kind: pipeline
 name: integration-setup-features
 
 steps:
@@ -1559,7 +1534,7 @@ trigger:
 
 ---
 kind: pipeline
-name: integration-ldap-openldap-uid-features
+name: integration-ldap-openldap-uid-features-php54-api
 
 steps:
 - name: submodules
@@ -1567,7 +1542,7 @@ steps:
   commands:
     - git submodule update --init
 - name: integration-ldap-openldap-uid-features
-  image: nextcloudci/integration-php7.3:integration-php7.3-2
+  image: nextcloudci/integration-php7.2:integration-php7.2-1
   commands:
     - bash tests/drone-run-integration-tests.sh || exit 0
     - ./occ maintenance:install --admin-pass=admin --data-dir=/dev/shm/nc_int
@@ -1597,6 +1572,49 @@ trigger:
   event:
     - pull_request
     - push
+type: docker
+
+---
+kind: pipeline
+name: integration-ldap-openldap-uid-features
+
+steps:
+    - name: submodules
+      image: docker:git
+      commands:
+          - git submodule update --init
+    - name: integration-ldap-openldap-uid-features
+      image: nextcloudci/integration-php7.3:integration-php7.3-2
+      commands:
+          - bash tests/drone-run-integration-tests.sh || exit 0
+          - ./occ maintenance:install --admin-pass=admin --data-dir=/dev/shm/nc_int
+          - ./occ config:system:set redis host --value=cache
+          - ./occ config:system:set redis port --value=6379 --type=integer
+          - ./occ config:system:set redis timeout --value=0 --type=integer
+          - ./occ config:system:set --type string --value "\\OC\\Memcache\\Redis" memcache.local
+          - ./occ config:system:set --type string --value "\\OC\\Memcache\\Redis" memcache.distributed
+          - cd build/integration
+          - ./run.sh ldap_features/openldap-uid-username.feature
+
+services:
+    - name: cache
+      image: redis
+    - name: openldap
+      image: nextcloudci/openldap:openldap-7
+      environment:
+          SLAPD_DOMAIN: nextcloud.ci
+          SLAPD_ORGANIZATION: Nextcloud
+          SLAPD_PASSWORD: admin
+          SLAPD_ADDITIONAL_MODULES: memberof
+
+trigger:
+    branch:
+        - master
+        - stable*
+    event:
+        - pull_request
+        - push
+type: docker
 
 ---
 kind: pipeline
@@ -1744,36 +1762,36 @@ trigger:
     - pull_request
     - push
 
----
-kind: pipeline
-name: acceptance-app-comments
-
-steps:
-- name: submodules
-  image: docker:git
-  commands:
-    - git submodule update --init
-- name: acceptance-app-comments
-  image: nextcloudci/acceptance-php7.3:acceptance-php7.3-2
-  commands:
-    - tests/acceptance/run-local.sh --timeout-multiplier 10 --nextcloud-server-domain acceptance-app-comments --selenium-server selenium:4444 allow-git-repository-modifications features/app-comments.feature
-
-services:
-- name: selenium
-  image: selenium/standalone-firefox:2.53.1-beryllium
-  environment:
-    # Reduce default log level for Selenium server (INFO) as it is too
-    # verbose.
-    JAVA_OPTS: -Dselenium.LOGGER.level=WARNING
-
-trigger:
-  branch:
-    - master
-    - stable*
-  event:
-    - pull_request
-    - push
-
+#---
+#kind: pipeline
+#name: acceptance-app-comments
+#
+#steps:
+#- name: submodules
+#  image: docker:git
+#  commands:
+#    - git submodule update --init
+#- name: acceptance-app-comments
+#  image: nextcloudci/acceptance-php7.3:acceptance-php7.3-2
+#  commands:
+#    - tests/acceptance/run-local.sh --timeout-multiplier 10 --nextcloud-server-domain acceptance-app-comments --selenium-server selenium:4444 allow-git-repository-modifications features/app-comments.feature
+#
+#services:
+#- name: selenium
+#  image: selenium/standalone-firefox:2.53.1-beryllium
+#  environment:
+#    # Reduce default log level for Selenium server (INFO) as it is too
+#    # verbose.
+#    JAVA_OPTS: -Dselenium.LOGGER.level=WARNING
+#
+#trigger:
+#  branch:
+#    - master
+#    - stable*
+#  event:
+#    - pull_request
+#    - push
+#
 ---
 kind: pipeline
 name: acceptance-app-files
@@ -2054,13 +2072,15 @@ steps:
   commands:
     - git submodule update --init
 - name: nodb-codecov
-  image: nextcloudci/php7.2:php7.2-13
+  image: nextcloudci/php7.4:latest
+  environment:
+      CODECOV_TOKEN:
+          from_secret: CODECOV_TOKEN
   commands:
     - phpenmod xdebug
     - TEST_SELECTION=NODB ./autotest.sh sqlite
     - wget https://codecov.io/bash -O codecov.sh
-    - sh -c "if [ '$DRONE_BUILD_EVENT' = 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -P $DRONE_PULL_REQUEST -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5 -f tests/autotest-clover-sqlite.xml; fi"
-    - sh -c "if [ '$DRONE_BUILD_EVENT' != 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5 -f tests/autotest-clover-sqlite.xml; fi"
+    - bash codecov.sh -Z -C $DRONE_COMMIT -f tests/autotest-clover-sqlite.xml
 
 services:
 - name: cache
@@ -2083,13 +2103,15 @@ steps:
   commands:
     - git submodule update --init
 - name: db-codecov
-  image: nextcloudci/php7.2:php7.2-13
+  image: nextcloudci/php7.4:latest
+  environment:
+      CODECOV_TOKEN:
+          from_secret: CODECOV_TOKEN
   commands:
     - phpenmod xdebug
     - TEST_SELECTION=QUICKDB ./autotest.sh sqlite
     - wget https://codecov.io/bash -O codecov.sh
-    - sh -c "if [ '$DRONE_BUILD_EVENT' = 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -P $DRONE_PULL_REQUEST -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5 -f tests/autotest-clover-sqlite.xml; fi"
-    - sh -c "if [ '$DRONE_BUILD_EVENT' != 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5 -f tests/autotest-clover-sqlite.xml; fi"
+    - bash codecov.sh -Z -C $DRONE_COMMIT -f tests/autotest-clover-sqlite.xml
 
 services:
 - name: cache
@@ -2112,14 +2134,16 @@ steps:
   commands:
     - git submodule update --init
 - name: object-store
-  image: nextcloudci/php7.2:php7.2-13
+  image: nextcloudci/php7.4:latest
+  environment:
+      CODECOV_TOKEN:
+          from_secret: CODECOV_TOKEN
   commands:
     - phpenmod xdebug
     - ./tests/drone-wait-objectstore.sh
     - TEST_SELECTION=PRIMARY-s3 ./autotest.sh sqlite
     - wget https://codecov.io/bash -O codecov.sh
-    - sh -c "if [ '$DRONE_BUILD_EVENT' = 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -P $DRONE_PULL_REQUEST -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5 -f tests/autotest-clover-sqlite.xml; fi"
-    - sh -c "if [ '$DRONE_BUILD_EVENT' != 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5 -f tests/autotest-clover-sqlite.xml; fi"
+    - bash codecov.sh -C $DRONE_COMMIT -f tests/autotest-clover-sqlite.xml
 
 services:
 - name: fake-s3
@@ -2143,14 +2167,16 @@ steps:
   commands:
     - git submodule update --init
 - name: object-store
-  image: nextcloudci/php7.2:php7.2-13
+  image: nextcloudci/php7.4:latest
+  environment:
+      CODECOV_TOKEN:
+          from_secret: CODECOV_TOKEN
   commands:
     - phpenmod xdebug
     - ./tests/drone-wait-objectstore.sh
     - TEST_SELECTION=PRIMARY-azure ./autotest.sh sqlite
     - wget https://codecov.io/bash -O codecov.sh
-    - sh -c "if [ '$DRONE_BUILD_EVENT' = 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -P $DRONE_PULL_REQUEST -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5 -f tests/autotest-clover-sqlite.xml; fi"
-    - sh -c "if [ '$DRONE_BUILD_EVENT' != 'pull_request' ]; then bash codecov.sh -B $DRONE_BRANCH -C $DRONE_COMMIT -t 117641e2-a9e8-4b7b-984b-ae872d9b05f5 -f tests/autotest-clover-sqlite.xml; fi"
+    - bash codecov.sh -C $DRONE_COMMIT -f tests/autotest-clover-sqlite.xml
 
 services:
 - name: azurite

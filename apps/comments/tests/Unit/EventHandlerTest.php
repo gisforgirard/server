@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016 Arthur Schiwon <blizzz@arthur-schiwon.de>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -35,10 +36,10 @@ class EventHandlerTest extends TestCase {
 	/** @var  EventHandler */
 	protected $eventHandler;
 
-	/** @var ActivityListener|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ActivityListener|\PHPUnit\Framework\MockObject\MockObject */
 	protected $activityListener;
 
-	/** @var NotificationListener|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var NotificationListener|\PHPUnit\Framework\MockObject\MockObject */
 	protected $notificationListener;
 
 	protected function setUp(): void {
@@ -56,13 +57,13 @@ class EventHandlerTest extends TestCase {
 	}
 
 	public function testNotFiles() {
-		/** @var IComment|\PHPUnit_Framework_MockObject_MockObject $comment */
+		/** @var IComment|\PHPUnit\Framework\MockObject\MockObject $comment */
 		$comment = $this->getMockBuilder(IComment::class)->getMock();
 		$comment->expects($this->once())
 			->method('getObjectType')
 			->willReturn('smiles');
 
-		/** @var CommentsEvent|\PHPUnit_Framework_MockObject_MockObject $event */
+		/** @var CommentsEvent|\PHPUnit\Framework\MockObject\MockObject $event */
 		$event = $this->getMockBuilder(CommentsEvent::class)
 			->disableOriginalConstructor()
 			->getMock();
@@ -89,13 +90,13 @@ class EventHandlerTest extends TestCase {
 	 * @param string $eventType
 	 */
 	public function testHandled($eventType) {
-		/** @var IComment|\PHPUnit_Framework_MockObject_MockObject $comment */
+		/** @var IComment|\PHPUnit\Framework\MockObject\MockObject $comment */
 		$comment = $this->getMockBuilder(IComment::class)->getMock();
 		$comment->expects($this->once())
 			->method('getObjectType')
 			->willReturn('files');
 
-		/** @var CommentsEvent|\PHPUnit_Framework_MockObject_MockObject $event */
+		/** @var CommentsEvent|\PHPUnit\Framework\MockObject\MockObject $event */
 		$event = $this->getMockBuilder(CommentsEvent::class)
 			->disableOriginalConstructor()
 			->getMock();
@@ -116,5 +117,4 @@ class EventHandlerTest extends TestCase {
 
 		$this->eventHandler->handle($event);
 	}
-
 }

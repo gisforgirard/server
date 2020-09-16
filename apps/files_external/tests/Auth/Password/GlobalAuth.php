@@ -2,6 +2,8 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -31,12 +33,12 @@ use Test\TestCase;
 
 class GlobalAuthTest extends TestCase {
 	/**
-	 * @var \OCP\IL10N|\PHPUnit_Framework_MockObject_MockObject
+	 * @var \OCP\IL10N|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	private $l10n;
 
 	/**
-	 * @var \OCP\Security\ICredentialsManager|\PHPUnit_Framework_MockObject_MockObject
+	 * @var \OCP\Security\ICredentialsManager|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	private $credentialsManager;
 
@@ -53,26 +55,26 @@ class GlobalAuthTest extends TestCase {
 	}
 
 	private function getStorageConfig($type, $config = []) {
-		/** @var \OCA\Files_External\Lib\StorageConfig|\PHPUnit_Framework_MockObject_MockObject $storageConfig */
+		/** @var \OCA\Files_External\Lib\StorageConfig|\PHPUnit\Framework\MockObject\MockObject $storageConfig */
 		$storageConfig = $this->createMock(StorageConfig::class);
 		$storageConfig->expects($this->any())
 			->method('getType')
-			->will($this->returnValue($type));
+			->willReturn($type);
 		$storageConfig->expects($this->any())
 			->method('getBackendOptions')
-			->will($this->returnCallback(function () use (&$config) {
+			->willReturnCallback(function () use (&$config) {
 				return $config;
-			}));
+			});
 		$storageConfig->expects($this->any())
 			->method('getBackendOption')
-			->will($this->returnCallback(function ($key) use (&$config) {
+			->willReturnCallback(function ($key) use (&$config) {
 				return $config[$key];
-			}));
+			});
 		$storageConfig->expects($this->any())
 			->method('setBackendOption')
-			->will($this->returnCallback(function ($key, $value) use (&$config) {
+			->willReturnCallback(function ($key, $value) use (&$config) {
 				$config[$key] = $value;
-			}));
+			});
 
 		return $storageConfig;
 	}
@@ -80,7 +82,7 @@ class GlobalAuthTest extends TestCase {
 	public function testNoCredentials() {
 		$this->credentialsManager->expects($this->once())
 			->method('retrieve')
-			->will($this->returnValue(null));
+			->willReturn(null);
 
 		$storage = $this->getStorageConfig(StorageConfig::MOUNT_TYPE_ADMIN);
 
@@ -91,10 +93,10 @@ class GlobalAuthTest extends TestCase {
 	public function testSavedCredentials() {
 		$this->credentialsManager->expects($this->once())
 			->method('retrieve')
-			->will($this->returnValue([
+			->willReturn([
 				'user' => 'a',
 				'password' => 'b'
-			]));
+			]);
 
 		$storage = $this->getStorageConfig(StorageConfig::MOUNT_TYPE_ADMIN);
 
@@ -105,7 +107,7 @@ class GlobalAuthTest extends TestCase {
 		], $storage->getBackendOptions());
 	}
 
-	
+
 	public function testNoCredentialsPersonal() {
 		$this->expectException(\OCA\Files_External\Lib\InsufficientDataForMeaningfulAnswerException::class);
 
@@ -117,5 +119,4 @@ class GlobalAuthTest extends TestCase {
 		$this->instance->manipulateStorageConfig($storage);
 		$this->assertEquals([], $storage->getBackendOptions());
 	}
-
 }

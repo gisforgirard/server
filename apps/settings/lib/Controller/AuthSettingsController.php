@@ -40,7 +40,6 @@ use OC\Authentication\Exceptions\WipeTokenException;
 use OC\Authentication\Token\INamedToken;
 use OC\Authentication\Token\IProvider;
 use OC\Authentication\Token\IToken;
-use OC\Authentication\Token\IWipeableToken;
 use OC\Authentication\Token\RemoteWipe;
 use OCA\Settings\Activity\Provider;
 use OCP\Activity\IManager;
@@ -63,7 +62,7 @@ class AuthSettingsController extends Controller {
 	private $session;
 
 	/** IUserSession */
-	private  $userSession;
+	private $userSession;
 
 	/** @var string */
 	private $uid;
@@ -115,7 +114,7 @@ class AuthSettingsController extends Controller {
 
 	/**
 	 * @NoAdminRequired
-	 * @NoSubadminRequired
+	 * @NoSubAdminRequired
 	 * @PasswordConfirmationRequired
 	 *
 	 * @param string $name
@@ -127,8 +126,7 @@ class AuthSettingsController extends Controller {
 		} catch (SessionNotAvailableException $ex) {
 			return $this->getServiceNotAvailableResponse();
 		}
-		if ($this->userSession->getImpersonatingUserID() !== null)
-		{
+		if ($this->userSession->getImpersonatingUserID() !== null) {
 			return $this->getServiceNotAvailableResponse();
 		}
 
@@ -185,7 +183,7 @@ class AuthSettingsController extends Controller {
 
 	/**
 	 * @NoAdminRequired
-	 * @NoSubadminRequired
+	 * @NoSubAdminRequired
 	 *
 	 * @param int $id
 	 * @return array|JSONResponse
@@ -207,7 +205,7 @@ class AuthSettingsController extends Controller {
 
 	/**
 	 * @NoAdminRequired
-	 * @NoSubadminRequired
+	 * @NoSubAdminRequired
 	 *
 	 * @param int $id
 	 * @param array $scope
@@ -280,7 +278,7 @@ class AuthSettingsController extends Controller {
 
 	/**
 	 * @NoAdminRequired
-	 * @NoSubadminRequired
+	 * @NoSubAdminRequired
 	 * @PasswordConfirmationRequired
 	 *
 	 * @param int $id
@@ -289,7 +287,13 @@ class AuthSettingsController extends Controller {
 	 * @throws \OC\Authentication\Exceptions\ExpiredTokenException
 	 */
 	public function wipe(int $id): JSONResponse {
-		if (!$this->remoteWipe->markTokenForWipe($id)) {
+		try {
+			$token = $this->findTokenByIdAndUser($id);
+		} catch (InvalidTokenException $e) {
+			return new JSONResponse([], Http::STATUS_NOT_FOUND);
+		}
+
+		if (!$this->remoteWipe->markTokenForWipe($token)) {
 			return new JSONResponse([], Http::STATUS_BAD_REQUEST);
 		}
 

@@ -2,6 +2,7 @@
 /**
  * @copyright 2017, Georg Ehrke <oc.list@georgehrke.com>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -35,13 +36,13 @@ use OCP\IL10N;
 
 class CalendarManagerTest extends \Test\TestCase {
 
-	/** @var CalDavBackend | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var CalDavBackend | \PHPUnit\Framework\MockObject\MockObject */
 	private $backend;
 
-	/** @var IL10N | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IL10N | \PHPUnit\Framework\MockObject\MockObject */
 	private $l10n;
 
-	/** @var IConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	private $config;
 
 	/** @var CalendarManager */
@@ -60,28 +61,28 @@ class CalendarManagerTest extends \Test\TestCase {
 		$this->backend->expects($this->once())
 			->method('getCalendarsForUser')
 			->with('principals/users/user123')
-			->will($this->returnValue([
+			->willReturn([
 				['id' => 123, 'uri' => 'blablub1'],
 				['id' => 456, 'uri' => 'blablub2'],
-			]));
+			]);
 
-		/** @var IManager | \PHPUnit_Framework_MockObject_MockObject $calendarManager */
+		/** @var IManager | \PHPUnit\Framework\MockObject\MockObject $calendarManager */
 		$calendarManager = $this->createMock(Manager::class);
 		$calendarManager->expects($this->at(0))
 			->method('registerCalendar')
-			->will($this->returnCallback(function() {
+			->willReturnCallback(function () {
 				$parameter = func_get_arg(0);
 				$this->assertInstanceOf(CalendarImpl::class, $parameter);
 				$this->assertEquals(123, $parameter->getKey());
-			}));
+			});
 
 		$calendarManager->expects($this->at(1))
 			->method('registerCalendar')
-			->will($this->returnCallback(function() {
+			->willReturnCallback(function () {
 				$parameter = func_get_arg(0);
 				$this->assertInstanceOf(CalendarImpl::class, $parameter);
 				$this->assertEquals(456, $parameter->getKey());
-			}));
+			});
 
 		$this->manager->setupCalendarProvider($calendarManager, 'user123');
 	}

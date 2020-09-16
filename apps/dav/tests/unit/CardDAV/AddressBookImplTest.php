@@ -3,8 +3,11 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
@@ -26,7 +29,6 @@
 
 namespace OCA\DAV\Tests\unit\CardDAV;
 
-
 use OCA\DAV\CardDAV\AddressBook;
 use OCA\DAV\CardDAV\AddressBookImpl;
 use OCA\DAV\CardDAV\CardDavBackend;
@@ -43,16 +45,16 @@ class AddressBookImplTest extends TestCase {
 	/** @var  array */
 	private $addressBookInfo;
 
-	/** @var  AddressBook | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  AddressBook | \PHPUnit\Framework\MockObject\MockObject */
 	private $addressBook;
 
-	/** @var IURLGenerator | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IURLGenerator | \PHPUnit\Framework\MockObject\MockObject */
 	private $urlGenerator;
 
-	/** @var  CardDavBackend | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  CardDavBackend | \PHPUnit\Framework\MockObject\MockObject */
 	private $backend;
 
-	/** @var  VCard | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  VCard | \PHPUnit\Framework\MockObject\MockObject */
 	private $vCard;
 
 	protected function setUp(): void {
@@ -91,7 +93,7 @@ class AddressBookImplTest extends TestCase {
 
 	public function testSearch() {
 
-		/** @var \PHPUnit_Framework_MockObject_MockObject | AddressBookImpl $addressBookImpl */
+		/** @var \PHPUnit\Framework\MockObject\MockObject | AddressBookImpl $addressBookImpl */
 		$addressBookImpl = $this->getMockBuilder(AddressBookImpl::class)
 			->setConstructorArgs(
 				[
@@ -135,10 +137,9 @@ class AddressBookImplTest extends TestCase {
 	 * @param array $properties
 	 */
 	public function testCreate($properties) {
-
 		$uid = 'uid';
 
-		/** @var \PHPUnit_Framework_MockObject_MockObject | AddressBookImpl $addressBookImpl */
+		/** @var \PHPUnit\Framework\MockObject\MockObject | AddressBookImpl $addressBookImpl */
 		$addressBookImpl = $this->getMockBuilder(AddressBookImpl::class)
 			->setConstructorArgs(
 				[
@@ -174,12 +175,11 @@ class AddressBookImplTest extends TestCase {
 	}
 
 	public function testUpdate() {
-
 		$uid = 'uid';
 		$uri = 'bla.vcf';
 		$properties = ['URI' => $uri, 'UID' => $uid, 'FN' => 'John Doe'];
 
-		/** @var \PHPUnit_Framework_MockObject_MockObject | AddressBookImpl $addressBookImpl */
+		/** @var \PHPUnit\Framework\MockObject\MockObject | AddressBookImpl $addressBookImpl */
 		$addressBookImpl = $this->getMockBuilder(AddressBookImpl::class)
 			->setConstructorArgs(
 				[
@@ -262,7 +262,7 @@ class AddressBookImplTest extends TestCase {
 	}
 
 	public function testCreateUid() {
-		/** @var \PHPUnit_Framework_MockObject_MockObject | AddressBookImpl $addressBookImpl */
+		/** @var \PHPUnit\Framework\MockObject\MockObject | AddressBookImpl $addressBookImpl */
 		$addressBookImpl = $this->getMockBuilder(AddressBookImpl::class)
 			->setConstructorArgs(
 				[
@@ -281,7 +281,7 @@ class AddressBookImplTest extends TestCase {
 		// simulate that 'uid0' already exists, so the second uid will be returned
 		$this->backend->expects($this->exactly(2))->method('getContact')
 			->willReturnCallback(
-				function($id, $uid) {
+				function ($id, $uid) {
 					return ($uid === 'uid0.vcf');
 				}
 			);
@@ -289,7 +289,6 @@ class AddressBookImplTest extends TestCase {
 		$this->assertSame('uid1',
 			$this->invokePrivate($addressBookImpl, 'createUid', [])
 		);
-
 	}
 
 	public function testCreateEmptyVCard() {
@@ -323,6 +322,9 @@ class AddressBookImplTest extends TestCase {
 
 		// Type depending properties
 		$property = $vCard->createProperty('X-SOCIALPROFILE', 'tw-example');
+		$property->add('TYPE', 'twitter');
+		$vCard->add($property);
+		$property = $vCard->createProperty('X-SOCIALPROFILE', 'tw-example-2');
 		$property->add('TYPE', 'twitter');
 		$vCard->add($property);
 		$property = $vCard->createProperty('X-SOCIALPROFILE', 'fb-example');
@@ -359,11 +361,150 @@ class AddressBookImplTest extends TestCase {
 			],
 
 			'X-SOCIALPROFILE' => [
-				'twitter'=> 'tw-example',
-				'facebook'=> 'fb-example',
+				'tw-example',
+				'tw-example-2',
+				'fb-example',
 			],
 
 			'isLocalSystemBook' => true,
 		], $array);
+	}
+
+	public function testVCard2ArrayWithTypes() {
+		$vCard = new VCard();
+
+		$vCard->add($vCard->createProperty('FN', 'Full Name'));
+
+		// Multi-value properties
+		$vCard->add($vCard->createProperty('CLOUD', 'cloud-user1@localhost'));
+		$vCard->add($vCard->createProperty('CLOUD', 'cloud-user2@example.tld'));
+
+		$property = $vCard->createProperty('EMAIL', 'email-user1@localhost');
+		$property->add('TYPE', 'HOME');
+		$vCard->add($property);
+		$property = $vCard->createProperty('EMAIL', 'email-user2@example.tld');
+		$property->add('TYPE', 'WORK');
+		$vCard->add($property);
+
+		$vCard->add($vCard->createProperty('IMPP', 'impp-user1@localhost'));
+		$vCard->add($vCard->createProperty('IMPP', 'impp-user2@example.tld'));
+
+		$property = $vCard->createProperty('TEL', '+49 123456789');
+		$property->add('TYPE', 'HOME,VOICE');
+		$vCard->add($property);
+		$property = $vCard->createProperty('TEL', '+1 555 123456789');
+		$property->add('TYPE', 'WORK');
+		$vCard->add($property);
+
+		$vCard->add($vCard->createProperty('URL', 'https://localhost'));
+		$vCard->add($vCard->createProperty('URL', 'https://example.tld'));
+
+		// Type depending properties
+		$property = $vCard->createProperty('X-SOCIALPROFILE', 'tw-example');
+		$property->add('TYPE', 'twitter');
+		$vCard->add($property);
+		$property = $vCard->createProperty('X-SOCIALPROFILE', 'tw-example-2');
+		$property->add('TYPE', 'twitter');
+		$vCard->add($property);
+		$property = $vCard->createProperty('X-SOCIALPROFILE', 'fb-example');
+		$property->add('TYPE', 'facebook');
+		$vCard->add($property);
+
+		$array = $this->invokePrivate($this->addressBookImpl, 'vCard2Array', ['uri', $vCard, true]);
+		unset($array['PRODID']);
+		unset($array['UID']);
+
+		$this->assertEquals([
+			'URI' => 'uri',
+			'VERSION' => '4.0',
+			'FN' => 'Full Name',
+			'CLOUD' => [
+				['type' => '', 'value' => 'cloud-user1@localhost'],
+				['type' => '', 'value' => 'cloud-user2@example.tld'],
+			],
+			'EMAIL' => [
+				['type' => 'HOME', 'value' => 'email-user1@localhost'],
+				['type' => 'WORK', 'value' => 'email-user2@example.tld'],
+			],
+			'IMPP' => [
+				['type' => '', 'value' => 'impp-user1@localhost'],
+				['type' => '', 'value' => 'impp-user2@example.tld'],
+			],
+			'TEL' => [
+				['type' => 'HOME,VOICE', 'value' => '+49 123456789'],
+				['type' => 'WORK', 'value' => '+1 555 123456789'],
+			],
+			'URL' => [
+				['type' => '', 'value' => 'https://localhost'],
+				['type' => '', 'value' => 'https://example.tld'],
+			],
+
+			'X-SOCIALPROFILE' => [
+				['type' => 'twitter', 'value' => 'tw-example'],
+				['type' => 'twitter', 'value' => 'tw-example-2'],
+				['type' => 'facebook', 'value' => 'fb-example'],
+			],
+
+			'isLocalSystemBook' => true,
+		], $array);
+	}
+
+	public function testIsSystemAddressBook(): void {
+		$addressBookInfo = [
+			'{http://owncloud.org/ns}owner-principal' => 'principals/system/system',
+			'principaluri' => 'principals/system/system',
+			'{DAV:}displayname' => 'display name',
+			'id' => 666,
+			'uri' => 'system',
+		];
+
+		$addressBookImpl = new AddressBookImpl(
+			$this->addressBook,
+			$addressBookInfo,
+			$this->backend,
+			$this->urlGenerator
+		);
+
+		$this->assertTrue($addressBookImpl->isSystemAddressBook());
+	}
+
+	public function testIsShared(): void {
+		$addressBookInfo = [
+			'{http://owncloud.org/ns}owner-principal' => 'user1',
+			'{DAV:}displayname' => 'Test address book',
+			'principaluri' => 'user2',
+			'id' => 666,
+			'uri' => 'default',
+		];
+
+		$addressBookImpl = new AddressBookImpl(
+			$this->addressBook,
+			$addressBookInfo,
+			$this->backend,
+			$this->urlGenerator
+		);
+
+		$this->assertFalse($addressBookImpl->isSystemAddressBook());
+		$this->assertTrue($addressBookImpl->isShared());
+	}
+
+	public function testIsNotShared(): void {
+		$addressBookInfo = [
+			'{http://owncloud.org/ns}owner-principal' => 'user1',
+			'{DAV:}displayname' => 'Test address book',
+			'principaluri' => 'user1',
+			'id' => 666,
+			'uri' => 'default',
+		];
+
+		$addressBookImpl = new AddressBookImpl(
+			$this->addressBook,
+			$addressBookInfo,
+			$this->backend,
+			$this->urlGenerator
+		);
+
+		$this->assertFalse($addressBookImpl->isSystemAddressBook());
+		$this->assertFalse($addressBookImpl->isShared());
 	}
 }

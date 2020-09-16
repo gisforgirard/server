@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Andrew Brown <andrew@casabrown.com>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Morris Jobke <hey@morrisjobke.de>
  *
@@ -26,15 +27,17 @@ namespace OC\Search\Result;
 
 /**
  * A found audio file
+ * @deprecated 20.0.0
  */
 class Audio extends File {
 
 	/**
 	 * Type name; translated in templates
-	 * @var string 
+	 * @var string
+	 * @deprecated 20.0.0
 	 */
 	public $type = 'audio';
-	
+
 	/**
 	 * @TODO add ID3 information
 	 */

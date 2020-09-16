@@ -28,7 +28,6 @@ use OC\HintException;
 /**
  * Class ActionNotSupportedException
  *
- * @package OCP\Federation\Exceptions
  *
  * @since 14.0.0
  */
@@ -46,5 +45,4 @@ class ActionNotSupportedException extends HintException {
 		$hint = $l->t('Action "%s" not supported or implemented.', [$action]);
 		parent::__construct($message, $hint);
 	}
-
 }

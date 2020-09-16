@@ -28,7 +28,6 @@ use OC\HintException;
 /**
  * Class AuthenticationFailedException
  *
- * @package OCP\Federation\Exceptions
  *
  * @since 14.0.0
  */
@@ -46,5 +45,4 @@ class AuthenticationFailedException extends HintException {
 		$hint = $l->t('Authentication failed, wrong token or provider ID given');
 		parent::__construct($message, $hint);
 	}
-
 }

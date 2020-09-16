@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
@@ -71,7 +72,7 @@ class File extends Command implements Completion\CompletionAwareInterface {
 		;
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$toBeSet = [];
 
 		if ($input->getOption('enable')) {
@@ -114,6 +115,7 @@ class File extends Command implements Completion\CompletionAwareInterface {
 			$rotateString = 'disabled';
 		}
 		$output->writeln('Rotate at: '.$rotateString);
+		return 0;
 	}
 
 	/**
@@ -143,7 +145,7 @@ class File extends Command implements Completion\CompletionAwareInterface {
 				Completion::TYPE_OPTION
 			);
 			return $helper->run();
-		} else if ($optionName === 'rotate-size') {
+		} elseif ($optionName === 'rotate-size') {
 			return [0];
 		}
 		return [];

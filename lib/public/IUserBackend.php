@@ -35,7 +35,6 @@ namespace OCP;
 /**
  * Interface IUserBackend
  *
- * @package OCP
  * @since 8.0.0
  */
 interface IUserBackend {
@@ -46,5 +45,4 @@ interface IUserBackend {
 	 * @since 8.0.0
 	 */
 	public function getBackendName();
-
 }

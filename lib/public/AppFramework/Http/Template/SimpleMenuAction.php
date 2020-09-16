@@ -29,7 +29,6 @@ use OCP\Util;
 /**
  * Class SimpleMenuAction
  *
- * @package OCP\AppFramework\Http\Template
  * @since 14.0.0
  */
 class SimpleMenuAction implements IMenuAction {
@@ -123,5 +122,4 @@ class SimpleMenuAction implements IMenuAction {
 			Util::sanitizeHTML($this->id), Util::sanitizeHTML($this->link), Util::sanitizeHTML($this->icon), Util::sanitizeHTML($this->label), $detailContent
 		);
 	}
-
 }

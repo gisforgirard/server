@@ -6,12 +6,13 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2018 John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @copyright Copyright (c) 2019 Janis Köhr <janiskoehr@icloud.com>
  *
- * @author Alexey Pyltsyn <lex61rus@gmail.com>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Janis Köhr <janis.koehr@novatec-gmbh.de>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Citharel <tcit@tcit.fr>
+ * @author Thomas Citharel <nextcloud@tcit.fr>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -37,7 +38,6 @@ use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDisplayResponse;
-use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
 use OCP\ILogger;
@@ -129,7 +129,7 @@ class AccessibilityController extends Controller {
 	}
 
 	/**
-	 * @NoAdminRequired
+	 * @PublicPage
 	 * @NoCSRFRequired
 	 * @NoSameSiteCookieRequired
 	 *
@@ -138,7 +138,11 @@ class AccessibilityController extends Controller {
 	public function getCss(): DataDisplayResponse {
 		$css        = '';
 		$imports    = '';
-		$userValues = $this->getUserValues();
+		if ($this->userSession->isLoggedIn()) {
+			$userValues = $this->getUserValues();
+		} else {
+			$userValues = ['dark'];
+		}
 
 		foreach ($userValues as $key => $scssFile) {
 			if ($scssFile !== false) {
@@ -197,46 +201,10 @@ class AccessibilityController extends Controller {
 		$response->addHeader('Pragma', 'cache');
 
 		// store current cache hash
-		$this->config->setUserValue($this->userSession->getUser()->getUID(), $this->appName, 'icons-css', md5($css));
-
-		return $response;
-	}
-
-	/**
-	 * @NoCSRFRequired
-	 * @PublicPage
-	 * @NoSameSiteCookieRequired
-	 *
-	 * @return DataDownloadResponse
-	 */
-	public function getJavascript(): DataDownloadResponse {
-		$user = $this->userSession->getUser();
-
-		if ($user === null) {
-			$theme = false;
-			$highcontrast = false;
-		} else {
-			$theme = $this->config->getUserValue($user->getUID(), $this->appName, 'theme', false);
-			$highcontrast = $this->config->getUserValue($user->getUID(), $this->appName, 'highcontrast', false) !== false;
+		if ($this->userSession->isLoggedIn()) {
+			$this->config->setUserValue($this->userSession->getUser()->getUID(), $this->appName, 'icons-css', md5($css));
 		}
-		if ($theme !== false) {
-			$responseJS = '(function() {
-	OCA.Accessibility = {
-		highcontrast: ' . json_encode($highcontrast) . ',
-		theme: ' . json_encode($theme) . ',
-	};
-	document.body.classList.add(' . json_encode($theme) . ');
-})();';
-		} else {
-			$responseJS = '(function() {
-	OCA.Accessibility = {
-		highcontrast: ' . json_encode($highcontrast) . ',
-		theme: ' . json_encode($theme) . ',
-	};
-})();';
-		}
-		$response = new DataDownloadResponse($responseJS, 'javascript', 'text/javascript');
-		$response->cacheFor(3600);
+
 		return $response;
 	}
 
@@ -245,7 +213,7 @@ class AccessibilityController extends Controller {
 	 *
 	 * @return array
 	 */
-	private function getUserValues(): array{
+	private function getUserValues(): array {
 		$userTheme = $this->config->getUserValue($this->userSession->getUser()->getUID(), $this->appName, 'theme', false);
 		$userFont  = $this->config->getUserValue($this->userSession->getUser()->getUID(), $this->appName, 'font', false);
 		$userHighContrast = $this->config->getUserValue($this->userSession->getUser()->getUID(), $this->appName, 'highcontrast', false);
@@ -314,7 +282,7 @@ class AccessibilityController extends Controller {
 			$scss->compile($variables);
 			$this->injectedVariables = $variables;
 		} catch (ParserException $e) {
-			$this->logger->error($e, ['app' => 'core']);
+			$this->logger->logException($e, ['app' => 'core']);
 		}
 		return $variables;
 	}

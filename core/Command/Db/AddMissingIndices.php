@@ -7,10 +7,11 @@ declare(strict_types=1);
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Mario Danic <mario@lovelyhq.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Citharel <tcit@tcit.fr>
+ * @author Thomas Citharel <nextcloud@tcit.fr>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -43,7 +44,7 @@ use Symfony\Component\EventDispatcher\GenericEvent;
  * Class AddMissingIndices
  *
  * if you added any new indices to the database, this is the right place to add
- * it your update routine for existing instances
+ * your update routine for existing instances
  *
  * @package OC\Core\Command\Db
  */
@@ -68,12 +69,13 @@ class AddMissingIndices extends Command {
 			->setDescription('Add missing indices to the database tables');
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$this->addCoreIndexes($output);
 
 		// Dispatch event so apps can also update indexes if needed
 		$event = new GenericEvent($output);
 		$this->dispatcher->dispatch(IDBConnection::ADD_MISSING_INDEXES_EVENT, $event);
+		return 0;
 	}
 
 	/**
@@ -83,7 +85,6 @@ class AddMissingIndices extends Command {
 	 * @throws \Doctrine\DBAL\Schema\SchemaException
 	 */
 	private function addCoreIndexes(OutputInterface $output) {
-
 		$output->writeln('<info>Check indices of the share table.</info>');
 
 		$schema = new SchemaWrapper($this->connection);
@@ -252,6 +253,19 @@ class AddMissingIndices extends Command {
 				$this->connection->migrateToSchema($schema->getWrappedSchema());
 				$updated = true;
 				$output->writeln('<info>schedulingobjects table updated successfully.</info>');
+			}
+		}
+
+		$output->writeln('<info>Check indices of the oc_properties table.</info>');
+		if ($schema->hasTable('properties')) {
+			$table = $schema->getTable('properties');
+			if (!$table->hasIndex('properties_path_index')) {
+				$output->writeln('<info>Adding properties_path_index index to the oc_properties table, this can take some time...</info>');
+
+				$table->addIndex(['userid', 'propertypath'], 'properties_path_index');
+				$this->connection->migrateToSchema($schema->getWrappedSchema());
+				$updated = true;
+				$output->writeln('<info>oc_properties table updated successfully.</info>');
 			}
 		}
 

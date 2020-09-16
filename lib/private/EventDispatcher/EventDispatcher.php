@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright 2019 Christoph Wurst <christoph@winzerhof-wurst.at>
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -63,6 +64,11 @@ class EventDispatcher implements IEventDispatcher {
 		$this->dispatcher->addListener($eventName, $listener, $priority);
 	}
 
+	public function removeListener(string $eventName,
+								   callable $listener): void {
+		$this->dispatcher->removeListener($eventName, $listener);
+	}
+
 	public function addServiceListener(string $eventName,
 									   string $className,
 									   int $priority = 0): void {
@@ -94,9 +100,9 @@ class EventDispatcher implements IEventDispatcher {
 
 	/**
 	 * @return SymfonyDispatcher
+	 * @deprecated 20.0.0
 	 */
 	public function getSymfonyDispatcher(): SymfonyDispatcher {
 		return $this->dispatcher;
 	}
-
 }

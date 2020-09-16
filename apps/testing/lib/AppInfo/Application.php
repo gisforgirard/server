@@ -2,6 +2,8 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud GmbH
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
@@ -25,20 +27,27 @@ namespace OCA\Testing\AppInfo;
 
 use OCA\Testing\AlternativeHomeUserBackend;
 use OCP\AppFramework\App;
+use OCP\AppFramework\Bootstrap\IBootContext;
+use OCP\AppFramework\Bootstrap\IBootstrap;
+use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
-class Application extends App {
-	public function __construct (array $urlParams = array()) {
-		$appName = 'testing';
-		parent::__construct($appName, $urlParams);
+class Application extends App implements IBootstrap {
+	public function __construct(array $urlParams = []) {
+		parent::__construct('testing', $urlParams);
+	}
 
-		$c = $this->getContainer();
-		$config = $c->getServer()->getConfig();
-		if ($config->getAppValue($appName, 'enable_alt_user_backend', 'no') === 'yes') {
-			$userManager = $c->getServer()->getUserManager();
+	public function register(IRegistrationContext $context): void {
+	}
+
+	public function boot(IBootContext $context): void {
+		$server = $context->getServerContainer();
+		$config = $server->getConfig();
+		if ($config->getAppValue('testing', 'enable_alt_user_backend', 'no') === 'yes') {
+			$userManager = $server->getUserManager();
 
 			// replace all user backends with this one
 			$userManager->clearBackends();
-			$userManager->registerBackend($c->query(AlternativeHomeUserBackend::class));
+			$userManager->registerBackend($context->getAppContainer()->get(AlternativeHomeUserBackend::class));
 		}
 	}
 }

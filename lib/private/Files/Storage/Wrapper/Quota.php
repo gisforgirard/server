@@ -29,6 +29,7 @@
 
 namespace OC\Files\Storage\Wrapper;
 
+use OC\Files\Filesystem;
 use OCP\Files\Cache\ICacheEntry;
 use OCP\Files\Storage\IStorage;
 
@@ -44,6 +45,8 @@ class Quota extends Wrapper {
 	 */
 	protected $sizeRoot;
 
+	private $config;
+
 	/**
 	 * @param array $parameters
 	 */
@@ -51,6 +54,7 @@ class Quota extends Wrapper {
 		parent::__construct($parameters);
 		$this->quota = $parameters['quota'];
 		$this->sizeRoot = isset($parameters['root']) ? $parameters['root'] : '';
+		$this->config = \OC::$server->getSystemConfig();
 	}
 
 	/**
@@ -65,16 +69,21 @@ class Quota extends Wrapper {
 	 * @param \OC\Files\Storage\Storage $storage
 	 */
 	protected function getSize($path, $storage = null) {
-		if (is_null($storage)) {
-			$cache = $this->getCache();
+		if ($this->config->getValue('quota_include_external_storage', false)) {
+			$rootInfo = Filesystem::getFileInfo('', 'ext');
+			return $rootInfo->getSize(true);
 		} else {
-			$cache = $storage->getCache();
-		}
-		$data = $cache->get($path);
-		if ($data instanceof ICacheEntry and isset($data['size'])) {
-			return $data['size'];
-		} else {
-			return \OCP\Files\FileInfo::SPACE_NOT_COMPUTED;
+			if (is_null($storage)) {
+				$cache = $this->getCache();
+			} else {
+				$cache = $storage->getCache();
+			}
+			$data = $cache->get($path);
+			if ($data instanceof ICacheEntry and isset($data['size'])) {
+				return $data['size'];
+			} else {
+				return \OCP\Files\FileInfo::SPACE_NOT_COMPUTED;
+			}
 		}
 	}
 
@@ -152,7 +161,7 @@ class Quota extends Wrapper {
 			$free = $this->free_space($path);
 			if ($source && $free >= 0 && $mode !== 'r' && $mode !== 'rb') {
 				// only apply quota for files, not metadata, trash or others
-				if (strpos(ltrim($path, '/'), 'files/') === 0) {
+				if ($this->shouldApplyQuota($path)) {
 					return \OC\Files\Stream\Quota::wrap($source, $free);
 				}
 			}
@@ -171,6 +180,13 @@ class Quota extends Wrapper {
 		$extension = pathinfo($path, PATHINFO_EXTENSION);
 
 		return ($extension === 'part');
+	}
+
+	/**
+	 * Only apply quota for files, not metadata, trash or others
+	 */
+	private function shouldApplyQuota(string $path): bool {
+		return strpos(ltrim($path, '/'), 'files/') === 0;
 	}
 
 	/**
@@ -205,7 +221,7 @@ class Quota extends Wrapper {
 
 	public function mkdir($path) {
 		$free = $this->free_space($path);
-		if ($free === 0.0) {
+		if ($this->shouldApplyQuota($path) && $free === 0.0) {
 			return false;
 		}
 
@@ -220,5 +236,4 @@ class Quota extends Wrapper {
 
 		return parent::touch($path, $mtime);
 	}
-
 }

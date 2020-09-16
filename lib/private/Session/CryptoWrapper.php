@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Phil Davis <phil.davis@inf.org>
@@ -48,7 +49,7 @@ use OCP\Security\ISecureRandom;
  * @package OC\Session
  */
 class CryptoWrapper {
-	const COOKIE_NAME = 'oc_sessionPassphrase';
+	public const COOKIE_NAME = 'oc_sessionPassphrase';
 
 	/** @var IConfig */
 	protected $config;
@@ -83,10 +84,26 @@ class CryptoWrapper {
 			// FIXME: Required for CI
 			if (!defined('PHPUNIT_RUN')) {
 				$webRoot = \OC::$WEBROOT;
-				if($webRoot === '') {
+				if ($webRoot === '') {
 					$webRoot = '/';
 				}
-				setcookie(self::COOKIE_NAME, $this->passphrase, 0, $webRoot, '', $secureCookie, true);
+
+				if (PHP_VERSION_ID < 70300) {
+					setcookie(self::COOKIE_NAME, $this->passphrase, 0, $webRoot, '', $secureCookie, true);
+				} else {
+					setcookie(
+						self::COOKIE_NAME,
+						$this->passphrase,
+						[
+							'expires' => 0,
+							'path' => $webRoot,
+							'domain' => '',
+							'secure' => $secureCookie,
+							'httponly' => true,
+							'samesite' => 'Lax',
+						]
+					);
+				}
 			}
 		}
 	}

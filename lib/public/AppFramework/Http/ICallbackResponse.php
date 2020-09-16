@@ -25,11 +25,9 @@
 
 namespace OCP\AppFramework\Http;
 
-
 /**
  * Interface ICallbackResponse
  *
- * @package OCP\AppFramework\Http
  * @since 8.1.0
  */
 interface ICallbackResponse {
@@ -41,5 +39,4 @@ interface ICallbackResponse {
 	 * @since 8.1.0
 	 */
 	public function callback(IOutput $output);
-
 }

@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCP\FullTextSearch\Model;
 
-
 use OCP\FullTextSearch\IFullTextSearchProvider;
 
 /**
@@ -52,7 +51,6 @@ use OCP\FullTextSearch\IFullTextSearchProvider;
  *
  * @since 16.0.0
  *
- * @package OCP\FullTextSearch\Model
  */
 interface ISearchTemplate {
 
@@ -169,5 +167,4 @@ interface ISearchTemplate {
 	 * @return array
 	 */
 	public function getNavigationOptions(): array;
-
 }

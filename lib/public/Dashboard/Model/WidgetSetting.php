@@ -5,6 +5,8 @@ declare(strict_types=1);
 /**
  * @copyright 2018, Maxence Lange <maxence@artificial-owl.com>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Maxence Lange <maxence@artificial-owl.com>
  *
  * @license GNU AGPL version 3 or any later version
@@ -26,7 +28,6 @@ declare(strict_types=1);
 
 namespace OCP\Dashboard\Model;
 
-
 use JsonSerializable;
 
 /**
@@ -45,14 +46,12 @@ use JsonSerializable;
  * @see WidgetTemplate::addSetting
  *
  * @since 15.0.0
+ * @deprecated 20.0.0
  *
- * @package OCP\Dashboard\Model
  */
 final class WidgetSetting implements JsonSerializable {
-
-
-	const TYPE_INPUT = 'input';
-	const TYPE_CHECKBOX = 'checkbox';
+	public const TYPE_INPUT = 'input';
+	public const TYPE_CHECKBOX = 'checkbox';
 
 
 	/** @var string */
@@ -75,6 +74,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * WidgetSetting constructor.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param string $type
 	 */
@@ -87,6 +87,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Set the name of the setting (full string, no space)
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param string $name
 	 *
@@ -102,6 +103,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Get the name of the setting
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return string
 	 */
@@ -114,6 +116,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Set the title/display name of the setting.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param string $title
 	 *
@@ -129,6 +132,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Get the title of the setting
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return string
 	 */
@@ -141,6 +145,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Set the type of the setting (input, checkbox, ...)
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param string $type
 	 *
@@ -156,6 +161,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Get the type of the setting.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return string
 	 */
@@ -168,6 +174,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Set the placeholder (in case of type=input)
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param string $text
 	 *
@@ -183,6 +190,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Get the placeholder.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return string
 	 */
@@ -195,6 +203,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Set the default value of the setting.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param string $value
 	 *
@@ -210,6 +219,7 @@ final class WidgetSetting implements JsonSerializable {
 	 * Get the default value.
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return string
 	 */
@@ -220,6 +230,7 @@ final class WidgetSetting implements JsonSerializable {
 
 	/**
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @return array
 	 */
@@ -232,6 +243,4 @@ final class WidgetSetting implements JsonSerializable {
 			'placeholder' => $this->getPlaceholder()
 		];
 	}
-
-
 }

@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2018 Robin Appelman <robin@icewind.nl>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
@@ -29,10 +30,11 @@ namespace OC\Log;
 
 use OC\Core\Controller\SetupController;
 use OC\HintException;
+use OC\Security\IdentityProof\Key;
 use OC\Setup;
 
 class ExceptionSerializer {
-	const methodsWithSensitiveParameters = [
+	public const methodsWithSensitiveParameters = [
 		// Session/User
 		'completeLogin',
 		'login',
@@ -79,14 +81,14 @@ class ExceptionSerializer {
 		'storeKeyPair',
 		'setupUser',
 
-		// files_external: OC_Mount_Config
+		// files_external: OCA\Files_External\MountConfig
 		'getBackendStatus',
 
 		// files_external: UserStoragesController
 		'update',
 	];
 
-	const methodsWithSensitiveParametersByClass = [
+	public const methodsWithSensitiveParametersByClass = [
 		SetupController::class => [
 			'run',
 			'display',
@@ -94,7 +96,10 @@ class ExceptionSerializer {
 		],
 		Setup::class => [
 			'install'
-		]
+		],
+		Key::class => [
+			'__construct'
+		],
 	];
 
 	private function editTrace(array &$sensitiveValues, array $traceLine): array {
@@ -132,7 +137,7 @@ class ExceptionSerializer {
 		foreach ($args as &$arg) {
 			if (in_array($arg, $values, true)) {
 				$arg = '*** sensitive parameter replaced ***';
-			} else if (is_array($arg)) {
+			} elseif (is_array($arg)) {
 				$arg = $this->removeValuesFromArgs($arg, $values);
 			}
 		}
@@ -154,7 +159,7 @@ class ExceptionSerializer {
 			$data = get_object_vars($arg);
 			$data['__class__'] = get_class($arg);
 			return array_map([$this, 'encodeArg'], $data);
-		} else if (is_array($arg)) {
+		} elseif (is_array($arg)) {
 			return array_map([$this, 'encodeArg'], $arg);
 		} else {
 			return $arg;

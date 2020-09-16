@@ -24,7 +24,6 @@
 
 namespace OCA\Files\Service;
 
-
 use OCP\DirectEditing\ACreateEmpty;
 use OCP\DirectEditing\ACreateFromTemplate;
 use OCP\DirectEditing\IEditor;
@@ -56,6 +55,10 @@ class DirectEditingService {
 			'creators' => []
 		];
 
+		if (!$this->directEditingManager->isEnabled()) {
+			return $capabilities;
+		}
+
 		/**
 		 * @var string $id
 		 * @var IEditor $editor
@@ -83,5 +86,4 @@ class DirectEditingService {
 		}
 		return $capabilities;
 	}
-
 }

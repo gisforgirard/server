@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2019 Robin Appelman <robin@icewind.nl>
  *
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -62,6 +63,14 @@ class AbstractCacheEvent extends Event implements ICacheEvent {
 	 */
 	public function getPath(): string {
 		return $this->path;
+	}
+
+	/**
+	 * @param string $path
+	 * @since 19.0.0
+	 */
+	public function setPath(string $path): void {
+		$this->path = $path;
 	}
 
 	/**

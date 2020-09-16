@@ -7,6 +7,7 @@
  */
 
 namespace Test\Repair;
+
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IUserManager;
 use OCP\Migration\IOutput;
@@ -26,7 +27,7 @@ class CleanTagsTest extends \Test\TestCase {
 	/** @var \OCP\IDBConnection */
 	protected $connection;
 
-	/** @var \OCP\IUserManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\IUserManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $userManager;
 
 	/** @var int */

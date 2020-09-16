@@ -2,7 +2,9 @@
 /**
  * @copyright Copyright (c) 2016 Joas Schilling <coding@schilljs.com>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -24,7 +26,6 @@
 
 namespace OCA\Provisioning_API\Tests\Controller;
 
-
 use OCA\Provisioning_API\Controller\AppConfigController;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;
@@ -40,9 +41,9 @@ use Test\TestCase;
  */
 class AppConfigControllerTest extends TestCase {
 
-	/** @var IConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	private $config;
-	/** @var IAppConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IAppConfig|\PHPUnit\Framework\MockObject\MockObject */
 	private $appConfig;
 
 	protected function setUp(): void {
@@ -50,12 +51,11 @@ class AppConfigControllerTest extends TestCase {
 
 		$this->config = $this->createMock(IConfig::class);
 		$this->appConfig = $this->createMock(IAppConfig::class);
-
 	}
 
 	/**
 	 * @param string[] $methods
-	 * @return AppConfigController|\PHPUnit_Framework_MockObject_MockObject
+	 * @return AppConfigController|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	protected function getInstance(array $methods = []) {
 		$request = $this->createMock(IRequest::class);
@@ -106,7 +106,6 @@ class AppConfigControllerTest extends TestCase {
 	 * @param int $status
 	 */
 	public function testGetKeys($app, $keys, $throws, $status) {
-
 		$api = $this->getInstance(['verifyAppId']);
 		if ($throws instanceof \Exception) {
 			$api->expects($this->once())
@@ -154,7 +153,6 @@ class AppConfigControllerTest extends TestCase {
 	 * @param int $status
 	 */
 	public function testGetValue($app, $key, $default, $return, $throws, $status) {
-
 		$api = $this->getInstance(['verifyAppId']);
 		if ($throws instanceof \Exception) {
 			$api->expects($this->once())
@@ -203,7 +201,6 @@ class AppConfigControllerTest extends TestCase {
 	 * @param int $status
 	 */
 	public function testSetValue($app, $key, $value, $appThrows, $keyThrows, $status) {
-
 		$api = $this->getInstance(['verifyAppId', 'verifyConfigKey']);
 		if ($appThrows instanceof \Exception) {
 			$api->expects($this->once())
@@ -215,7 +212,7 @@ class AppConfigControllerTest extends TestCase {
 				->method('verifyConfigKey');
 			$this->config->expects($this->never())
 				->method('setAppValue');
-		} else if ($keyThrows instanceof  \Exception) {
+		} elseif ($keyThrows instanceof  \Exception) {
 			$api->expects($this->once())
 				->method('verifyAppId')
 				->with($app);
@@ -244,7 +241,7 @@ class AppConfigControllerTest extends TestCase {
 		$this->assertSame($status, $result->getStatus());
 		if ($appThrows instanceof \Exception) {
 			$this->assertEquals(['data' => ['message' => $appThrows->getMessage()]], $result->getData());
-		} else if ($keyThrows instanceof \Exception) {
+		} elseif ($keyThrows instanceof \Exception) {
 			$this->assertEquals(['data' => ['message' => $keyThrows->getMessage()]], $result->getData());
 		} else {
 			$this->assertEquals([], $result->getData());
@@ -268,7 +265,6 @@ class AppConfigControllerTest extends TestCase {
 	 * @param int $status
 	 */
 	public function testDeleteValue($app, $key, $appThrows, $keyThrows, $status) {
-
 		$api = $this->getInstance(['verifyAppId', 'verifyConfigKey']);
 		if ($appThrows instanceof \Exception) {
 			$api->expects($this->once())
@@ -280,7 +276,7 @@ class AppConfigControllerTest extends TestCase {
 				->method('verifyConfigKey');
 			$this->config->expects($this->never())
 				->method('deleteAppValue');
-		} else if ($keyThrows instanceof  \Exception) {
+		} elseif ($keyThrows instanceof  \Exception) {
 			$api->expects($this->once())
 				->method('verifyAppId')
 				->with($app);
@@ -309,7 +305,7 @@ class AppConfigControllerTest extends TestCase {
 		$this->assertSame($status, $result->getStatus());
 		if ($appThrows instanceof \Exception) {
 			$this->assertEquals(['data' => ['message' => $appThrows->getMessage()]], $result->getData());
-		} else if ($keyThrows instanceof \Exception) {
+		} elseif ($keyThrows instanceof \Exception) {
 			$this->assertEquals(['data' => ['message' => $keyThrows->getMessage()]], $result->getData());
 		} else {
 			$this->assertEquals([], $result->getData());

@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2018 Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -32,13 +33,13 @@ use OCP\IUser;
 use Test\TestCase;
 
 class SecurityTest extends TestCase {
-	/** @var ILogger|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ILogger|\PHPUnit\Framework\MockObject\MockObject */
 	private $logger;
 
 	/** @var Security */
 	private $security;
 
-	/** @var IUser|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUser|\PHPUnit\Framework\MockObject\MockObject */
 	private $user;
 
 	protected function setUp(): void {
@@ -73,5 +74,4 @@ class SecurityTest extends TestCase {
 
 		$this->security->twofactorSuccess($this->user, ['provider' => 'myprovider']);
 	}
-
 }

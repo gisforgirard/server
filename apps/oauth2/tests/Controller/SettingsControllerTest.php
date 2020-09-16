@@ -2,7 +2,9 @@
 /**
  * @copyright Copyright (c) 2017 Lukas Reschke <lukas@statuscode.ch>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author rakekniven <mark.ziegler@rakekniven.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -38,15 +40,15 @@ use OCP\Security\ISecureRandom;
 use Test\TestCase;
 
 class SettingsControllerTest extends TestCase {
-	/** @var IRequest|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IRequest|\PHPUnit\Framework\MockObject\MockObject */
 	private $request;
-	/** @var ClientMapper|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ClientMapper|\PHPUnit\Framework\MockObject\MockObject */
 	private $clientMapper;
-	/** @var ISecureRandom|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ISecureRandom|\PHPUnit\Framework\MockObject\MockObject */
 	private $secureRandom;
-	/** @var AccessTokenMapper|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var AccessTokenMapper|\PHPUnit\Framework\MockObject\MockObject */
 	private $accessTokenMapper;
-	/** @var DefaultTokenMapper|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var DefaultTokenMapper|\PHPUnit\Framework\MockObject\MockObject */
 	private $defaultTokenMapper;
 	/** @var SettingsController */
 	private $settingsController;
@@ -100,10 +102,10 @@ class SettingsControllerTest extends TestCase {
 					$c->getRedirectUri() === 'https://example.com/' &&
 					$c->getSecret() === 'MySecret' &&
 					$c->getClientIdentifier() === 'MyClientIdentifier';
-			}))->will($this->returnCallback(function (Client $c) {
+			}))->willReturnCallback(function (Client $c) {
 				$c->setId(42);
 				return $c;
-			}));
+			});
 
 		$result = $this->settingsController->addClient('My Client Name', 'https://example.com/');
 		$this->assertInstanceOf(JSONResponse::class, $result);

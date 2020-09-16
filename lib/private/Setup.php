@@ -17,6 +17,7 @@
  * @author Joas Schilling <coding@schilljs.com>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author KB7777 <k.burkowski@gmail.com>
+ * @author Kevin Lanni <therealklanni@gmail.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author MichaIng <28480705+MichaIng@users.noreply.github.com>
  * @author MichaIng <micha@dietpi.com>
@@ -25,6 +26,7 @@
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Sean Comeau <sean@ftlnetworks.ca>
  * @author Serge Martin <edb@sigluy.net>
+ * @author Simounet <contact@simounet.net>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
@@ -59,7 +61,6 @@ use OCP\Defaults;
 use OCP\IGroup;
 use OCP\IL10N;
 use OCP\ILogger;
-use OCP\IUser;
 use OCP\Security\ISecureRandom;
 
 class Setup {
@@ -105,7 +106,7 @@ class Setup {
 		$this->installer = $installer;
 	}
 
-	static protected $dbSetupClasses = [
+	protected static $dbSetupClasses = [
 		'mysql' => \OC\Setup\MySQL::class,
 		'pgsql' => \OC\Setup\PostgreSQL::class,
 		'oci' => \OC\Setup\OCI::class,
@@ -182,7 +183,7 @@ class Setup {
 			throw new Exception('Supported databases are not properly configured.');
 		}
 
-		$supportedDatabases = array();
+		$supportedDatabases = [];
 
 		foreach ($configuredDatabases as $database) {
 			if (array_key_exists($database, $availableDatabases)) {
@@ -263,7 +264,7 @@ class Setup {
 			];
 		}
 
-		return array(
+		return [
 			'hasSQLite' => isset($databases['sqlite']),
 			'hasMySQL' => isset($databases['mysql']),
 			'hasPostgreSQL' => isset($databases['pgsql']),
@@ -272,7 +273,7 @@ class Setup {
 			'directory' => $dataDir,
 			'htaccessWorking' => $htAccessWorking,
 			'errors' => $errors,
-		);
+		];
 	}
 
 	/**
@@ -282,7 +283,7 @@ class Setup {
 	public function install($options) {
 		$l = $this->l10n;
 
-		$error = array();
+		$error = [];
 		$dbType = $options['dbtype'];
 
 		if (empty($options['adminlogin'])) {
@@ -310,7 +311,7 @@ class Setup {
 
 		// validate the data directory
 		if ((!is_dir($dataDir) && !mkdir($dataDir)) || !is_writable($dataDir)) {
-			$error[] = $l->t("Can't create or write into the data directory %s", array($dataDir));
+			$error[] = $l->t("Can't create or write into the data directory %s", [$dataDir]);
 		}
 
 		if (!empty($error)) {
@@ -353,11 +354,9 @@ class Setup {
 
 		$this->config->setValues($newConfigValues);
 
+		$dbSetup->initialize($options);
 		try {
-			$dbSetup->initialize($options);
 			$dbSetup->setupDatabase($username);
-			// apply necessary migrations
-			$dbSetup->runMigrations();
 		} catch (\OC\DatabaseSetupException $e) {
 			$error[] = [
 				'error' => $e->getMessage(),
@@ -367,6 +366,16 @@ class Setup {
 		} catch (Exception $e) {
 			$error[] = [
 				'error' => 'Error while trying to create admin user: ' . $e->getMessage(),
+				'hint' => '',
+			];
+			return $error;
+		}
+		try {
+			// apply necessary migrations
+			$dbSetup->runMigrations();
+		} catch (Exception $e) {
+			$error[] = [
+				'error' => 'Error while trying to initialise the database: ' . $e->getMessage(),
 				'hint' => '',
 			];
 			return $error;
@@ -495,7 +504,7 @@ class Setup {
 
 		$setupHelper = new \OC\Setup(
 			$config,
-			\OC::$server->getIniWrapper(),
+			\OC::$server->get(IniGetWrapper::class),
 			\OC::$server->getL10N('lib'),
 			\OC::$server->query(Defaults::class),
 			\OC::$server->getLogger(),
@@ -520,7 +529,7 @@ class Setup {
 			$content .= "\n  Options -MultiViews";
 			$content .= "\n  RewriteRule ^core/js/oc.js$ index.php [PT,E=PATH_INFO:$1]";
 			$content .= "\n  RewriteRule ^core/preview.png$ index.php [PT,E=PATH_INFO:$1]";
-			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !\\.(css|js|svg|gif|png|html|ttf|woff2?|ico|jpg|jpeg|map)$";
+			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !\\.(css|js|svg|gif|png|html|ttf|woff2?|ico|jpg|jpeg|map|webm|mp4|mp3|ogg|wav)$";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !core/img/favicon.ico$";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !core/img/manifest.json$";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/remote.php";
@@ -535,6 +544,7 @@ class Setup {
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/ocs-provider/";
 			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/ocm-provider/";
 			$content .= "\n  RewriteCond %{REQUEST_URI} !^/\\.well-known/(acme-challenge|pki-validation)/.*";
+			$content .= "\n  RewriteCond %{REQUEST_FILENAME} !/richdocumentscode/proxy.php$";
 			$content .= "\n  RewriteRule . index.php [PT,E=PATH_INFO:$1]";
 			$content .= "\n  RewriteBase " . $rewriteBase;
 			$content .= "\n  <IfModule mod_env.c>";
@@ -573,7 +583,7 @@ class Setup {
 		$content .= "    <IfModule mod_authz_host.c>\n";
 		$content .= "      Order Allow,Deny\n";
 		$content .= "      Deny from all\n";
-		$content .= "    <IifModule>\n";
+		$content .= "    </IfModule>\n";
 		$content .= "    Satisfy All\n";
 		$content .= "  </IfModule>\n";
 		$content .= "</IfModule>\n\n";

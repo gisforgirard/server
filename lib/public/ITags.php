@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Bernhard Reiter <ockham@raz.or.at>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Tanghus <thomas@tanghus.net>
@@ -53,6 +54,10 @@ use OC\Tags;
  */
 
 interface ITags {
+	/**
+	 * @since 19.0.0
+	 */
+	public const TAG_FAVORITE = '_$!<Favorite>!$_';
 
 	/**
 	 * Check if any tags are saved for this type and user.
@@ -228,5 +233,4 @@ interface ITags {
 	 * @since 6.0.0
 	 */
 	public function delete($names);
-
 }

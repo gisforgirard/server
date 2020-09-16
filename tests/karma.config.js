@@ -52,7 +52,6 @@ module.exports = function(config) {
 				srcFiles: [
 					// only test these files, others are not ready and mess
 					// up with the global namespace/classes/state
-					'apps/files_sharing/js/app.js',
 					'apps/files_sharing/js/dist/additionalScripts.js',
 					'apps/files_sharing/js/dist/files_sharing_tab.js',
 					'apps/files_sharing/js/dist/files_sharing.js',
@@ -84,12 +83,6 @@ module.exports = function(config) {
 					'apps/comments/js/comments.js'
 				],
 				testFiles: ['apps/comments/tests/js/**/*.js']
-			},
-			{
-				name: 'settings',
-				srcFiles: [
-					'settings/js/apps.js'
-				]
 			}
 		];
 	}
@@ -133,6 +126,9 @@ module.exports = function(config) {
 
 	files.push(corePath + 'tests/html-domparser.js');
 	files.push('core/js/dist/main.js');
+	files.push('core/js/dist/files_fileinfo.js');
+	files.push('core/js/dist/files_client.js');
+	files.push('core/js/dist/systemtags.js');
 	// core mocks
 	files.push(corePath + 'tests/specHelper.js');
 

@@ -4,6 +4,7 @@
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -36,7 +37,7 @@ class AdminTest extends TestCase {
 	private $admin;
 	/** @var \OCA\FederatedFileSharing\FederatedShareProvider */
 	private $federatedShareProvider;
-	/** @var  IConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	private $gsConfig;
 
 	protected function setUp(): void {

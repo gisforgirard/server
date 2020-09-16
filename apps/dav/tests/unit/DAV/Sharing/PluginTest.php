@@ -2,6 +2,8 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -25,10 +27,10 @@
 
 namespace OCA\DAV\Tests\unit\DAV\Sharing;
 
-
 use OCA\DAV\Connector\Sabre\Auth;
 use OCA\DAV\DAV\Sharing\IShareable;
 use OCA\DAV\DAV\Sharing\Plugin;
+use OCP\IConfig;
 use OCP\IRequest;
 use Sabre\DAV\Server;
 use Sabre\DAV\SimpleCollection;
@@ -42,19 +44,20 @@ class PluginTest extends TestCase {
 	private $plugin;
 	/** @var Server */
 	private $server;
-	/** @var IShareable | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IShareable | \PHPUnit\Framework\MockObject\MockObject */
 	private $book;
 
 	protected function setUp(): void {
 		parent::setUp();
-		
-		/** @var Auth | \PHPUnit_Framework_MockObject_MockObject $authBackend */
+
+		/** @var Auth | \PHPUnit\Framework\MockObject\MockObject $authBackend */
 		$authBackend = $this->getMockBuilder(Auth::class)->disableOriginalConstructor()->getMock();
 		$authBackend->method('isDavAuthenticated')->willReturn(true);
 
 		/** @var IRequest $request */
 		$request = $this->getMockBuilder(IRequest::class)->disableOriginalConstructor()->getMock();
-		$this->plugin = new Plugin($authBackend, $request);
+		$config = $this->createMock(IConfig::class);
+		$this->plugin = new Plugin($authBackend, $request, $config);
 
 		$root = new SimpleCollection('root');
 		$this->server = new \Sabre\DAV\Server($root);
@@ -68,18 +71,16 @@ class PluginTest extends TestCase {
 	}
 
 	public function testSharing() {
-
 		$this->book->expects($this->once())->method('updateShares')->with([[
-				'href' => 'principal:principals/admin',
-				'commonName' => null,
-				'summary' => null,
-				'readOnly' => false
+			'href' => 'principal:principals/admin',
+			'commonName' => null,
+			'summary' => null,
+			'readOnly' => false
 		]], ['mailto:wilfredo@example.com']);
 
 		// setup request
-		$request = new Request();
+		$request = new Request('POST', 'addressbook1.vcf');
 		$request->addHeader('Content-Type', 'application/xml');
-		$request->setUrl('addressbook1.vcf');
 		$request->setBody('<?xml version="1.0" encoding="utf-8" ?><CS:share xmlns:D="DAV:" xmlns:CS="http://owncloud.org/ns"><CS:set><D:href>principal:principals/admin</D:href><CS:read-write/></CS:set> <CS:remove><D:href>mailto:wilfredo@example.com</D:href></CS:remove></CS:share>');
 		$response = new Response();
 		$this->plugin->httpPost($request, $response);

@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2017, ownCloud GmbH
  *
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
  * @license AGPL-3.0
@@ -22,22 +23,20 @@
 
 namespace OCA\DAV\Tests\Unit\Avatars;
 
-
 use OCA\DAV\Avatars\AvatarNode;
 use OCP\IAvatar;
 use Test\TestCase;
 
 class AvatarNodeTest extends TestCase {
-
 	public function testGetName() {
-		/** @var IAvatar | \PHPUnit_Framework_MockObject_MockObject $a */
+		/** @var IAvatar | \PHPUnit\Framework\MockObject\MockObject $a */
 		$a = $this->createMock(IAvatar::class);
 		$n = new AvatarNode(1024, 'png', $a);
 		$this->assertEquals('1024.png', $n->getName());
 	}
 
 	public function testGetContentType() {
-		/** @var IAvatar | \PHPUnit_Framework_MockObject_MockObject $a */
+		/** @var IAvatar | \PHPUnit\Framework\MockObject\MockObject $a */
 		$a = $this->createMock(IAvatar::class);
 		$n = new AvatarNode(1024, 'png', $a);
 		$this->assertEquals('image/png', $n->getContentType());

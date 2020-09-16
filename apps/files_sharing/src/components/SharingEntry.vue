@@ -23,11 +23,16 @@
 <template>
 	<li class="sharing-entry">
 		<Avatar class="sharing-entry__avatar"
+			:is-no-user="share.type !== SHARE_TYPES.SHARE_TYPE_USER"
 			:user="share.shareWith"
 			:display-name="share.shareWithDisplayName"
 			:url="share.shareWithAvatar" />
 		<div v-tooltip.auto="tooltip" class="sharing-entry__desc">
 			<h5>{{ title }}</h5>
+			<p v-if="hasStatus">
+				<span>{{ share.status.icon || '' }}</span>
+				<span>{{ share.status.message || '' }}</span>
+			</p>
 		</div>
 		<Actions
 			menu-align="right"
@@ -39,7 +44,7 @@
 					ref="canEdit"
 					:checked.sync="canEdit"
 					:value="permissionsEdit"
-					:disabled="saving">
+					:disabled="saving || !canSetEdit">
 					{{ t('files_sharing', 'Allow editing') }}
 				</ActionCheckbox>
 
@@ -49,7 +54,7 @@
 					ref="canCreate"
 					:checked.sync="canCreate"
 					:value="permissionsCreate"
-					:disabled="saving">
+					:disabled="saving || !canSetCreate">
 					{{ t('files_sharing', 'Allow creating') }}
 				</ActionCheckbox>
 
@@ -59,7 +64,7 @@
 					ref="canDelete"
 					:checked.sync="canDelete"
 					:value="permissionsDelete"
-					:disabled="saving">
+					:disabled="saving || !canSetDelete">
 					{{ t('files_sharing', 'Allow deleting') }}
 				</ActionCheckbox>
 
@@ -68,7 +73,7 @@
 					ref="canReshare"
 					:checked.sync="canReshare"
 					:value="permissionsShare"
-					:disabled="saving">
+					:disabled="saving || !canSetReshare">
 					{{ t('files_sharing', 'Allow resharing') }}
 				</ActionCheckbox>
 
@@ -92,10 +97,10 @@
 					:first-day-of-week="firstDay"
 					:lang="lang"
 					:value="share.expireDate"
+					value-type="format"
 					icon="icon-calendar-dark"
 					type="date"
-					:not-before="dateTomorrow"
-					:not-after="dateMaxEnforced"
+					:disabled-date="disabledDate"
 					@update:value="onExpirationChange">
 					{{ t('files_sharing', 'Enter a date') }}
 				</ActionInput>
@@ -216,13 +221,61 @@ export default {
 		},
 
 		/**
+		 * Can the sharer set whether the sharee can edit the file ?
+		 *
+		 * @returns {boolean}
+		 */
+		canSetEdit() {
+			// If the owner revoked the permission after the resharer granted it
+			// the share still has the permission, and the resharer is still
+			// allowed to revoke it too (but not to grant it again).
+			return (this.fileInfo.sharePermissions & OC.PERMISSION_UPDATE) || this.canEdit
+		},
+
+		/**
+		 * Can the sharer set whether the sharee can create the file ?
+		 *
+		 * @returns {boolean}
+		 */
+		canSetCreate() {
+			// If the owner revoked the permission after the resharer granted it
+			// the share still has the permission, and the resharer is still
+			// allowed to revoke it too (but not to grant it again).
+			return (this.fileInfo.sharePermissions & OC.PERMISSION_CREATE) || this.canCreate
+		},
+
+		/**
+		 * Can the sharer set whether the sharee can delete the file ?
+		 *
+		 * @returns {boolean}
+		 */
+		canSetDelete() {
+			// If the owner revoked the permission after the resharer granted it
+			// the share still has the permission, and the resharer is still
+			// allowed to revoke it too (but not to grant it again).
+			return (this.fileInfo.sharePermissions & OC.PERMISSION_DELETE) || this.canDelete
+		},
+
+		/**
+		 * Can the sharer set whether the sharee can reshare the file ?
+		 *
+		 * @returns {boolean}
+		 */
+		canSetReshare() {
+			// If the owner revoked the permission after the resharer granted it
+			// the share still has the permission, and the resharer is still
+			// allowed to revoke it too (but not to grant it again).
+			return (this.fileInfo.sharePermissions & OC.PERMISSION_SHARE) || this.canReshare
+		},
+
+		/**
 		 * Can the sharee edit the shared file ?
 		 */
 		canEdit: {
-			get: function() {
+			get() {
 				return this.share.hasUpdatePermission
 			},
-			set: function(checked) {
+			set(checked) {
 				this.updatePermissions({ isEditChecked: checked })
 			},
 		},
@@ -231,10 +284,10 @@ export default {
 		 * Can the sharee create the shared file ?
 		 */
 		canCreate: {
-			get: function() {
+			get() {
 				return this.share.hasCreatePermission
 			},
-			set: function(checked) {
+			set(checked) {
 				this.updatePermissions({ isCreateChecked: checked })
 			},
 		},
@@ -243,10 +296,10 @@ export default {
 		 * Can the sharee delete the shared file ?
 		 */
 		canDelete: {
-			get: function() {
+			get() {
 				return this.share.hasDeletePermission
 			},
-			set: function(checked) {
+			set(checked) {
 				this.updatePermissions({ isDeleteChecked: checked })
 			},
 		},
@@ -255,10 +308,10 @@ export default {
 		 * Can the sharee reshare the file ?
 		 */
 		canReshare: {
-			get: function() {
+			get() {
 				return this.share.hasSharePermission
 			},
-			set: function(checked) {
+			set(checked) {
 				this.updatePermissions({ isReshareChecked: checked })
 			},
 		},
@@ -276,10 +329,10 @@ export default {
 		 * @returns {boolean}
 		 */
 		hasExpirationDate: {
-			get: function() {
+			get() {
 				return this.config.isDefaultInternalExpireDateEnforced || !!this.share.expireDate
 			},
-			set: function(enabled) {
+			set(enabled) {
 				this.share.expireDate = enabled
 					? this.config.defaultInternalExpirationDateString !== ''
 						? this.config.defaultInternalExpirationDateString
@@ -291,6 +344,17 @@ export default {
 		dateMaxEnforced() {
 			return this.config.isDefaultInternalExpireDateEnforced
 				&& moment().add(1 + this.config.defaultInternalExpireDate, 'days')
+		},
+
+		/**
+		 * @returns {bool}
+		 */
+		hasStatus() {
+			if (this.share.type !== this.SHARE_TYPES.SHARE_TYPE_USER) {
+				return false
+			}
+
+			return (typeof this.share.status === 'object' && !Array.isArray(this.share.status))
 		},
 
 	},

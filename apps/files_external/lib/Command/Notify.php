@@ -3,6 +3,8 @@
  * @copyright Copyright (c) 2016 Robin Appelman <robin@icewind.nl>
  *
  * @author Ari Selseng <ari@selseng.net>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -52,7 +54,7 @@ class Notify extends Base {
 	/** @var ILogger */
 	private $logger;
 
-	function __construct(GlobalStoragesService $globalService, IDBConnection $connection, ILogger $logger) {
+	public function __construct(GlobalStoragesService $globalService, IDBConnection $connection, ILogger $logger) {
 		parent::__construct();
 		$this->globalService = $globalService;
 		$this->connection = $connection;
@@ -87,7 +89,7 @@ class Notify extends Base {
 		parent::configure();
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$mount = $this->globalService->getStorage($input->getArgument('mount_id'));
 		if (is_null($mount)) {
 			$output->writeln('<error>Mount not found</error>');
@@ -105,16 +107,16 @@ class Notify extends Base {
 
 		if ($input->getOption('user')) {
 			$mount->setBackendOption('user', $input->getOption('user'));
-		} else if (isset($_ENV['NOTIFY_USER'])) {
+		} elseif (isset($_ENV['NOTIFY_USER'])) {
 			$mount->setBackendOption('user', $_ENV['NOTIFY_USER']);
-		} else if (isset($_SERVER['NOTIFY_USER'])) {
+		} elseif (isset($_SERVER['NOTIFY_USER'])) {
 			$mount->setBackendOption('user', $_SERVER['NOTIFY_USER']);
 		}
 		if ($input->getOption('password')) {
 			$mount->setBackendOption('password', $input->getOption('password'));
-		} else if (isset($_ENV['NOTIFY_PASSWORD'])) {
+		} elseif (isset($_ENV['NOTIFY_PASSWORD'])) {
 			$mount->setBackendOption('password', $_ENV['NOTIFY_PASSWORD']);
-		} else if (isset($_SERVER['NOTIFY_PASSWORD'])) {
+		} elseif (isset($_SERVER['NOTIFY_PASSWORD'])) {
 			$mount->setBackendOption('password', $_SERVER['NOTIFY_PASSWORD']);
 		}
 
@@ -146,6 +148,7 @@ class Notify extends Base {
 			}
 			$this->markParentAsOutdated($mount->getId(), $change->getPath(), $output);
 		});
+		return 0;
 	}
 
 	private function createStorage(StorageConfig $mount) {
@@ -208,7 +211,7 @@ class Notify extends Base {
 	/**
 	 * @param int $mountId
 	 * @return array
-	*/
+	 */
 	private function getStorageIds($mountId) {
 		$qb = $this->connection->getQueryBuilder();
 		return $qb
@@ -223,7 +226,7 @@ class Notify extends Base {
 	 * @param array $storageIds
 	 * @param string $parent
 	 * @return int
-	*/
+	 */
 	private function updateParent($storageIds, $parent) {
 		$pathHash = md5(trim(\OC_Util::normalizeUnicode($parent), '/'));
 		$qb = $this->connection->getQueryBuilder();
@@ -237,7 +240,7 @@ class Notify extends Base {
 
 	/**
 	 * @return \OCP\IDBConnection
-	*/
+	 */
 	private function reconnectToDatabase(IDBConnection $connection, OutputInterface $output) {
 		try {
 			$connection->close();
@@ -280,16 +283,16 @@ class Notify extends Base {
 		foreach ($changes as $change) {
 			if ($change->getPath() === '/.nc_test_file.txt' || $change->getPath() === '.nc_test_file.txt') {
 				$foundRootChange = true;
-			} else if ($change->getPath() === '/.nc_test_folder/subfile.txt' || $change->getPath() === '.nc_test_folder/subfile.txt') {
+			} elseif ($change->getPath() === '/.nc_test_folder/subfile.txt' || $change->getPath() === '.nc_test_folder/subfile.txt') {
 				$foundSubfolderChange = true;
 			}
 		}
 
 		if ($foundRootChange && $foundSubfolderChange && $verbose) {
 			$output->writeln('<info>Self-test successful</info>');
-		} else if ($foundRootChange && !$foundSubfolderChange) {
+		} elseif ($foundRootChange && !$foundSubfolderChange) {
 			$output->writeln('<error>Error while running self-test, change is subfolder not detected</error>');
-		} else if (!$foundRootChange) {
+		} elseif (!$foundRootChange) {
 			$output->writeln('<error>Error while running self-test, no changes detected</error>');
 		}
 	}

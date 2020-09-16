@@ -5,6 +5,7 @@
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
@@ -25,7 +26,6 @@
  */
 
 namespace OCA\Federation\Tests\BackgroundJob;
-
 
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Ring\Exception\RingException;
@@ -51,31 +51,31 @@ use OCP\OCS\IDiscoveryService;
  */
 class GetSharedSecretTest extends TestCase {
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|IClient */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|IClient */
 	private $httpClient;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject|IClientService */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject|IClientService */
 	private $httpClientService;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|IJobList */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|IJobList */
 	private $jobList;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|IURLGenerator */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|IURLGenerator */
 	private $urlGenerator;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|TrustedServers  */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|TrustedServers  */
 	private $trustedServers;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|ILogger */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|ILogger */
 	private $logger;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|IResponse */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|IResponse */
 	private $response;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|IDiscoveryService */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|IDiscoveryService */
 	private $discoverService;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|ITimeFactory */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|ITimeFactory */
 	private $timeFactory;
 
 	/** @var GetSharedSecret */
@@ -116,7 +116,7 @@ class GetSharedSecretTest extends TestCase {
 	 * @param bool $retainBackgroundJob
 	 */
 	public function testExecute($isTrustedServer, $retainBackgroundJob) {
-		/** @var GetSharedSecret |\PHPUnit_Framework_MockObject_MockObject $getSharedSecret */
+		/** @var GetSharedSecret |\PHPUnit\Framework\MockObject\MockObject $getSharedSecret */
 		$getSharedSecret = $this->getMockBuilder('OCA\Federation\BackgroundJob\GetSharedSecret')
 			->setConstructorArgs(
 				[
@@ -159,7 +159,6 @@ class GetSharedSecretTest extends TestCase {
 		}
 
 		$getSharedSecret->execute($this->jobList);
-
 	}
 
 	public function dataTestExecute() {

@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Loki3000 <github@labcms.ru>
@@ -59,16 +60,16 @@ use OCP\IDBConnection;
 /**
  * Class for group management in a SQL Database (e.g. MySQL, SQLite)
  */
-class Database extends ABackend
-	implements IAddToGroupBackend,
-	           ICountDisabledInGroup,
-	           ICountUsersBackend,
-	           ICreateGroupBackend,
-	           IDeleteGroupBackend,
-	           IGetDisplayNameBackend,
-	           IGroupDetailsBackend,
-	           IRemoveFromGroupBackend,
-	           ISetDisplayNameBackend {
+class Database extends ABackend implements
+	IAddToGroupBackend,
+			   ICountDisabledInGroup,
+			   ICountUsersBackend,
+			   ICreateGroupBackend,
+			   IDeleteGroupBackend,
+			   IGetDisplayNameBackend,
+			   IGroupDetailsBackend,
+			   IRemoveFromGroupBackend,
+			   ISetDisplayNameBackend {
 
 	/** @var string[] */
 	private $groupCache = [];
@@ -112,12 +113,15 @@ class Database extends ABackend
 				->setValue('gid', $builder->createNamedParameter($gid))
 				->setValue('displayname', $builder->createNamedParameter($gid))
 				->execute();
-		} catch(UniqueConstraintViolationException $e) {
+		} catch (UniqueConstraintViolationException $e) {
 			$result = 0;
 		}
 
 		// Add to cache
-		$this->groupCache[$gid] = $gid;
+		$this->groupCache[$gid] = [
+			'gid' => $gid,
+			'displayname' => $gid
+		];
 
 		return $result === 1;
 	}
@@ -164,7 +168,7 @@ class Database extends ABackend
 	 *
 	 * Checks whether the user is member of a group or not.
 	 */
-	public function inGroup( $uid, $gid ) {
+	public function inGroup($uid, $gid) {
 		$this->fixDI();
 
 		// check
@@ -193,14 +197,14 @@ class Database extends ABackend
 		$this->fixDI();
 
 		// No duplicate entries!
-		if( !$this->inGroup( $uid, $gid )) {
+		if (!$this->inGroup($uid, $gid)) {
 			$qb = $this->dbConn->getQueryBuilder();
 			$qb->insert('group_user')
 				->setValue('uid', $qb->createNamedParameter($uid))
 				->setValue('gid', $qb->createNamedParameter($gid))
 				->execute();
 			return true;
-		}else{
+		} else {
 			return false;
 		}
 	}
@@ -233,7 +237,7 @@ class Database extends ABackend
 	 * This function fetches all groups a user belongs to. It does not check
 	 * if the user exists at all.
 	 */
-	public function getUserGroups( $uid ) {
+	public function getUserGroups($uid) {
 		//guests has empty or null $uid
 		if ($uid === null || $uid === '') {
 			return [];
@@ -243,15 +247,19 @@ class Database extends ABackend
 
 		// No magic!
 		$qb = $this->dbConn->getQueryBuilder();
-		$cursor = $qb->select('gid')
-			->from('group_user')
+		$cursor = $qb->select('gu.gid', 'g.displayname')
+			->from('group_user', 'gu')
+			->leftJoin('gu', 'groups', 'g', $qb->expr()->eq('gu.gid', 'g.gid'))
 			->where($qb->expr()->eq('uid', $qb->createNamedParameter($uid)))
 			->execute();
 
 		$groups = [];
-		while( $row = $cursor->fetch()) {
+		while ($row = $cursor->fetch()) {
 			$groups[] = $row['gid'];
-			$this->groupCache[$row['gid']] = $row['gid'];
+			$this->groupCache[$row['gid']] = [
+				'gid' => $row['gid'],
+				'displayname' => $row['displayname'],
+			];
 		}
 		$cursor->closeCursor();
 
@@ -277,6 +285,9 @@ class Database extends ABackend
 
 		if ($search !== '') {
 			$query->where($query->expr()->iLike('gid', $query->createNamedParameter(
+				'%' . $this->dbConn->escapeLikeParameter($search) . '%'
+			)));
+			$query->orWhere($query->expr()->iLike('displayname', $query->createNamedParameter(
 				'%' . $this->dbConn->escapeLikeParameter($search) . '%'
 			)));
 		}
@@ -308,7 +319,7 @@ class Database extends ABackend
 		}
 
 		$qb = $this->dbConn->getQueryBuilder();
-		$cursor = $qb->select('gid')
+		$cursor = $qb->select('gid', 'displayname')
 			->from('groups')
 			->where($qb->expr()->eq('gid', $qb->createNamedParameter($gid)))
 			->execute();
@@ -316,7 +327,10 @@ class Database extends ABackend
 		$cursor->closeCursor();
 
 		if ($result !== false) {
-			$this->groupCache[$gid] = $gid;
+			$this->groupCache[$gid] = [
+				'gid' => $gid,
+				'displayname' => $result['displayname'],
+			];
 			return true;
 		}
 		return false;
@@ -334,15 +348,27 @@ class Database extends ABackend
 		$this->fixDI();
 
 		$query = $this->dbConn->getQueryBuilder();
-		$query->select('uid')
-			->from('group_user')
+		$query->select('g.uid')
+			->from('group_user', 'g')
 			->where($query->expr()->eq('gid', $query->createNamedParameter($gid)))
-			->orderBy('uid', 'ASC');
+			->orderBy('g.uid', 'ASC');
 
 		if ($search !== '') {
-			$query->andWhere($query->expr()->like('uid', $query->createNamedParameter(
-				'%' . $this->dbConn->escapeLikeParameter($search) . '%'
-			)));
+			$query->leftJoin('g', 'users', 'u', $query->expr()->eq('g.uid', 'u.uid'))
+				->leftJoin('u', 'preferences', 'p', $query->expr()->andX(
+					$query->expr()->eq('p.userid', 'u.uid'),
+					$query->expr()->eq('p.appid', $query->expr()->literal('settings')),
+					$query->expr()->eq('p.configkey', $query->expr()->literal('email')))
+				)
+				// sqlite doesn't like re-using a single named parameter here
+				->andWhere(
+					$query->expr()->orX(
+						$query->expr()->ilike('g.uid', $query->createNamedParameter('%' . $this->dbConn->escapeLikeParameter($search) . '%')),
+						$query->expr()->ilike('u.displayname', $query->createNamedParameter('%' . $this->dbConn->escapeLikeParameter($search) . '%')),
+						$query->expr()->ilike('p.configvalue', $query->createNamedParameter('%' . $this->dbConn->escapeLikeParameter($search) . '%'))
+					)
+				)
+				->orderBy('u.uid_lower', 'ASC');
 		}
 
 		if ($limit !== -1) {
@@ -400,7 +426,8 @@ class Database extends ABackend
 	 * get the number of disabled users in a group
 	 *
 	 * @param string $search
-	 * @return int|bool
+	 *
+	 * @return int
 	 */
 	public function countDisabledInGroup(string $gid): int {
 		$this->fixDI();
@@ -428,6 +455,10 @@ class Database extends ABackend
 	}
 
 	public function getDisplayName(string $gid): string {
+		if (isset($this->groupCache[$gid])) {
+			return $this->groupCache[$gid]['displayname'];
+		}
+
 		$this->fixDI();
 
 		$query = $this->dbConn->getQueryBuilder();
@@ -471,5 +502,4 @@ class Database extends ABackend
 
 		return true;
 	}
-
 }

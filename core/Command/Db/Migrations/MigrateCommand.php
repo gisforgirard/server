@@ -22,7 +22,6 @@
 
 namespace OC\Core\Command\Db\Migrations;
 
-
 use OC\DB\MigrationService;
 use OC\Migration\ConsoleOutput;
 use OCP\IDBConnection;
@@ -56,12 +55,13 @@ class MigrateCommand extends Command implements CompletionAwareInterface {
 		parent::configure();
 	}
 
-	public function execute(InputInterface $input, OutputInterface $output) {
+	public function execute(InputInterface $input, OutputInterface $output): int {
 		$appName = $input->getArgument('app');
 		$ms = new MigrationService($appName, $this->connection, new ConsoleOutput($output));
 		$version = $input->getArgument('version');
 
 		$ms->migrate($version);
+		return 0;
 	}
 
 	/**
@@ -96,5 +96,4 @@ class MigrateCommand extends Command implements CompletionAwareInterface {
 
 		return [];
 	}
-
 }

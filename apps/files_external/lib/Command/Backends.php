@@ -2,6 +2,8 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Robin Appelman <robin@icewind.nl>
  *
  * @license AGPL-3.0
@@ -35,7 +37,7 @@ class Backends extends Base {
 	/** @var BackendService */
 	private $backendService;
 
-	function __construct(BackendService $backendService
+	public function __construct(BackendService $backendService
 	) {
 		parent::__construct();
 
@@ -58,7 +60,7 @@ class Backends extends Base {
 		parent::configure();
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$authBackends = $this->backendService->getAuthMechanisms();
 		$storageBackends = $this->backendService->getBackends();
 
@@ -86,6 +88,7 @@ class Backends extends Base {
 		}
 
 		$this->writeArrayInOutputFormat($input, $output, $data);
+		return 0;
 	}
 
 	private function serializeAuthBackend(\JsonSerializable $backend) {

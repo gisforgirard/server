@@ -5,6 +5,7 @@
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -49,34 +50,34 @@ class MountPublicLinkControllerTest extends \Test\TestCase {
 	/** @var  MountPublicLinkController */
 	private $controller;
 
-	/** @var  \OCP\IRequest | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  \OCP\IRequest | \PHPUnit\Framework\MockObject\MockObject */
 	private $request;
 
-	/** @var  FederatedShareProvider | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  FederatedShareProvider | \PHPUnit\Framework\MockObject\MockObject */
 	private $federatedShareProvider;
 
-	/** @var  IManager | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IManager | \PHPUnit\Framework\MockObject\MockObject */
 	private $shareManager;
 
-	/** @var  AddressHandler | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  AddressHandler | \PHPUnit\Framework\MockObject\MockObject */
 	private $addressHandler;
 
-	/** @var  IRootFolder | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IRootFolder | \PHPUnit\Framework\MockObject\MockObject */
 	private $rootFolder;
 
-	/** @var  IUserManager | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IUserManager | \PHPUnit\Framework\MockObject\MockObject */
 	private $userManager;
 
-	/** @var  ISession | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  ISession | \PHPUnit\Framework\MockObject\MockObject */
 	private $session;
 
-	/** @var  IL10N | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IL10N | \PHPUnit\Framework\MockObject\MockObject */
 	private $l10n;
 
-	/** @var  IUserSession | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IUserSession | \PHPUnit\Framework\MockObject\MockObject */
 	private $userSession;
 
-	/** @var  IClientService | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IClientService | \PHPUnit\Framework\MockObject\MockObject */
 	private $clientService;
 
 	/** @var  IShare */
@@ -135,7 +136,6 @@ class MountPublicLinkControllerTest extends \Test\TestCase {
 											 $createSuccessful,
 											 $expectedReturnData
 	) {
-
 		$this->federatedShareProvider->expects($this->any())
 			->method('isOutgoingServer2serverShareEnabled')
 			->willReturn($outgoingSharesAllowed);
@@ -143,7 +143,7 @@ class MountPublicLinkControllerTest extends \Test\TestCase {
 		$this->addressHandler->expects($this->any())->method('splitUserRemote')
 			->with($shareWith)
 			->willReturnCallback(
-				function($shareWith) use ($validShareWith, $expectedReturnData) {
+				function ($shareWith) use ($validShareWith, $expectedReturnData) {
 					if ($validShareWith) {
 						return ['user', 'server'];
 					}
@@ -188,9 +188,7 @@ class MountPublicLinkControllerTest extends \Test\TestCase {
 			$this->assertSame(Http::STATUS_OK, $result->getStatus());
 			$this->assertTrue(isset($result->getData()['remoteUrl']));
 			$this->assertSame($expectedReturnData, $result->getData()['remoteUrl']);
-
 		}
-
 	}
 
 	public function dataTestCreateFederatedShare() {
@@ -207,5 +205,4 @@ class MountPublicLinkControllerTest extends \Test\TestCase {
 			['user@server', false, true, 'token', true, true, 'This server doesn\'t support outgoing federated shares'],
 		];
 	}
-
 }

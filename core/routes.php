@@ -86,17 +86,9 @@ $application->registerRoutes($this, [
 		['name' => 'Wipe#checkWipe', 'url' => '/core/wipe/check', 'verb' => 'POST'],
 		['name' => 'Wipe#wipeDone', 'url' => '/core/wipe/success', 'verb' => 'POST'],
 
-		// Legacy routes that need to be globally available while they are handled by an app
-		['name' => 'viewcontroller#showFile', 'url' => '/f/{fileid}', 'verb' => 'GET', 'app' => 'files'],
-		['name' => 'sharecontroller#showShare', 'url' => '/s/{token}', 'verb' => 'GET', 'app' => 'files_sharing'],
-		['name' => 'sharecontroller#showAuthenticate', 'url' => '/s/{token}/authenticate/{redirect}', 'verb' => 'GET', 'app' => 'files_sharing'],
-		['name' => 'sharecontroller#authenticate', 'url' => '/s/{token}/authenticate/{redirect}', 'verb' => 'POST', 'app' => 'files_sharing'],
-		['name' => 'sharecontroller#downloadShare', 'url' => '/s/{token}/download', 'verb' => 'GET', 'app' => 'files_sharing'],
-		['name' => 'publicpreview#directLink', 'url' => '/s/{token}/preview', 'verb' => 'GET', 'app' => 'files_sharing'],
-		['name' => 'requesthandlercontroller#addShare', 'url' => '/ocm/shares', 'verb' => 'POST', 'app' => 'cloud_federation_api'],
-		['name' => 'requesthandlercontroller#receiveNotification', 'url' => '/ocm/notifications', 'verb' => 'POST', 'app' => 'cloud_federation_api'],
-		['name' => 'pagecontroller#showCall', 'url' => '/call/{token}', 'verb' => 'GET', 'app' => 'spreed'],
-		['name' => 'pagecontroller#authenticatePassword', 'url' => '/call/{token}', 'verb' => 'POST', 'app' => 'spreed'],
+		// Logins for passwordless auth
+		['name' => 'WebAuthn#startAuthentication', 'url' => 'login/webauthn/start', 'verb' => 'POST'],
+		['name' => 'WebAuthn#finishAuthentication', 'url' => 'login/webauthn/finish', 'verb' => 'POST'],
 	],
 	'ocs' => [
 		['root' => '/cloud', 'name' => 'OCS#getCapabilities', 'url' => '/capabilities', 'verb' => 'GET'],
@@ -119,7 +111,11 @@ $application->registerRoutes($this, [
 
 		['root' => '/collaboration', 'name' => 'CollaborationResources#removeResource', 'url' => '/resources/collections/{collectionId}', 'verb' => 'DELETE'],
 		['root' => '/collaboration', 'name' => 'CollaborationResources#getCollectionsByResource', 'url' => '/resources/{resourceType}/{resourceId}', 'verb' => 'GET'],
-		['root' => '/collaboration', 'name' => 'CollaborationResources#createCollectionOnResource', 'url' => '/resources/{baseResourceType}/{baseResourceId}', 'verb' => 'POST']
+		['root' => '/collaboration', 'name' => 'CollaborationResources#createCollectionOnResource', 'url' => '/resources/{baseResourceType}/{baseResourceId}', 'verb' => 'POST'],
+
+		// Unified search
+		['root' => '/search', 'name' => 'UnifiedSearch#getProviders', 'url' => '/providers', 'verb' => 'GET'],
+		['root' => '/search', 'name' => 'UnifiedSearch#search', 'url' => '/providers/{providerId}/search', 'verb' => 'GET'],
 
 	],
 ]);

@@ -3,10 +3,10 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Bernhard Reiter <ockham@raz.or.at>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Tanghus <thomas@tanghus.net>
- * @author Vincent Petry <pvince81@owncloud.com>
  *
  * @license AGPL-3.0
  *
@@ -54,11 +54,11 @@ interface ITagManager {
 	 * @see \OCP\ITags
 	 * @param string $type The type identifier e.g. 'contact' or 'event'.
 	 * @param array $defaultTags An array of default tags to be used if none are stored.
-	 * @param boolean $includeShared Whether to include tags for items shared with this user by others.
+	 * @param boolean $includeShared Whether to include tags for items shared with this user by others. - always false since 20.0.0
 	 * @param string $userId user for which to retrieve the tags, defaults to the currently
 	 * logged in user
 	 * @return \OCP\ITags
-	 * @since 6.0.0 - parameter $includeShared and $userId were added in 8.0.0
-	*/
-	public function load($type, $defaultTags = array(), $includeShared = false, $userId = null);
+	 * @since 6.0.0 - parameter $includeShared and $userId were added in 8.0.0 - $includeShared is always false since 20.0.0
+	 */
+	public function load($type, $defaultTags = [], $includeShared = false, $userId = null);
 }

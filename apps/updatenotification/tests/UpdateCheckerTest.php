@@ -8,6 +8,7 @@ declare(strict_types=1);
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
@@ -34,9 +35,9 @@ use OCA\UpdateNotification\UpdateChecker;
 use Test\TestCase;
 
 class UpdateCheckerTest extends TestCase {
-	/** @var ChangesCheck|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ChangesCheck|\PHPUnit\Framework\MockObject\MockObject */
 	protected $changesChecker;
-	/** @var VersionCheck|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var VersionCheck|\PHPUnit\Framework\MockObject\MockObject */
 	private $updater;
 	/** @var UpdateChecker */
 	private $updateChecker;

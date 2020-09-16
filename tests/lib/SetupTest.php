@@ -19,21 +19,21 @@ use OCP\Security\ISecureRandom;
 
 class SetupTest extends \Test\TestCase {
 
-	/** @var SystemConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var SystemConfig|\PHPUnit\Framework\MockObject\MockObject */
 	protected $config;
-	/** @var \bantu\IniGetWrapper\IniGetWrapper|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \bantu\IniGetWrapper\IniGetWrapper|\PHPUnit\Framework\MockObject\MockObject */
 	private $iniWrapper;
-	/** @var \OCP\IL10N|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\IL10N|\PHPUnit\Framework\MockObject\MockObject */
 	private $l10n;
-	/** @var Defaults|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Defaults|\PHPUnit\Framework\MockObject\MockObject */
 	private $defaults;
-	/** @var \OC\Setup|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OC\Setup|\PHPUnit\Framework\MockObject\MockObject */
 	protected $setupClass;
-	/** @var \OCP\ILogger|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\ILogger|\PHPUnit\Framework\MockObject\MockObject */
 	protected $logger;
-	/** @var \OCP\Security\ISecureRandom|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\Security\ISecureRandom|\PHPUnit\Framework\MockObject\MockObject */
 	protected $random;
-	/** @var Installer|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Installer|\PHPUnit\Framework\MockObject\MockObject */
 	protected $installer;
 
 	protected function setUp(): void {
@@ -56,17 +56,17 @@ class SetupTest extends \Test\TestCase {
 		$this->config
 			->expects($this->once())
 			->method('getValue')
-			->will($this->returnValue(
+			->willReturn(
 				['sqlite', 'mysql', 'oci']
-			));
+			);
 		$this->setupClass
 			->expects($this->once())
 			->method('is_callable')
-			->will($this->returnValue(false));
+			->willReturn(false);
 		$this->setupClass
 			->expects($this->any())
 			->method('getAvailableDbDriversForPdo')
-			->will($this->returnValue(['sqlite']));
+			->willReturn(['sqlite']);
 		$result = $this->setupClass->getSupportedDatabases();
 		$expectedResult = [
 			'sqlite' => 'SQLite'
@@ -79,17 +79,17 @@ class SetupTest extends \Test\TestCase {
 		$this->config
 			->expects($this->once())
 			->method('getValue')
-			->will($this->returnValue(
+			->willReturn(
 				['sqlite', 'mysql', 'oci', 'pgsql']
-			));
+			);
 		$this->setupClass
 			->expects($this->any())
 			->method('is_callable')
-			->will($this->returnValue(false));
+			->willReturn(false);
 		$this->setupClass
 			->expects($this->any())
 			->method('getAvailableDbDriversForPdo')
-			->will($this->returnValue([]));
+			->willReturn([]);
 		$result = $this->setupClass->getSupportedDatabases();
 
 		$this->assertSame([], $result);
@@ -99,17 +99,17 @@ class SetupTest extends \Test\TestCase {
 		$this->config
 			->expects($this->once())
 			->method('getValue')
-			->will($this->returnValue(
+			->willReturn(
 				['sqlite', 'mysql', 'pgsql', 'oci']
-			));
+			);
 		$this->setupClass
 			->expects($this->any())
 			->method('is_callable')
-			->will($this->returnValue(true));
+			->willReturn(true);
 		$this->setupClass
 			->expects($this->any())
 			->method('getAvailableDbDriversForPdo')
-			->will($this->returnValue(['sqlite', 'mysql', 'pgsql']));
+			->willReturn(['sqlite', 'mysql', 'pgsql']);
 		$result = $this->setupClass->getSupportedDatabases();
 		$expectedResult = [
 			'sqlite' => 'SQLite',
@@ -120,7 +120,7 @@ class SetupTest extends \Test\TestCase {
 		$this->assertSame($expectedResult, $result);
 	}
 
-	
+
 	public function testGetSupportedDatabaseException() {
 		$this->expectException(\Exception::class);
 		$this->expectExceptionMessage('Supported databases are not properly configured.');
@@ -128,7 +128,7 @@ class SetupTest extends \Test\TestCase {
 		$this->config
 			->expects($this->once())
 			->method('getValue')
-			->will($this->returnValue('NotAnArray'));
+			->willReturn('NotAnArray');
 		$this->setupClass->getSupportedDatabases();
 	}
 
@@ -143,7 +143,7 @@ class SetupTest extends \Test\TestCase {
 		$this->config
 			->expects($this->once())
 			->method('getValue')
-			->will($this->returnValue($url));
+			->willReturn($url);
 		\OC::$CLI = true;
 
 		try {

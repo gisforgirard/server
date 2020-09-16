@@ -2,7 +2,10 @@
 /**
  * @copyright Copyright (c) 2018 Georg Ehrke <oc.list@georgehrke.com>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
+ * @author Nils Wittenbrink <nilswittenbrink@web.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -35,28 +38,28 @@ use Test\TestCase;
 
 class AppleProvisioningPluginTest extends TestCase {
 
-	/** @var \Sabre\DAV\Server|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \Sabre\DAV\Server|\PHPUnit\Framework\MockObject\MockObject */
 	protected $server;
 
-	/** @var IUserSession|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	protected $userSession;
 
-	/** @var IURLGenerator|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IURLGenerator|\PHPUnit\Framework\MockObject\MockObject */
 	protected $urlGenerator;
 
-	/** @var ThemingDefaults|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ThemingDefaults|\PHPUnit\Framework\MockObject\MockObject */
 	protected $themingDefaults;
 
-	/** @var IRequest|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IRequest|\PHPUnit\Framework\MockObject\MockObject */
 	protected $request;
 
-	/** @var IL10N|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IL10N|\PHPUnit\Framework\MockObject\MockObject */
 	protected $l10n;
 
-	/** @var \Sabre\HTTP\RequestInterface|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \Sabre\HTTP\RequestInterface|\PHPUnit\Framework\MockObject\MockObject */
 	protected $sabreRequest;
 
-	/** @var \Sabre\HTTP\ResponseInterface|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \Sabre\HTTP\ResponseInterface|\PHPUnit\Framework\MockObject\MockObject */
 	protected $sabreResponse;
 
 	/** @var AppleProvisioningPlugin */
@@ -77,7 +80,7 @@ class AppleProvisioningPluginTest extends TestCase {
 			$this->themingDefaults,
 			$this->request,
 			$this->l10n,
-			function() {
+			function () {
 				return 'generated-uuid';
 			}
 		);
@@ -91,7 +94,8 @@ class AppleProvisioningPluginTest extends TestCase {
 
 		$plugin = new AppleProvisioningPlugin($this->userSession,
 			$this->urlGenerator, $this->themingDefaults, $this->request, $this->l10n,
-			function() {});
+			function () {
+			});
 
 		$server->expects($this->at(0))
 			->method('on')
@@ -158,10 +162,9 @@ class AppleProvisioningPluginTest extends TestCase {
 			->method('getServerProtocol')
 			->wilLReturn('https');
 
-		$this->sabreRequest->expects($this->at(1))
-			->method('getAbsoluteUrl')
-			->with()
-			->willReturn('https://nextcloud.tld/nextcloud/remote.php/dav/provisioning/apple-provisioning.mobileconfig');
+		$this->urlGenerator->expects($this->once())
+			->method('getBaseUrl')
+			->willReturn('https://nextcloud.tld/nextcloud');
 
 		$this->themingDefaults->expects($this->at(0))
 			->method('getName')
@@ -266,5 +269,4 @@ EOF
 
 		$this->assertFalse($returnValue);
 	}
-
 }

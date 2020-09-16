@@ -10,6 +10,7 @@
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Ko- <k.stoffelen@cs.ru.nl>
+ * @author Lauris Binde <laurisb@users.noreply.github.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Michael Weimann <mail@michael-weimann.eu>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -41,16 +42,20 @@ use bantu\IniGetWrapper\IniGetWrapper;
 use DirectoryIterator;
 use Doctrine\DBAL\DBALException;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
-use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use GuzzleHttp\Exception\ClientException;
 use OC;
 use OC\AppFramework\Http;
 use OC\DB\Connection;
+use OC\DB\MissingColumnInformation;
 use OC\DB\MissingIndexInformation;
 use OC\DB\SchemaWrapper;
 use OC\IntegrityCheck\Checker;
 use OC\Lock\NoopLockingProvider;
 use OC\MemoryInfo;
+use OCA\Settings\SetupChecks\LegacySSEKeyFormat;
+use OCA\Settings\SetupChecks\PhpDefaultCharset;
+use OCA\Settings\SetupChecks\PhpOutputBuffering;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\DataResponse;
@@ -93,6 +98,8 @@ class CheckSetupController extends Controller {
 	private $memoryInfo;
 	/** @var ISecureRandom */
 	private $secureRandom;
+	/** @var IniGetWrapper */
+	private $iniGetWrapper;
 
 	public function __construct($AppName,
 								IRequest $request,
@@ -107,7 +114,8 @@ class CheckSetupController extends Controller {
 								ILockingProvider $lockingProvider,
 								IDateTimeFormatter $dateTimeFormatter,
 								MemoryInfo $memoryInfo,
-								ISecureRandom $secureRandom) {
+								ISecureRandom $secureRandom,
+								IniGetWrapper $iniGetWrapper) {
 		parent::__construct($AppName, $request);
 		$this->config = $config;
 		$this->clientService = $clientService;
@@ -121,6 +129,7 @@ class CheckSetupController extends Controller {
 		$this->dateTimeFormatter = $dateTimeFormatter;
 		$this->memoryInfo = $memoryInfo;
 		$this->secureRandom = $secureRandom;
+		$this->iniGetWrapper = $iniGetWrapper;
 	}
 
 	/**
@@ -136,7 +145,7 @@ class CheckSetupController extends Controller {
 			'www.nextcloud.com', 'www.startpage.com', 'www.eff.org', 'www.edri.org'
 		]);
 
-		foreach($siteArray as $site) {
+		foreach ($siteArray as $site) {
 			if ($this->isSiteReachable($site)) {
 				return false;
 			}
@@ -145,9 +154,9 @@ class CheckSetupController extends Controller {
 	}
 
 	/**
-	* Checks if the Nextcloud server can connect to a specific URL using both HTTPS and HTTP
-	* @return bool
-	*/
+	 * Checks if the Nextcloud server can connect to a specific URL using both HTTPS and HTTP
+	 * @return bool
+	 */
 	private function isSiteReachable($sitename) {
 		$httpSiteName = 'http://' . $sitename . '/';
 		$httpsSiteName = 'https://' . $sitename . '/';
@@ -207,40 +216,40 @@ class CheckSetupController extends Controller {
 		// Don't run check when:
 		// 1. Server has `has_internet_connection` set to false
 		// 2. AppStore AND S2S is disabled
-		if(!$this->config->getSystemValue('has_internet_connection', true)) {
+		if (!$this->config->getSystemValue('has_internet_connection', true)) {
 			return '';
 		}
-		if(!$this->config->getSystemValue('appstoreenabled', true)
+		if (!$this->config->getSystemValue('appstoreenabled', true)
 			&& $this->config->getAppValue('files_sharing', 'outgoing_server2server_share_enabled', 'yes') === 'no'
 			&& $this->config->getAppValue('files_sharing', 'incoming_server2server_share_enabled', 'yes') === 'no') {
 			return '';
 		}
 
 		$versionString = $this->getCurlVersion();
-		if(isset($versionString['ssl_version'])) {
+		if (isset($versionString['ssl_version'])) {
 			$versionString = $versionString['ssl_version'];
 		} else {
 			return '';
 		}
 
 		$features = (string)$this->l10n->t('installing and updating apps via the app store or Federated Cloud Sharing');
-		if(!$this->config->getSystemValue('appstoreenabled', true)) {
+		if (!$this->config->getSystemValue('appstoreenabled', true)) {
 			$features = (string)$this->l10n->t('Federated Cloud Sharing');
 		}
 
 		// Check if at least OpenSSL after 1.01d or 1.0.2b
-		if(strpos($versionString, 'OpenSSL/') === 0) {
+		if (strpos($versionString, 'OpenSSL/') === 0) {
 			$majorVersion = substr($versionString, 8, 5);
 			$patchRelease = substr($versionString, 13, 6);
 
-			if(($majorVersion === '1.0.1' && ord($patchRelease) < ord('d')) ||
+			if (($majorVersion === '1.0.1' && ord($patchRelease) < ord('d')) ||
 				($majorVersion === '1.0.2' && ord($patchRelease) < ord('b'))) {
 				return $this->l10n->t('cURL is using an outdated %1$s version (%2$s). Please update your operating system or features such as %3$s will not work reliably.', ['OpenSSL', $versionString, $features]);
 			}
 		}
 
 		// Check if NSS and perform heuristic check
-		if(strpos($versionString, 'NSS/') === 0) {
+		if (strpos($versionString, 'NSS/') === 0) {
 			try {
 				$firstClient = $this->clientService->newClient();
 				$firstClient->get('https://nextcloud.com/');
@@ -248,7 +257,7 @@ class CheckSetupController extends Controller {
 				$secondClient = $this->clientService->newClient();
 				$secondClient->get('https://nextcloud.com/');
 			} catch (ClientException $e) {
-				if($e->getResponse()->getStatusCode() === 400) {
+				if ($e->getResponse()->getStatusCode() === 400) {
 					return $this->l10n->t('cURL is using an outdated %1$s version (%2$s). Please update your operating system or features such as %3$s will not work reliably.', ['NSS', $versionString, $features]);
 				}
 			}
@@ -262,12 +271,8 @@ class CheckSetupController extends Controller {
 	 *
 	 * @return bool
 	 */
-	protected function isPhpOutdated() {
-		if (version_compare(PHP_VERSION, '7.1.0', '<')) {
-			return true;
-		}
-
-		return false;
+	protected function isPhpOutdated(): bool {
+		return PHP_VERSION_ID < 70300;
 	}
 
 	/**
@@ -276,7 +281,7 @@ class CheckSetupController extends Controller {
 	 *
 	 * @return array
 	 */
-	private function isPhpSupported() {
+	private function isPhpSupported(): array {
 		return ['eol' => $this->isPhpOutdated(), 'version' => PHP_VERSION];
 	}
 
@@ -347,13 +352,13 @@ class CheckSetupController extends Controller {
 	 * @return DataResponse
 	 */
 	public function getFailedIntegrityCheckFiles() {
-		if(!$this->checker->isCodeCheckEnforced()) {
+		if (!$this->checker->isCodeCheckEnforced()) {
 			return new DataDisplayResponse('Integrity checker has been disabled. Integrity cannot be verified.');
 		}
 
 		$completeResults = $this->checker->getResults();
 
-		if(!empty($completeResults)) {
+		if (!empty($completeResults)) {
 			$formattedTextResponse = 'Technical information
 =====================
 The following list covers which files have failed the integrity check. Please read
@@ -363,12 +368,12 @@ them.
 Results
 =======
 ';
-			foreach($completeResults as $context => $contextResult) {
+			foreach ($completeResults as $context => $contextResult) {
 				$formattedTextResponse .= "- $context\n";
 
-				foreach($contextResult as $category => $result) {
+				foreach ($contextResult as $category => $result) {
 					$formattedTextResponse .= "\t- $category\n";
-					if($category !== 'EXCEPTION') {
+					if ($category !== 'EXCEPTION') {
 						foreach ($result as $key => $results) {
 							$formattedTextResponse .= "\t\t- $key\n";
 						}
@@ -377,7 +382,6 @@ Results
 							$formattedTextResponse .= "\t\t- $results\n";
 						}
 					}
-
 				}
 			}
 
@@ -407,25 +411,23 @@ Raw output
 	 * @return bool
 	 */
 	protected function isOpcacheProperlySetup() {
-		$iniWrapper = new IniGetWrapper();
-
-		if(!$iniWrapper->getBool('opcache.enable')) {
+		if (!$this->iniGetWrapper->getBool('opcache.enable')) {
 			return false;
 		}
 
-		if(!$iniWrapper->getBool('opcache.save_comments')) {
+		if (!$this->iniGetWrapper->getBool('opcache.save_comments')) {
 			return false;
 		}
 
-		if($iniWrapper->getNumeric('opcache.max_accelerated_files') < 10000) {
+		if ($this->iniGetWrapper->getNumeric('opcache.max_accelerated_files') < 10000) {
 			return false;
 		}
 
-		if($iniWrapper->getNumeric('opcache.memory_consumption') < 128) {
+		if ($this->iniGetWrapper->getNumeric('opcache.memory_consumption') < 128) {
 			return false;
 		}
 
-		if($iniWrapper->getNumeric('opcache.interned_strings_buffer') < 8) {
+		if ($this->iniGetWrapper->getNumeric('opcache.interned_strings_buffer') < 8) {
 			return false;
 		}
 
@@ -447,6 +449,15 @@ Raw output
 		$this->dispatcher->dispatch(IDBConnection::CHECK_MISSING_INDEXES_EVENT, $event);
 
 		return $indexInfo->getListOfMissingIndexes();
+	}
+
+	protected function hasMissingColumns(): array {
+		$indexInfo = new MissingColumnInformation();
+		// Dispatch event so apps can also hint for pending index updates if needed
+		$event = new GenericEvent($indexInfo);
+		$this->dispatcher->dispatch(IDBConnection::CHECK_MISSING_COLUMNS_EVENT, $event);
+
+		return $indexInfo->getListOfMissingColumns();
 	}
 
 	protected function isSqliteUsed() {
@@ -516,7 +527,7 @@ Raw output
 	}
 
 	protected function hasOpcacheLoaded(): bool {
-		return function_exists('opcache_get_status');
+		return extension_loaded('Zend OPcache');
 	}
 
 	/**
@@ -578,6 +589,14 @@ Raw output
 			$recommendedPHPModules[] = 'intl';
 		}
 
+		if (!extension_loaded('bcmath')) {
+			$recommendedPHPModules[] = 'bcmath';
+		}
+
+		if (!extension_loaded('gmp')) {
+			$recommendedPHPModules[] = 'gmp';
+		}
+
 		if ($this->config->getAppValue('theming', 'enabled', 'no') === 'yes') {
 			if (!extension_loaded('imagick')) {
 				$recommendedPHPModules[] = 'imagick';
@@ -620,7 +639,7 @@ Raw output
 				$column = $table->getColumn($columnName);
 				$isAutoIncrement = $column->getAutoincrement();
 				$isAutoIncrementOnSqlite = $isSqlite && $isAutoIncrement;
-				if ($column->getType()->getName() !== Type::BIGINT && !$isAutoIncrementOnSqlite) {
+				if ($column->getType()->getName() !== Types::BIGINT && !$isAutoIncrementOnSqlite) {
 					$pendingColumns[] = $tableName . '.' . $columnName;
 				}
 			}
@@ -669,6 +688,9 @@ Raw output
 	 * @return DataResponse
 	 */
 	public function check() {
+		$phpDefaultCharset = new PhpDefaultCharset();
+		$phpOutputBuffering = new PhpOutputBuffering();
+		$legacySSEKeyFormat = new LegacySSEKeyFormat($this->l10n, $this->config, $this->urlGenerator);
 		return new DataResponse(
 			[
 				'isGetenvServerWorking' => !empty(getenv('PATH')),
@@ -697,6 +719,7 @@ Raw output
 				'isSettimelimitAvailable' => $this->isSettimelimitAvailable(),
 				'hasFreeTypeSupport' => $this->hasFreeTypeSupport(),
 				'missingIndexes' => $this->hasMissingIndexes(),
+				'missingColumns' => $this->hasMissingColumns(),
 				'isSqliteUsed' => $this->isSqliteUsed(),
 				'databaseConversionDocumentation' => $this->urlGenerator->linkToDocs('admin-db-conversion'),
 				'isPHPMailerUsed' => $this->isPHPMailerUsed(),
@@ -707,6 +730,10 @@ Raw output
 				'pendingBigIntConversionColumns' => $this->hasBigIntConversionPendingColumns(),
 				'isMysqlUsedWithoutUTF8MB4' => $this->isMysqlUsedWithoutUTF8MB4(),
 				'isEnoughTempSpaceAvailableIfS3PrimaryStorageIsUsed' => $this->isEnoughTempSpaceAvailableIfS3PrimaryStorageIsUsed(),
+				'reverseProxyGeneratedURL' => $this->urlGenerator->getAbsoluteURL('index.php'),
+				PhpDefaultCharset::class => ['pass' => $phpDefaultCharset->run(), 'description' => $phpDefaultCharset->description(), 'severity' => $phpDefaultCharset->severity()],
+				PhpOutputBuffering::class => ['pass' => $phpOutputBuffering->run(), 'description' => $phpOutputBuffering->description(), 'severity' => $phpOutputBuffering->severity()],
+				LegacySSEKeyFormat::class => ['pass' => $legacySSEKeyFormat->run(), 'description' => $legacySSEKeyFormat->description(), 'severity' => $legacySSEKeyFormat->severity(), 'linkToDocumentation' => $legacySSEKeyFormat->linkToDocumentation()],
 			]
 		);
 	}

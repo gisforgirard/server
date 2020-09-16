@@ -2,9 +2,8 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
- * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Daniel Calviño Sánchez <danxuliu@gmail.com>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Felix Nüsse <Felix.nuesse@t-online.de>
  * @author fnuesse <felix.nuesse@t-online.de>
  * @author fnuesse <fnuesse@techfak.uni-bielefeld.de>
@@ -52,7 +51,7 @@ use OCP\IPreview;
 use OCP\IRequest;
 use OCP\IUserSession;
 use OCP\Share\IManager;
-use Sabre\VObject\Property\Boolean;
+use OCP\Share\IShare;
 
 /**
  * Class ApiController
@@ -217,12 +216,12 @@ class ApiController extends Controller {
 		$userId = $this->userSession->getUser()->getUID();
 		$shareTypes = [];
 		$requestedShareTypes = [
-			\OCP\Share::SHARE_TYPE_USER,
-			\OCP\Share::SHARE_TYPE_GROUP,
-			\OCP\Share::SHARE_TYPE_LINK,
-			\OCP\Share::SHARE_TYPE_REMOTE,
-			\OCP\Share::SHARE_TYPE_EMAIL,
-			\OCP\Share::SHARE_TYPE_ROOM
+			IShare::TYPE_USER,
+			IShare::TYPE_GROUP,
+			IShare::TYPE_LINK,
+			IShare::TYPE_REMOTE,
+			IShare::TYPE_EMAIL,
+			IShare::TYPE_ROOM
 		];
 		foreach ($requestedShareTypes as $requestedShareType) {
 			// one of each type is enough to find out about the types
@@ -332,7 +331,7 @@ class ApiController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @param string
+	 * @param string $folderpath
 	 * @return string
 	 * @throws \OCP\Files\NotFoundException
 	 */
@@ -340,5 +339,4 @@ class ApiController extends Controller {
 		$node = $this->userFolder->get($folderpath);
 		return $node->getType();
 	}
-
 }

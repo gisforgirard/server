@@ -4,6 +4,7 @@
  *
  * @author Joas Schilling <coding@schilljs.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vincent Petry <pvince81@owncloud.com>
@@ -26,7 +27,6 @@
 
 namespace OCA\DAV\Tests\unit;
 
-use OCA\DAV\AppInfo\PluginManager;
 use OCA\DAV\Server;
 use OCP\IRequest;
 
@@ -43,7 +43,7 @@ class ServerTest extends \Test\TestCase {
 	 * @dataProvider providesUris
 	 */
 	public function test($uri, array $plugins) {
-		/** @var IRequest | \PHPUnit_Framework_MockObject_MockObject $r */
+		/** @var IRequest | \PHPUnit\Framework\MockObject\MockObject $r */
 		$r = $this->createMock(IRequest::class);
 		$r->expects($this->any())->method('getRequestUri')->willReturn($uri);
 		$s = new Server($r, '/');

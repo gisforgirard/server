@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016 Joas Schilling <coding@schilljs.com>
  *
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -26,23 +27,15 @@ namespace OCA\Files\Tests\Activity\Setting;
 
 use OCA\Files\Activity\Settings\FavoriteAction;
 use OCA\Files\Activity\Settings\FileChanged;
-use OCA\Files\Activity\Settings\FileCreated;
-use OCA\Files\Activity\Settings\FileDeleted;
-use OCA\Files\Activity\Settings\FileFavorite;
-use OCA\Files\Activity\Settings\FileRestored;
 use OCP\Activity\ISetting;
 use Test\TestCase;
 
 class GenericTest extends TestCase {
-
 	public function dataSettings() {
 		return [
 			[FavoriteAction::class],
 			[FileChanged::class],
-			[FileCreated::class],
-			[FileDeleted::class],
-			[FileFavorite::class],
-			[FileRestored::class],
+			[FileChanged::class],
 		];
 	}
 

@@ -2,7 +2,9 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -59,12 +61,12 @@ class UserStoragesServiceTest extends StoragesServiceTest {
 		$this->createUser($this->userId, $this->userId);
 		$this->user = \OC::$server->getUserManager()->get($this->userId);
 
-		/** @var \OCP\IUserSession|\PHPUnit_Framework_MockObject_MockObject $userSession */
+		/** @var \OCP\IUserSession|\PHPUnit\Framework\MockObject\MockObject $userSession */
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession
 			->expects($this->any())
 			->method('getUser')
-			->will($this->returnValue($this->user));
+			->willReturn($this->user);
 
 		$this->service = new UserStoragesService($this->backendService, $this->dbConfig, $userSession, $this->mountCache);
 	}
@@ -105,7 +107,7 @@ class UserStoragesServiceTest extends StoragesServiceTest {
 			current(self::$hookCalls),
 			Filesystem::signal_create_mount,
 			$storage->getMountPoint(),
-			\OC_Mount_Config::MOUNT_TYPE_USER,
+			\OCA\Files_External\MountConfig::MOUNT_TYPE_USER,
 			$this->userId
 		);
 
@@ -156,7 +158,7 @@ class UserStoragesServiceTest extends StoragesServiceTest {
 			self::$hookCalls[1],
 			Filesystem::signal_delete_mount,
 			'/mountpoint',
-			\OC_Mount_Config::MOUNT_TYPE_USER,
+			\OCA\Files_External\MountConfig::MOUNT_TYPE_USER,
 			$this->userId
 		);
 	}
@@ -177,19 +179,19 @@ class UserStoragesServiceTest extends StoragesServiceTest {
 			self::$hookCalls[0],
 			Filesystem::signal_delete_mount,
 			'/mountpoint',
-			\OC_Mount_Config::MOUNT_TYPE_USER,
+			\OCA\Files_External\MountConfig::MOUNT_TYPE_USER,
 			$this->userId
 		);
 		$this->assertHookCall(
 			self::$hookCalls[1],
 			Filesystem::signal_create_mount,
 			'/renamedMountpoint',
-			\OC_Mount_Config::MOUNT_TYPE_USER,
+			\OCA\Files_External\MountConfig::MOUNT_TYPE_USER,
 			$this->userId
 		);
 	}
 
-	
+
 	public function testGetAdminStorage() {
 		$this->expectException(\OCA\Files_External\NotFoundException::class);
 

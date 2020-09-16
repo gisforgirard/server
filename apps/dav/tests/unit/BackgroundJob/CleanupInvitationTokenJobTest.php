@@ -5,8 +5,10 @@ declare(strict_types=1);
 /**
  * @copyright 2018, Georg Ehrke <oc.list@georgehrke.com>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -36,10 +38,10 @@ use Test\TestCase;
 
 class CleanupInvitationTokenJobTest extends TestCase {
 
-	/** @var IDBConnection | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IDBConnection | \PHPUnit\Framework\MockObject\MockObject */
 	private $dbConnection;
 
-	/** @var ITimeFactory | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var ITimeFactory | \PHPUnit\Framework\MockObject\MockObject */
 	private $timeFactory;
 
 	/** @var \OCA\DAV\BackgroundJob\GenerateBirthdayCalendarBackgroundJob */
@@ -59,7 +61,7 @@ class CleanupInvitationTokenJobTest extends TestCase {
 		$this->timeFactory->expects($this->once())
 			->method('getTime')
 			->with()
-			->will($this->returnValue(1337));
+			->willReturn(1337);
 
 		$queryBuilder = $this->createMock(IQueryBuilder::class);
 		$expr = $this->createMock(\OCP\DB\QueryBuilder\IExpressionBuilder::class);
@@ -68,36 +70,36 @@ class CleanupInvitationTokenJobTest extends TestCase {
 		$this->dbConnection->expects($this->once())
 			->method('getQueryBuilder')
 			->with()
-			->will($this->returnValue($queryBuilder));
+			->willReturn($queryBuilder);
 		$queryBuilder->method('expr')
-			->will($this->returnValue($expr));
+			->willReturn($expr);
 		$queryBuilder->method('createNamedParameter')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				[1337, \PDO::PARAM_STR, null, 'namedParameter1337']
-			]));
+			]);
 
 		$expr->expects($this->once())
 			->method('lt')
 			->with('expiration', 'namedParameter1337')
-			->will($this->returnValue('LT STATEMENT'));
+			->willReturn('LT STATEMENT');
 
 		$this->dbConnection->expects($this->once())
 			->method('getQueryBuilder')
 			->with()
-			->will($this->returnValue($queryBuilder));
+			->willReturn($queryBuilder);
 
 		$queryBuilder->expects($this->at(0))
 			->method('delete')
 			->with('calendar_invitations')
-			->will($this->returnValue($queryBuilder));
+			->willReturn($queryBuilder);
 		$queryBuilder->expects($this->at(3))
 			->method('where')
 			->with('LT STATEMENT')
-			->will($this->returnValue($queryBuilder));
+			->willReturn($queryBuilder);
 		$queryBuilder->expects($this->at(4))
 			->method('execute')
 			->with()
-			->will($this->returnValue($stmt));
+			->willReturn($stmt);
 
 		$this->backgroundJob->run([]);
 	}

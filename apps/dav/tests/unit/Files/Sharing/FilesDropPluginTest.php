@@ -2,6 +2,9 @@
 /**
  * @copyright Copyright (c) 2016, Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -33,19 +36,19 @@ use Test\TestCase;
 
 class FilesDropPluginTest extends TestCase {
 
-	/** @var View|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var View|\PHPUnit\Framework\MockObject\MockObject */
 	private $view;
 
-	/** @var Server|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Server|\PHPUnit\Framework\MockObject\MockObject */
 	private $server;
 
 	/** @var FilesDropPlugin */
 	private $plugin;
 
-	/** @var RequestInterface|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var RequestInterface|\PHPUnit\Framework\MockObject\MockObject */
 	private $request;
 
-	/** @var ResponseInterface|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ResponseInterface|\PHPUnit\Framework\MockObject\MockObject */
 	private $response;
 
 	protected function setUp(): void {
@@ -66,7 +69,7 @@ class FilesDropPluginTest extends TestCase {
 		$this->server->expects($this->once())
 			->method('on')
 			->with(
-				$this->equalTo('beforeMethod'),
+				$this->equalTo('beforeMethod:*'),
 				$this->equalTo([$this->plugin, 'beforeMethod']),
 				$this->equalTo(999)
 			);
@@ -122,13 +125,13 @@ class FilesDropPluginTest extends TestCase {
 			->willReturn('https://example.com');
 
 		$this->view->method('file_exists')
-			->will($this->returnCallback(function($path) {
+			->willReturnCallback(function ($path) {
 				if ($path === 'file.txt' || $path === '/file.txt') {
 					return true;
 				} else {
 					return false;
 				}
-			}));
+			});
 
 		$this->request->expects($this->once())
 			->method('setUrl')
@@ -163,13 +166,13 @@ class FilesDropPluginTest extends TestCase {
 			->willReturn('https://example.com');
 
 		$this->view->method('file_exists')
-			->will($this->returnCallback(function($path) {
+			->willReturnCallback(function ($path) {
 				if ($path === 'file.txt' || $path === '/file.txt') {
 					return true;
 				} else {
 					return false;
 				}
-			}));
+			});
 
 		$this->request->expects($this->once())
 			->method('setUrl')

@@ -5,6 +5,7 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -26,7 +27,6 @@
 
 namespace OC\Collaboration\Collaborators;
 
-
 use OCP\Collaboration\Collaborators\ISearchPlugin;
 use OCP\Collaboration\Collaborators\ISearchResult;
 use OCP\Collaboration\Collaborators\SearchResultType;
@@ -35,7 +35,7 @@ use OCP\Http\Client\IClientService;
 use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IUserSession;
-use OCP\Share;
+use OCP\Share\IShare;
 
 class LookupPlugin implements ISearchPlugin {
 
@@ -74,7 +74,7 @@ class LookupPlugin implements ISearchPlugin {
 		}
 
 		$lookupServerUrl = $this->config->getSystemValue('lookup_server', 'https://lookup.nextcloud.com');
-		if(empty($lookupServerUrl)) {
+		if (empty($lookupServerUrl)) {
 			return false;
 		}
 		$lookupServerUrl = rtrim($lookupServerUrl, '/');
@@ -108,7 +108,7 @@ class LookupPlugin implements ISearchPlugin {
 				$result[] = [
 					'label' => $label,
 					'value' => [
-						'shareType' => Share::SHARE_TYPE_REMOTE,
+						'shareType' => IShare::TYPE_REMOTE,
 						'shareWith' => $lookup['federationId'],
 					],
 					'extra' => $lookup,

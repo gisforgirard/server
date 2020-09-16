@@ -23,7 +23,6 @@
 
 namespace OC\Core\Command\Db\Migrations;
 
-
 use OC\DB\MigrationService;
 use OC\Migration\ConsoleOutput;
 use OCP\App\IAppManager;
@@ -76,7 +75,7 @@ class ExecuteCommand extends Command implements CompletionAwareInterface {
 	 * @param OutputInterface $output
 	 * @return int
 	 */
-	public function execute(InputInterface $input, OutputInterface $output) {
+	public function execute(InputInterface $input, OutputInterface $output): int {
 		$appName = $input->getArgument('app');
 		$ms = new MigrationService($appName, $this->connection, new ConsoleOutput($output));
 		$version = $input->getArgument('version');
@@ -128,5 +127,4 @@ class ExecuteCommand extends Command implements CompletionAwareInterface {
 
 		return [];
 	}
-
 }

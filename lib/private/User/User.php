@@ -5,9 +5,11 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bart Visscher <bartv@thisnet.nl>
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Leon Klingele <leon@struktur.de>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -35,9 +37,13 @@
 namespace OC\User;
 
 use OC\Accounts\AccountManager;
+use OC\Avatar\AvatarManager;
 use OC\Files\Cache\Storage;
 use OC\Hooks\Emitter;
 use OC_Helper;
+use OCP\EventDispatcher\IEventDispatcher;
+use OCP\Group\Events\BeforeUserRemovedEvent;
+use OCP\Group\Events\UserRemovedEvent;
 use OCP\IAvatarManager;
 use OCP\IConfig;
 use OCP\IImage;
@@ -58,6 +64,9 @@ class User implements IUser {
 	/** @var UserInterface|null */
 	private $backend;
 	/** @var EventDispatcherInterface */
+	private $legacyDispatcher;
+
+	/** @var IEventDispatcher */
 	private $dispatcher;
 
 	/** @var bool */
@@ -84,9 +93,9 @@ class User implements IUser {
 	public function __construct(string $uid, ?UserInterface $backend, EventDispatcherInterface $dispatcher, $emitter = null, IConfig $config = null, $urlGenerator = null) {
 		$this->uid = $uid;
 		$this->backend = $backend;
-		$this->dispatcher = $dispatcher;
+		$this->legacyDispatcher = $dispatcher;
 		$this->emitter = $emitter;
-		if(is_null($config)) {
+		if (is_null($config)) {
 			$config = \OC::$server->getConfig();
 		}
 		$this->config = $config;
@@ -97,6 +106,8 @@ class User implements IUser {
 		if (is_null($this->urlGenerator)) {
 			$this->urlGenerator = \OC::$server->getURLGenerator();
 		}
+		// TODO: inject
+		$this->dispatcher = \OC::$server->query(IEventDispatcher::class);
 	}
 
 	/**
@@ -162,8 +173,8 @@ class User implements IUser {
 	 */
 	public function setEMailAddress($mailAddress) {
 		$oldMailAddress = $this->getEMailAddress();
-		if($oldMailAddress !== $mailAddress) {
-			if($mailAddress === '') {
+		if ($oldMailAddress !== $mailAddress) {
+			if ($mailAddress === '') {
 				$this->config->deleteUserValue($this->uid, 'settings', 'email');
 			} else {
 				$this->config->setUserValue($this->uid, 'settings', 'email', $mailAddress);
@@ -200,9 +211,9 @@ class User implements IUser {
 	 * @return bool
 	 */
 	public function delete() {
-		$this->dispatcher->dispatch(IUser::class . '::preDelete', new GenericEvent($this));
+		$this->legacyDispatcher->dispatch(IUser::class . '::preDelete', new GenericEvent($this));
 		if ($this->emitter) {
-			$this->emitter->emit('\OC\User', 'preDelete', array($this));
+			$this->emitter->emit('\OC\User', 'preDelete', [$this]);
 		}
 		// get the home now because it won't return it after user deletion
 		$homePath = $this->getHome();
@@ -216,9 +227,9 @@ class User implements IUser {
 			foreach ($groupManager->getUserGroupIds($this) as $groupId) {
 				$group = $groupManager->get($groupId);
 				if ($group) {
-					\OC_Hook::emit("OC_Group", "pre_removeFromGroup", ["run" => true, "uid" => $this->uid, "gid" => $groupId]);
+					$this->dispatcher->dispatchTyped(new BeforeUserRemovedEvent($group, $this));
 					$group->removeUser($this);
-					\OC_Hook::emit("OC_User", "post_removeFromGroup", ["uid" => $this->uid, "gid" => $groupId]);
+					$this->dispatcher->dispatchTyped(new UserRemovedEvent($group, $this));
 				}
 			}
 			// Delete the user's keys in preferences
@@ -237,6 +248,10 @@ class User implements IUser {
 			\OC::$server->getCommentsManager()->deleteReferencesOfActor('users', $this->uid);
 			\OC::$server->getCommentsManager()->deleteReadMarksFromUser($this);
 
+			/** @var IAvatarManager $avatarManager */
+			$avatarManager = \OC::$server->query(AvatarManager::class);
+			$avatarManager->deleteUserAvatar($this->uid);
+
 			$notification = \OC::$server->getNotificationManager()->createNotification();
 			$notification->setUser($this->uid);
 			\OC::$server->getNotificationManager()->markProcessed($notification);
@@ -245,9 +260,9 @@ class User implements IUser {
 			$accountManager = \OC::$server->query(AccountManager::class);
 			$accountManager->deleteUser($this);
 
-			$this->dispatcher->dispatch(IUser::class . '::postDelete', new GenericEvent($this));
+			$this->legacyDispatcher->dispatch(IUser::class . '::postDelete', new GenericEvent($this));
 			if ($this->emitter) {
-				$this->emitter->emit('\OC\User', 'postDelete', array($this));
+				$this->emitter->emit('\OC\User', 'postDelete', [$this]);
 			}
 		}
 		return !($result === false);
@@ -261,21 +276,21 @@ class User implements IUser {
 	 * @return bool
 	 */
 	public function setPassword($password, $recoveryPassword = null) {
-		$this->dispatcher->dispatch(IUser::class . '::preSetPassword', new GenericEvent($this, [
+		$this->legacyDispatcher->dispatch(IUser::class . '::preSetPassword', new GenericEvent($this, [
 			'password' => $password,
 			'recoveryPassword' => $recoveryPassword,
 		]));
 		if ($this->emitter) {
-			$this->emitter->emit('\OC\User', 'preSetPassword', array($this, $password, $recoveryPassword));
+			$this->emitter->emit('\OC\User', 'preSetPassword', [$this, $password, $recoveryPassword]);
 		}
 		if ($this->backend->implementsActions(Backend::SET_PASSWORD)) {
 			$result = $this->backend->setPassword($this->uid, $password);
-			$this->dispatcher->dispatch(IUser::class . '::postSetPassword', new GenericEvent($this, [
+			$this->legacyDispatcher->dispatch(IUser::class . '::postSetPassword', new GenericEvent($this, [
 				'password' => $password,
 				'recoveryPassword' => $recoveryPassword,
 			]));
 			if ($this->emitter) {
-				$this->emitter->emit('\OC\User', 'postSetPassword', array($this, $password, $recoveryPassword));
+				$this->emitter->emit('\OC\User', 'postSetPassword', [$this, $password, $recoveryPassword]);
 			}
 			return !($result === false);
 		} else {
@@ -307,7 +322,7 @@ class User implements IUser {
 	 * @return string
 	 */
 	public function getBackendClassName() {
-		if($this->backend instanceof IUserBackend) {
+		if ($this->backend instanceof IUserBackend) {
 			return $this->backend->getBackendName();
 		}
 		return get_class($this->backend);
@@ -392,7 +407,7 @@ class User implements IUser {
 	 */
 	public function getQuota() {
 		$quota = $this->config->getUserValue($this->uid, 'files', 'quota', 'default');
-		if($quota === 'default') {
+		if ($quota === 'default') {
 			$quota = $this->config->getAppValue('files', 'default_quota', 'none');
 		}
 		return $quota;
@@ -407,11 +422,11 @@ class User implements IUser {
 	 */
 	public function setQuota($quota) {
 		$oldQuota = $this->config->getUserValue($this->uid, 'files', 'quota', '');
-		if($quota !== 'none' and $quota !== 'default') {
+		if ($quota !== 'none' and $quota !== 'default') {
 			$quota = OC_Helper::computerFileSize($quota);
 			$quota = OC_Helper::humanFileSize($quota);
 		}
-		if($quota !== $oldQuota) {
+		if ($quota !== $oldQuota) {
 			$this->config->setUserValue($this->uid, 'files', 'quota', $quota);
 			$this->triggerChange('quota', $quota, $oldQuota);
 		}
@@ -448,7 +463,7 @@ class User implements IUser {
 	public function getCloudId() {
 		$uid = $this->getUID();
 		$server = $this->urlGenerator->getAbsoluteURL('/');
-		$server =  rtrim( $this->removeProtocolFromUrl($server), '/');
+		$server =  rtrim($this->removeProtocolFromUrl($server), '/');
 		return \OC::$server->getCloudIdManager()->getCloudId($uid, $server)->getId();
 	}
 
@@ -459,7 +474,7 @@ class User implements IUser {
 	private function removeProtocolFromUrl($url) {
 		if (strpos($url, 'https://') === 0) {
 			return substr($url, strlen('https://'));
-		} else if (strpos($url, 'http://') === 0) {
+		} elseif (strpos($url, 'http://') === 0) {
 			return substr($url, strlen('http://'));
 		}
 
@@ -467,13 +482,13 @@ class User implements IUser {
 	}
 
 	public function triggerChange($feature, $value = null, $oldValue = null) {
-		$this->dispatcher->dispatch(IUser::class . '::changeUser', new GenericEvent($this, [
+		$this->legacyDispatcher->dispatch(IUser::class . '::changeUser', new GenericEvent($this, [
 			'feature' => $feature,
 			'value' => $value,
 			'oldValue' => $oldValue,
 		]));
 		if ($this->emitter) {
-			$this->emitter->emit('\OC\User', 'changeUser', array($this, $feature, $value, $oldValue));
+			$this->emitter->emit('\OC\User', 'changeUser', [$this, $feature, $value, $oldValue]);
 		}
 	}
 }

@@ -27,7 +27,7 @@ class CORSMiddlewareTest extends \Test\TestCase {
 
 	/** @var ControllerMethodReflector */
 	private $reflector;
-	/** @var Session|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Session|\PHPUnit\Framework\MockObject\MockObject */
 	private $session;
 	/** @var Throttler */
 	private $throttler;
@@ -140,7 +140,7 @@ class CORSMiddlewareTest extends \Test\TestCase {
 		$this->session->expects($this->never())
 			->method('logClientIn')
 			->with($this->equalTo('user'), $this->equalTo('pass'))
-			->will($this->returnValue(true));
+			->willReturn(true);
 		$this->reflector->reflect($this, __FUNCTION__);
 
 		$middleware->beforeController($this->controller, __FUNCTION__);
@@ -163,7 +163,7 @@ class CORSMiddlewareTest extends \Test\TestCase {
 		$this->session->expects($this->once())
 			->method('logClientIn')
 			->with($this->equalTo('user'), $this->equalTo('pass'))
-			->will($this->returnValue(true));
+			->willReturn(true);
 		$this->reflector->reflect($this, __FUNCTION__);
 		$middleware = new CORSMiddleware($request, $this->reflector, $this->session, $this->throttler);
 
@@ -215,7 +215,7 @@ class CORSMiddlewareTest extends \Test\TestCase {
 		$this->session->expects($this->once())
 			->method('logClientIn')
 			->with($this->equalTo('user'), $this->equalTo('pass'))
-			->will($this->returnValue(false));
+			->willReturn(false);
 		$this->reflector->reflect($this, __FUNCTION__);
 		$middleware = new CORSMiddleware($request, $this->reflector, $this->session, $this->throttler);
 
@@ -254,7 +254,7 @@ class CORSMiddlewareTest extends \Test\TestCase {
 		$this->assertEquals($expected, $response);
 	}
 
-	
+
 	public function testAfterExceptionWithRegularException() {
 		$this->expectException(\Exception::class);
 		$this->expectExceptionMessage('A regular exception');
@@ -270,5 +270,4 @@ class CORSMiddlewareTest extends \Test\TestCase {
 		$middleware = new CORSMiddleware($request, $this->reflector, $this->session, $this->throttler);
 		$middleware->afterException($this->controller, __FUNCTION__, new \Exception('A regular exception'));
 	}
-
 }

@@ -4,8 +4,10 @@
  *
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
+ * @author Sander Ruitenbeek <s.ruitenbeek@getgoing.nl>
  *
  * @license AGPL-3.0
  *
@@ -82,7 +84,7 @@ class Enable extends Command implements CompletionAwareInterface {
 			);
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$appIds = $input->getArgument('app-id');
 		$groups = $this->resolveGroupIds($input->getOption('groups'));
 		$forceEnable = (bool) $input->getOption('force');
@@ -105,6 +107,10 @@ class Enable extends Command implements CompletionAwareInterface {
 			return $group->getDisplayName();
 		}, $groupIds);
 
+		if ($this->appManager->isInstalled($appId) && $groupIds === []) {
+			$output->writeln($appId . ' already enabled');
+			return;
+		}
 
 		try {
 			/** @var Installer $installer */
@@ -115,13 +121,14 @@ class Enable extends Command implements CompletionAwareInterface {
 			}
 
 			$installer->installApp($appId, $forceEnable);
+			$appVersion = \OC_App::getAppVersion($appId);
 
 			if ($groupIds === []) {
 				$this->appManager->enableApp($appId, $forceEnable);
-				$output->writeln($appId . ' enabled');
+				$output->writeln($appId . ' ' . $appVersion . ' enabled');
 			} else {
 				$this->appManager->enableAppForGroups($appId, $groupIds, $forceEnable);
-				$output->writeln($appId . ' enabled for groups: ' . implode(', ', $groupNames));
+				$output->writeln($appId . ' ' . $appVersion . ' enabled for groups: ' . implode(', ', $groupNames));
 			}
 		} catch (AppPathNotFoundException $e) {
 			$output->writeln($appId . ' not found');

@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -30,14 +31,17 @@
 
 namespace OCA\Files_Sharing\Tests;
 
+use OCA\Files_Trashbin\AppInfo\Application;
+use OCP\AppFramework\Bootstrap\IBootContext;
+use OCP\Share\IShare;
+
 /**
  * Class UpdaterTest
  *
  * @group DB
  */
 class UpdaterTest extends TestCase {
-
-	const TEST_FOLDER_NAME = '/folder_share_updater_test';
+	public const TEST_FOLDER_NAME = '/folder_share_updater_test';
 
 	public static function setUpBeforeClass(): void {
 		parent::setUpBeforeClass();
@@ -75,14 +79,15 @@ class UpdaterTest extends TestCase {
 		$status = \OC::$server->getAppManager()->isEnabledForUser('files_trashbin');
 		(new \OC_App())->enable('files_trashbin');
 
-
-		\OCA\Files_Trashbin\Trashbin::registerHooks();
+		// register trashbin hooks
+		$trashbinApp = new Application();
+		$trashbinApp->boot($this->createMock(IBootContext::class));
 
 		$fileinfo = \OC\Files\Filesystem::getFileInfo($this->folder);
 		$this->assertTrue($fileinfo instanceof \OC\Files\FileInfo);
 
 		$this->share(
-			\OCP\Share::SHARE_TYPE_USER,
+			IShare::TYPE_USER,
 			$this->folder,
 			self::TEST_FILES_SHARING_API_USER1,
 			self::TEST_FILES_SHARING_API_USER2,
@@ -166,7 +171,7 @@ class UpdaterTest extends TestCase {
 		$this->loginHelper(self::TEST_FILES_SHARING_API_USER1);
 
 		$share = $this->share(
-			\OCP\Share::SHARE_TYPE_USER,
+			IShare::TYPE_USER,
 			$this->folder,
 			self::TEST_FILES_SHARING_API_USER1,
 			self::TEST_FILES_SHARING_API_USER2,
@@ -199,11 +204,10 @@ class UpdaterTest extends TestCase {
 	 * if a folder gets renamed all children mount points should be renamed too
 	 */
 	public function testRename() {
-
 		$fileinfo = \OC\Files\Filesystem::getFileInfo($this->folder);
 
 		$share = $this->share(
-			\OCP\Share::SHARE_TYPE_USER,
+			IShare::TYPE_USER,
 			$this->folder,
 			self::TEST_FILES_SHARING_API_USER1,
 			self::TEST_FILES_SHARING_API_USER2,
@@ -234,5 +238,4 @@ class UpdaterTest extends TestCase {
 		// cleanup
 		$this->shareManager->deleteShare($share);
 	}
-
 }

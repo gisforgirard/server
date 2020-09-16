@@ -8,7 +8,7 @@
  * @copyright Copyright (c) 2016, Christoph Wurst <christoph@winzerhof-wurst.at>
  * @copyright Copyright (c) 2016, Raghu Nayyar <hey@raghunayyar.com>
  * @copyright Copyright (c) 2011-2017, Jan-Christoph Borchardt <hey@jancborchardt.net>
- * @copyright Copyright (c) 2019, Gary Kim <gary@garykim.dev>
+ * @copyright Copyright (c) 2019-2020, Gary Kim <gary@garykim.dev>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -87,7 +87,6 @@ ul {
 
 body {
 	background-color: var(--color-main-background);
-	background-color: linear-gradient(40deg, var(--color-main-background) 0%, rgba(28,175,255,1) 100%);
 	font-weight: normal;
 	/* bring the default font size up to 14px */
 	font-size: .875em;
@@ -124,6 +123,7 @@ body {
 	position: fixed;
 	top: 0;
 	bottom: 0;
+	left: 0;
 	height: 100%;
 	width: 100%;
 	z-index: 9000;
@@ -467,7 +467,9 @@ tr .action:not(.permanent), .selectedActions a {
 }
 
 tr {
-	&:hover .action, &:focus .action, .action.permanent {
+	&:hover .action:not(.menuitem),
+	&:focus .action:not(.menuitem),
+	.action.permanent:not(.menuitem) {
 		opacity: .5;
 	}
 }
@@ -718,6 +720,8 @@ code {
 /* ---- DIALOGS ---- */
 #oc-dialog-filepicker-content {
 	position: relative;
+	display: flex;
+	flex-direction:column;
 
 	.dirtree {
 		flex-wrap: wrap;
@@ -778,7 +782,9 @@ code {
 		border: 1px solid var(--color-border-dark);
 		border-radius: var(--border-radius-pill);
 		position: relative;
-		top: -5px;
+		left: 15px;
+		top:3px;
+		order:1;
 
 		.icon.icon-add{
 			background-image: var(--icon-add-000);
@@ -811,7 +817,8 @@ code {
 		box-sizing: border-box;
 		display: inline-block;
 		overflow-y: auto;
-		height: 100%;
+		flex: 1;
+		/*height: 100%;*/
 		/* overflow under the button row */
 		width: 100%;
 		overflow-x: hidden;

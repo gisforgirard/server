@@ -53,7 +53,7 @@ class StatusCommand extends Command implements CompletionAwareInterface {
 			->addArgument('app', InputArgument::REQUIRED, 'Name of the app this migration command shall work on');
 	}
 
-	public function execute(InputInterface $input, OutputInterface $output) {
+	public function execute(InputInterface $input, OutputInterface $output): int {
 		$appName = $input->getArgument('app');
 		$ms = new MigrationService($appName, $this->connection, new ConsoleOutput($output));
 
@@ -68,6 +68,7 @@ class StatusCommand extends Command implements CompletionAwareInterface {
 				$output->writeln("    <comment>>></comment> $key: " . str_repeat(' ', 50 - strlen($key)) . $value);
 			}
 		}
+		return 0;
 	}
 
 	/**
@@ -97,7 +98,6 @@ class StatusCommand extends Command implements CompletionAwareInterface {
 	 * @return array associative array of human readable info name as key and the actual information as value
 	 */
 	public function getMigrationsInfos(MigrationService $ms) {
-
 		$executedMigrations = $ms->getMigratedVersions();
 		$availableMigrations = $ms->getAvailableVersions();
 		$executedUnavailableMigrations = array_diff($executedMigrations, array_keys($availableMigrations));
@@ -145,6 +145,4 @@ class StatusCommand extends Command implements CompletionAwareInterface {
 
 		return $migration;
 	}
-
-
 }

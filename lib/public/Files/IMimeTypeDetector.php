@@ -26,10 +26,8 @@
 
 namespace OCP\Files;
 
-
 /**
  * Interface IMimeTypeDetector
- * @package OCP\Files
  * @since 8.2.0
  *
  * Interface to handle mimetypes (detection and icon retrieval)

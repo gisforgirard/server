@@ -3,7 +3,9 @@
  * @copyright Copyright (c) 2016 Lukas Reschke <lukas@statuscode.ch>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -28,8 +30,8 @@ namespace OCA\User_LDAP\Tests;
 use OCA\User_LDAP\LDAP;
 use Test\TestCase;
 
-class LDAPTest extends TestCase  {
-	/** @var LDAP|\PHPUnit_Framework_MockObject_MockObject */
+class LDAPTest extends TestCase {
+	/** @var LDAP|\PHPUnit\Framework\MockObject\MockObject */
 	private $ldap;
 
 	protected function setUp(): void {
@@ -57,9 +59,8 @@ class LDAPTest extends TestCase  {
 	 * @dataProvider errorProvider
 	 */
 	public function testSearchWithErrorHandler(string $errorMessage, bool $passThrough) {
-
 		$wasErrorHandlerCalled = false;
-		$errorHandler = function($number, $message, $file, $line) use (&$wasErrorHandlerCalled) {
+		$errorHandler = function ($number, $message, $file, $line) use (&$wasErrorHandlerCalled) {
 			$wasErrorHandlerCalled = true;
 		};
 
@@ -69,11 +70,12 @@ class LDAPTest extends TestCase  {
 			->expects($this->once())
 			->method('invokeLDAPMethod')
 			->with('search', $this->anything(), $this->anything(), $this->anything(), $this->anything(), $this->anything())
-			->willReturnCallback(function() use($errorMessage) {
+			->willReturnCallback(function () use ($errorMessage) {
 				trigger_error($errorMessage);
 			});
 
-		$this->ldap->search('pseudo-resource', 'base', 'filter', []);
+		$fakeResource = ldap_connect();
+		$this->ldap->search($fakeResource, 'base', 'filter', []);
 		$this->assertSame($wasErrorHandlerCalled, $passThrough);
 
 		restore_error_handler();
@@ -86,7 +88,7 @@ class LDAPTest extends TestCase  {
 		$this->ldap
 			->expects($this->once())
 			->method('invokeLDAPMethod')
-			->with('mod_replace', $link, $userDN, array('userPassword' => $password))
+			->with('mod_replace', $link, $userDN, ['userPassword' => $password])
 			->willReturn(true);
 
 		$this->assertTrue($this->ldap->modReplace($link, $userDN, $password));

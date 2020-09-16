@@ -32,7 +32,6 @@ namespace OCP\Lock;
 /**
  * Class LockedException
  *
- * @package OCP\Lock
  * @since 8.1.0
  */
 class LockedException extends \Exception {
@@ -44,16 +43,25 @@ class LockedException extends \Exception {
 	 */
 	private $path;
 
+	/** @var string|null */
+	private $existingLock;
+
 	/**
 	 * LockedException constructor.
 	 *
 	 * @param string $path locked path
 	 * @param \Exception|null $previous previous exception for cascading
 	 * @param string $existingLock since 14.0.0
+	 * @param string $readablePath since 20.0.0
 	 * @since 8.1.0
 	 */
-	public function __construct(string $path, \Exception $previous = null, string $existingLock = null) {
-		$message = '"' . $path . '" is locked';
+	public function __construct(string $path, \Exception $previous = null, string $existingLock = null, string $readablePath = null) {
+		if ($readablePath) {
+			$message = "\"$path\"(\"$readablePath\") is locked";
+		} else {
+			$message = '"' . $path . '" is locked';
+		}
+		$this->existingLock = $existingLock;
 		if ($existingLock) {
 			$message .= ', existing lock on file: ' . $existingLock;
 		}
@@ -67,5 +75,13 @@ class LockedException extends \Exception {
 	 */
 	public function getPath(): string {
 		return $this->path;
+	}
+
+	/**
+	 * @return string
+	 * @since 19.0.0
+	 */
+	public function getExistingLock(): ?string {
+		return $this->existingLock;
 	}
 }

@@ -76,31 +76,34 @@
 				width="32">
 		</div>
 		<!-- dirty hack to ellipsis on two lines -->
-		<div class="displayName">
+		<div v-if="user.backendCapabilities.setDisplayName" class="displayName">
 			<form
 				:class="{'icon-loading-small': loading.displayName}"
 				class="displayName"
 				@submit.prevent="updateDisplayName">
-				<template v-if="user.backendCapabilities.setDisplayName">
-					<input v-if="user.backendCapabilities.setDisplayName"
-						:id="'displayName'+user.id+rand"
-						ref="displayName"
-						:disabled="loading.displayName||loading.all"
-						:value="user.displayname"
-						autocapitalize="off"
-						autocomplete="new-password"
-						autocorrect="off"
-						spellcheck="false"
-						type="text">
-					<input v-if="user.backendCapabilities.setDisplayName"
-						class="icon-confirm"
-						type="submit"
-						value="">
-				</template>
-				<div v-else
-					v-tooltip.auto="t('settings', 'The backend does not support changing the display name')"
-					class="name" />
+				<input
+					:id="'displayName'+user.id+rand"
+					ref="displayName"
+					:disabled="loading.displayName||loading.all"
+					:value="user.displayname"
+					autocapitalize="off"
+					autocomplete="off"
+					autocorrect="off"
+					spellcheck="false"
+					type="text">
+				<input
+					class="icon-confirm"
+					type="submit"
+					value="">
 			</form>
+		</div>
+		<div v-else class="name">
+			{{ user.id }}
+			<div class="displayName subtitle">
+				<div v-tooltip="user.displayname.length > 20 ? user.displayname : ''" class="cellText">
+					{{ user.displayname }}
+				</div>
+			</div>
 		</div>
 		<form v-if="settings.canChangePassword && user.backendCapabilities.setPassword"
 			:class="{'icon-loading-small': loading.password}"
@@ -213,7 +216,7 @@
 		<div v-if="showConfig.showLastLogin" />
 
 		<div class="userActions">
-			<div v-if="OC.currentUser !== user.id && user.id !== 'admin' && !loading.all"
+			<div v-if="!loading.all"
 				class="toggleUserActions">
 				<Actions>
 					<ActionButton icon="icon-checkmark"
@@ -221,11 +224,12 @@
 						{{ t('settings', 'Done') }}
 					</ActionButton>
 				</Actions>
-				<div v-click-outside="hideMenu"
-					class="icon-more"
-					@click="toggleMenu" />
-				<div :class="{ 'open': openedMenu }" class="popovermenu">
-					<PopoverMenu :menu="userActions" />
+				<div v-click-outside="hideMenu" class="userPopoverMenuWrapper">
+					<div class="icon-more"
+						@click="toggleMenu" />
+					<div :class="{ 'open': openedMenu }" class="popovermenu">
+						<PopoverMenu :menu="userActions" />
+					</div>
 				</div>
 			</div>
 			<div :style="{opacity: feedbackMessage !== '' ? 1 : 0}"
@@ -363,11 +367,11 @@ export default {
 		wipeUserDevices() {
 			const userid = this.user.id
 			OC.dialogs.confirmDestructive(
-				t('settings', 'In case of lost device or exiting the organization, this can remotely wipe the Nextcloud data from all devices associated with {userid}. Only works if the devices are connected to the internet.', { userid: userid }),
+				t('settings', 'In case of lost device or exiting the organization, this can remotely wipe the Nextcloud data from all devices associated with {userid}. Only works if the devices are connected to the internet.', { userid }),
 				t('settings', 'Remote wipe of devices'),
 				{
 					type: OC.dialogs.YES_NO_BUTTONS,
-					confirm: t('settings', 'Wipe {userid}\'s devices', { userid: userid }),
+					confirm: t('settings', 'Wipe {userid}\'s devices', { userid }),
 					confirmClasses: 'error',
 					cancel: t('settings', 'Cancel'),
 				},
@@ -389,11 +393,11 @@ export default {
 		deleteUser() {
 			const userid = this.user.id
 			OC.dialogs.confirmDestructive(
-				t('settings', 'Fully delete {userid}\'s account including all their personal files, app data, etc.', { userid: userid }),
+				t('settings', 'Fully delete {userid}\'s account including all their personal files, app data, etc.', { userid }),
 				t('settings', 'Account deletion'),
 				{
 					type: OC.dialogs.YES_NO_BUTTONS,
-					confirm: t('settings', 'Delete {userid}\'s account', { userid: userid }),
+					confirm: t('settings', 'Delete {userid}\'s account', { userid }),
 					confirmClasses: 'error',
 					cancel: t('settings', 'Cancel'),
 				},
@@ -683,5 +687,8 @@ export default {
 	// Force menu to be above other rows
 	.row--menu-opened {
 		z-index: 1 !important;
+	}
+	.row::v-deep .multiselect__single {
+		z-index: auto !important;
 	}
 </style>

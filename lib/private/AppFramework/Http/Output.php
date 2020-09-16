@@ -5,6 +5,7 @@
  * @author Bernhard Posselt <dev@bernhard-posselt.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Robin Appelman <robin@icewind.nl>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Stefan Weil <sw@weilnetz.de>
  *
  * @license AGPL-3.0
@@ -92,9 +93,20 @@ class Output implements IOutput {
 	 * @param bool $secure
 	 * @param bool $httpOnly
 	 */
-	public function setCookie($name, $value, $expire, $path, $domain, $secure, $httpOnly) {
+	public function setCookie($name, $value, $expire, $path, $domain, $secure, $httpOnly, $sameSite = 'Lax') {
 		$path = $this->webRoot ? : '/';
-		setcookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
-	}
 
+		if (PHP_VERSION_ID < 70300) {
+			setcookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
+		} else {
+			setcookie($name, $value, [
+				'expires' => $expire,
+				'path' => $path,
+				'domain' => $domain,
+				'secure' => $secure,
+				'httponly' => $httpOnly,
+				'samesite' => $sameSite
+			]);
+		}
+	}
 }

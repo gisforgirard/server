@@ -3,6 +3,9 @@
  * @copyright Copyright (c) 2019 Julius Härtl <jus@bitgrid.net>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Julius Härtl <jus@bitgrid.net>
  *
  * @license GNU AGPL version 3 or any later version
@@ -32,13 +35,12 @@ use OCP\IGroupManager;
 use OCP\INavigationManager;
 use OCP\IRequest;
 use OCP\IURLGenerator;
-use OCP\IUserSession;
 
 class HelpController extends Controller {
 
 	/** @var INavigationManager */
 	private $navigationManager;
-	/** @var IUserSession */
+	/** @var IURLGenerator */
 	private $urlGenerator;
 	/** @var IGroupManager */
 	private $groupManager;
@@ -66,12 +68,12 @@ class HelpController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @NoAdminRequired
-	 * @NoSubadminRequired
+	 * @NoSubAdminRequired
 	 */
 	public function help(string $mode = 'user'): TemplateResponse {
 		$this->navigationManager->setActiveEntry('help');
 
-		if(!isset($mode) || $mode !== 'admin') {
+		if (!isset($mode) || $mode !== 'admin') {
 			$mode = 'user';
 		}
 
@@ -93,7 +95,5 @@ class HelpController extends Controller {
 		$policy->addAllowedFrameDomain('\'self\'');
 		$response->setContentSecurityPolicy($policy);
 		return $response;
-
 	}
-
 }

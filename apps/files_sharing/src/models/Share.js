@@ -254,6 +254,29 @@ export default class Share {
 	}
 
 	/**
+	 * Get the share label if any
+	 * Should only exist on link shares
+	 *
+	 * @returns {string}
+	 * @readonly
+	 * @memberof Share
+	 */
+	get label() {
+		return this.#share.label
+	}
+
+	/**
+	 * Set the share label if any
+	 * Should only be set on link shares
+	 *
+	 * @param {string} label the label
+	 * @memberof Share
+	 */
+	set label(label) {
+		this.#share.label = label
+	}
+
+	/**
 	 * Have a mail been sent
 	 *
 	 * @returns {boolean}
@@ -467,10 +490,27 @@ export default class Share {
 		return this.#share.can_delete === true
 	}
 
-	// TODO: SORT THOSE PROPERTIES
-	get label() {
-		return this.#share.label
+	/**
+	 * Top level accessible shared folder fileid for the current user
+	 * @returns {string}
+	 * @readonly
+	 * @memberof Share
+	 */
+	get viaFileid() {
+		return this.#share.via_fileid
 	}
+
+	/**
+	 * Top level accessible shared folder path for the current user
+	 * @returns {string}
+	 * @readonly
+	 * @memberof Share
+	 */
+	get viaPath() {
+		return this.#share.via_path
+	}
+
+	// TODO: SORT THOSE PROPERTIES
 
 	get parent() {
 		return this.#share.parent
@@ -486,6 +526,10 @@ export default class Share {
 
 	get itemSource() {
 		return this.#share.item_source
+	}
+
+	get status() {
+		return this.#share.status
 	}
 
 }

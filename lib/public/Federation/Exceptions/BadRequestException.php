@@ -28,12 +28,10 @@ use OC\HintException;
 /**
  * Class BadRequestException
  *
- * @package OCP\Federation\Exceptions
  *
  * @since 14.0.0
  */
 class BadRequestException extends HintException {
-
 	private $parameterList;
 
 	/**
@@ -75,5 +73,4 @@ class BadRequestException extends HintException {
 
 		return $result;
 	}
-
 }

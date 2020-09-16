@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
@@ -32,12 +33,14 @@ use OC\Files\Storage\StorageFactory;
 use OCA\Files_Sharing\External\Manager;
 use OCA\Files_Sharing\External\MountProvider;
 use OCA\Files_Sharing\Tests\TestCase;
+use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Federation\ICloudFederationFactory;
 use OCP\Federation\ICloudFederationProviderManager;
 use OCP\Http\Client\IClientService;
 use OCP\Http\Client\IResponse;
 use OCP\IGroupManager;
 use OCP\IUserManager;
+use OCP\Share\IShare;
 use Test\Traits\UserTrait;
 
 /**
@@ -50,25 +53,25 @@ use Test\Traits\UserTrait;
 class ManagerTest extends TestCase {
 	use UserTrait;
 
-	/** @var Manager|\PHPUnit_Framework_MockObject_MockObject **/
+	/** @var Manager|\PHPUnit\Framework\MockObject\MockObject **/
 	private $manager;
 
 	/** @var \OC\Files\Mount\Manager */
 	private $mountManager;
 
-	/** @var IClientService|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IClientService|\PHPUnit\Framework\MockObject\MockObject */
 	private $clientService;
 
-	/** @var ICloudFederationProviderManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ICloudFederationProviderManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $cloudFederationProviderManager;
 
-	/** @var ICloudFederationFactory|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ICloudFederationFactory|\PHPUnit\Framework\MockObject\MockObject */
 	private $cloudFederationFactory;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|IGroupManager */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|IGroupManager */
 	private $groupManager;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject|IUserManager */
+	/** @var \PHPUnit\Framework\MockObject\MockObject|IUserManager */
 	private $userManager;
 
 	private $uid;
@@ -78,6 +81,8 @@ class ManagerTest extends TestCase {
 	 */
 	private $user;
 	private $testMountProvider;
+	/** @var IEventDispatcher|\PHPUnit\Framework\MockObject\MockObject */
+	private $eventDispatcher;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -92,6 +97,7 @@ class ManagerTest extends TestCase {
 		$this->cloudFederationFactory = $this->createMock(ICloudFederationFactory::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->userManager = $this->createMock(IUserManager::class);
+		$this->eventDispatcher = $this->createMock(IEventDispatcher::class);
 
 		$this->manager = $this->getMockBuilder(Manager::class)
 			->setConstructorArgs(
@@ -106,11 +112,12 @@ class ManagerTest extends TestCase {
 					$this->cloudFederationFactory,
 					$this->groupManager,
 					$this->userManager,
-					$this->uid
+					$this->uid,
+					$this->eventDispatcher,
 				]
 			)->setMethods(['tryOCMEndPoint'])->getMock();
 
-		$this->testMountProvider = new MountProvider(\OC::$server->getDatabaseConnection(), function() {
+		$this->testMountProvider = new MountProvider(\OC::$server->getDatabaseConnection(), function () {
 			return $this->manager;
 		}, new CloudIdManager());
 	}
@@ -123,14 +130,13 @@ class ManagerTest extends TestCase {
 	}
 
 	public function testAddShare() {
-
 		$shareData1 = [
 			'remote' => 'http://localhost',
 			'token' => 'token1',
 			'password' => '',
 			'name' => '/SharedFolder',
 			'owner' => 'foobar',
-			'shareType' => \OCP\Share::SHARE_TYPE_USER,
+			'shareType' => IShare::TYPE_USER,
 			'accepted' => false,
 			'user' => $this->uid,
 		];

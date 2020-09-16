@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -27,7 +28,6 @@ declare(strict_types=1);
 
 namespace OCA\UpdateNotification\Tests\Notification;
 
-
 use OC\Installer;
 use OC\Updater\VersionCheck;
 use OCA\UpdateNotification\Notification\BackgroundJob;
@@ -43,17 +43,17 @@ use Test\TestCase;
 
 class BackgroundJobTest extends TestCase {
 
-	/** @var IConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	protected $config;
-	/** @var IManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $notificationManager;
-	/** @var IGroupManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IGroupManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $groupManager;
-	/** @var IAppManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IAppManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $appManager;
-	/** @var IClientService|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IClientService|\PHPUnit\Framework\MockObject\MockObject */
 	protected $client;
-	/** @var Installer|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Installer|\PHPUnit\Framework\MockObject\MockObject */
 	protected $installer;
 
 	protected function setUp(): void {
@@ -69,7 +69,7 @@ class BackgroundJobTest extends TestCase {
 
 	/**
 	 * @param array $methods
-	 * @return BackgroundJob|\PHPUnit_Framework_MockObject_MockObject
+	 * @return BackgroundJob|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	protected function getJob(array $methods = []) {
 		if (empty($methods)) {
@@ -81,7 +81,8 @@ class BackgroundJobTest extends TestCase {
 				$this->client,
 				$this->installer
 			);
-		} {
+		}
+		{
 			return $this->getMockBuilder(BackgroundJob::class)
 				->setConstructorArgs([
 					$this->config,
@@ -179,7 +180,7 @@ class BackgroundJobTest extends TestCase {
 				->method('createNotifications');
 			$job->expects($versionCheck === null ? $this->never() : $this->once())
 				->method('clearErrorNotifications');
-		} else if ($version === false) {
+		} elseif ($version === false) {
 			$job->expects($this->never())
 				->method('createNotifications');
 			$job->expects($this->never())
@@ -426,7 +427,7 @@ class BackgroundJobTest extends TestCase {
 
 	/**
 	 * @param string[] $userIds
-	 * @return IUser[]|\PHPUnit_Framework_MockObject_MockObject[]
+	 * @return IUser[]|\PHPUnit\Framework\MockObject\MockObject[]
 	 */
 	protected function getUsers(array $userIds): array {
 		$users = [];
@@ -442,7 +443,7 @@ class BackgroundJobTest extends TestCase {
 
 	/**
 	 * @param string $gid
-	 * @return \OCP\IGroup|\PHPUnit_Framework_MockObject_MockObject
+	 * @return \OCP\IGroup|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	protected function getGroup(string $gid) {
 		$group = $this->createMock(IGroup::class);

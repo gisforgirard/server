@@ -72,6 +72,7 @@
 				$('#free_space').val(response.data.freeSpace);
 				$('#upload.button').attr('data-original-title', response.data.maxHumanFilesize);
 				$('#usedSpacePercent').val(response.data.usedSpacePercent);
+				$('#usedSpacePercent').data('mount-type', response.data.mountType);
 				$('#owner').val(response.data.owner);
 				$('#ownerDisplayName').val(response.data.ownerDisplayName);
 				Files.displayStorageWarnings();
@@ -130,6 +131,8 @@
 		 * @return true if the file name is valid.
 		 * Throws a string exception with an error message if
 		 * the file name is not valid
+		 *
+		 * NOTE: This function is duplicated in the filepicker inside core/src/OC/dialogs.js
 		 */
 		isFileNameValid: function (name) {
 			var trimmedName = name.trim();
@@ -153,23 +156,32 @@
 
 			var usedSpacePercent = $('#usedSpacePercent').val(),
 				owner = $('#owner').val(),
-				ownerDisplayName = $('#ownerDisplayName').val();
+				ownerDisplayName = $('#ownerDisplayName').val(),
+				mountType = $('#usedSpacePercent').data('mount-type');
 			if (usedSpacePercent > 98) {
 				if (owner !== OC.getCurrentUser().uid) {
 					OC.Notification.show(t('files', 'Storage of {owner} is full, files can not be updated or synced anymore!',
 						{owner: ownerDisplayName}), {type: 'error'}
 					);
-					return;
+				} else if (mountType === 'group') {
+					OC.Notification.show(t('files',
+						'This group folder is full, files can not be updated or synced anymore!'),
+						{type: 'error'}
+					);
+				} else if (mountType === 'external') {
+					OC.Notification.show(t('files',
+						'This external storage is full, files can not be updated or synced anymore!'),
+						{type : 'error'}
+					);
+				} else {
+					OC.Notification.show(t('files',
+						'Your storage is full, files can not be updated or synced anymore!'),
+						{type: 'error'}
+					);
 				}
-				OC.Notification.show(t('files',
-					'Your storage is full, files can not be updated or synced anymore!'),
-					{type : 'error'}
-				);
-				return;
-			}
-			if (usedSpacePercent > 90) {
+			} else if (usedSpacePercent > 90) {
 				if (owner !== OC.getCurrentUser().uid) {
-					OC.Notification.show(t('files', 'Storage of {owner} is almost full ({usedSpacePercent}%)',
+					OC.Notification.show(t('files', 'Storage of {owner} is almost full ({usedSpacePercent}%).',
 						{
 							usedSpacePercent: usedSpacePercent,
 							owner: ownerDisplayName
@@ -178,12 +190,24 @@
 							type: 'error'
 						}
 					);
-					return;
+				} else if (mountType === 'group') {
+					OC.Notification.show(t('files',
+						'This group folder is almost full ({usedSpacePercent}%).',
+						{usedSpacePercent: usedSpacePercent}),
+						{type : 'error'}
+					);
+				} else if (mountType === 'external') {
+					OC.Notification.show(t('files',
+						'This external storage is almost full ({usedSpacePercent}%).',
+						{usedSpacePercent: usedSpacePercent}),
+						{type : 'error'}
+					);
+				} else {
+					OC.Notification.show(t('files', 'Your storage is almost full ({usedSpacePercent}%).',
+						{usedSpacePercent: usedSpacePercent}),
+						{type : 'error'}
+					);
 				}
-				OC.Notification.show(t('files', 'Your storage is almost full ({usedSpacePercent}%)',
-					{usedSpacePercent: usedSpacePercent}),
-					{type : 'error'}
-				);
 			}
 		},
 
@@ -289,7 +313,7 @@
 			setTimeout(Files.displayStorageWarnings, 100);
 
 			// only possible at the moment if user is logged in or the files app is loaded
-			if (OC.currentUser && OCA.Files.App) {
+			if (OC.currentUser && OCA.Files.App && OC.config.session_keepalive) {
 				// start on load - we ask the server every 5 minutes
 				var func = _.bind(OCA.Files.App.fileList.updateStorageStatistics, OCA.Files.App.fileList);
 				var updateStorageStatisticsInterval = 5*60*1000;

@@ -11,7 +11,7 @@
 (function(OC, OCA) {
 
 	_.extend(OC.Files.Client, {
-		PROPERTY_READMARKER:	'{' + OC.Files.Client.NS_OWNCLOUD + '}readMarker',
+		PROPERTY_READMARKER: '{' + OC.Files.Client.NS_OWNCLOUD + '}readMarker',
 	})
 
 	/**
@@ -41,7 +41,7 @@
 			_objectId: null,
 
 			davProperties: {
-				'readMarker': OC.Files.Client.PROPERTY_READMARKER,
+				readMarker: OC.Files.Client.PROPERTY_READMARKER,
 			},
 
 			/**
@@ -52,14 +52,14 @@
 			 * @param {string} [options.objectType] object type
 			 * @param {string} [options.objectId] object id
 			 */
-			initialize: function(attrs, options) {
+			initialize(attrs, options) {
 				options = options || {}
 				if (options.objectType) {
 					this._objectType = options.objectType
 				}
 			},
 
-			url: function() {
+			url() {
 				return OC.linkToRemote('dav') + '/comments/'
 				+ encodeURIComponent(this._objectType) + '/'
 				+ encodeURIComponent(this.id) + '/'

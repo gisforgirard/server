@@ -4,6 +4,7 @@
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -32,18 +33,17 @@ use OCP\Activity\IManager;
 use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
-use PHPUnit_Framework_MockObject_MockObject;
 use Test\TestCase;
 
 class ProviderTest extends TestCase {
 
-	/** @var IFactory|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IFactory|\PHPUnit\Framework\MockObject\MockObject */
 	private $l10n;
 
-	/** @var IURLGenerator|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IURLGenerator|\PHPUnit\Framework\MockObject\MockObject */
 	private $urlGenerator;
 
-	/** @var IManager|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $activityManager;
 
 	/** @var Provider */
@@ -130,5 +130,4 @@ class ProviderTest extends TestCase {
 		$this->expectException(InvalidArgumentException::class);
 		$this->provider->parse($lang, $event);
 	}
-
 }

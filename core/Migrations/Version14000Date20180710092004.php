@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2018, Daniel Calviño Sánchez (danxuliu@gmail.com)
  *
  * @author Daniel Calviño Sánchez <danxuliu@gmail.com>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -27,13 +28,12 @@ declare(strict_types=1);
 
 namespace OC\Core\Migrations;
 
-use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Types\Types;
 use OCP\DB\ISchemaWrapper;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
 class Version14000Date20180710092004 extends SimpleMigrationStep {
-
 	public function changeSchema(IOutput $output, \Closure $schemaClosure, array $options) {
 		/** @var ISchemaWrapper $schema */
 		$schema = $schemaClosure();
@@ -41,7 +41,7 @@ class Version14000Date20180710092004 extends SimpleMigrationStep {
 		$table = $schema->getTable('share');
 
 		if (!$table->hasColumn('password_by_talk')) {
-			$table->addColumn('password_by_talk', Type::BOOLEAN, [
+			$table->addColumn('password_by_talk', Types::BOOLEAN, [
 				'default' => 0,
 			]);
 		}

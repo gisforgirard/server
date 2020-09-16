@@ -3,7 +3,9 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
@@ -25,7 +27,6 @@
 
 namespace OCA\Federation\Tests;
 
-
 use OCA\Federation\DbHandler;
 use OCA\Federation\TrustedServers;
 use OCP\IDBConnection;
@@ -40,7 +41,7 @@ class DbHandlerTest extends TestCase {
 	/** @var  DbHandler */
 	private $dbHandler;
 
-	/** @var IL10N | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IL10N | \PHPUnit\Framework\MockObject\MockObject */
 	private $il10n;
 
 	/** @var  IDBConnection */
@@ -92,9 +93,9 @@ class DbHandlerTest extends TestCase {
 
 	public function dataTestAddServer() {
 		return [
-				['http://owncloud.org', 'http://owncloud.org', sha1('owncloud.org')],
-				['https://owncloud.org', 'https://owncloud.org', sha1('owncloud.org')],
-				['http://owncloud.org/', 'http://owncloud.org', sha1('owncloud.org')],
+			['http://owncloud.org', 'http://owncloud.org', sha1('owncloud.org')],
+			['https://owncloud.org', 'https://owncloud.org', sha1('owncloud.org')],
+			['http://owncloud.org/', 'http://owncloud.org', sha1('owncloud.org')],
 		];
 	}
 

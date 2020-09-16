@@ -2,7 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
- * @author Ari Selseng <ari@selseng.net>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Daniel Jagszent <daniel@jagszent.de>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
@@ -74,7 +74,7 @@ class CacheJail extends CacheWrapper {
 		$rootLength = strlen($this->getRoot()) + 1;
 		if ($path === $this->getRoot()) {
 			return '';
-		} else if (substr($path, 0, $rootLength) === $this->getRoot() . '/') {
+		} elseif (substr($path, 0, $rootLength) === $this->getRoot() . '/') {
 			return substr($path, $rootLength);
 		} else {
 			return null;
@@ -209,9 +209,9 @@ class CacheJail extends CacheWrapper {
 	}
 
 	private function formatSearchResults($results) {
-		$results = array_filter($results, array($this, 'filterCacheEntry'));
+		$results = array_filter($results, [$this, 'filterCacheEntry']);
 		$results = array_values($results);
-		return array_map(array($this, 'formatCacheEntry'), $results);
+		return array_map([$this, 'formatCacheEntry'], $results);
 	}
 
 	/**
@@ -241,7 +241,7 @@ class CacheJail extends CacheWrapper {
 		$results = $this->getCache()->searchQuery($simpleQuery);
 		$results = $this->formatSearchResults($results);
 
-		$limit = $query->getLimit() === 0 ? NULL : $query->getLimit();
+		$limit = $query->getLimit() === 0 ? null : $query->getLimit();
 		$results = array_slice($results, $query->getOffset(), $limit);
 
 		return $results;
@@ -253,9 +253,9 @@ class CacheJail extends CacheWrapper {
 	 * @param string|boolean $path
 	 * @param array $data (optional) meta data of the folder
 	 */
-	public function correctFolderSize($path, $data = null, $isBackgroundSize = false) {
+	public function correctFolderSize($path, $data = null, $isBackgroundScan = false) {
 		if ($this->getCache() instanceof Cache) {
-			$this->getCache()->correctFolderSize($this->getSourcePath($path), $data, $isBackgroundSize);
+			$this->getCache()->correctFolderSize($this->getSourcePath($path), $data, $isBackgroundScan);
 		}
 	}
 
@@ -272,7 +272,6 @@ class CacheJail extends CacheWrapper {
 		} else {
 			return 0;
 		}
-
 	}
 
 	/**
@@ -282,7 +281,7 @@ class CacheJail extends CacheWrapper {
 	 */
 	public function getAll() {
 		// not supported
-		return array();
+		return [];
 	}
 
 	/**

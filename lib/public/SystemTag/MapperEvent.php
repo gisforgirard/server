@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -32,13 +33,11 @@ use OCP\EventDispatcher\Event;
 /**
  * Class MapperEvent
  *
- * @package OCP\SystemTag
  * @since 9.0.0
  */
 class MapperEvent extends Event {
-
-	const EVENT_ASSIGN = 'OCP\SystemTag\ISystemTagObjectMapper::assignTags';
-	const EVENT_UNASSIGN = 'OCP\SystemTag\ISystemTagObjectMapper::unassignTags';
+	public const EVENT_ASSIGN = 'OCP\SystemTag\ISystemTagObjectMapper::assignTags';
+	public const EVENT_UNASSIGN = 'OCP\SystemTag\ISystemTagObjectMapper::unassignTags';
 
 	/** @var string */
 	protected $event;

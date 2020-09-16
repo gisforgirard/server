@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright 2018, Maxence Lange <maxence@artificial-owl.com>
  *
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Maxence Lange <maxence@artificial-owl.com>
  *
  * @license GNU AGPL version 3 or any later version
@@ -26,7 +27,6 @@ declare(strict_types=1);
 
 namespace OCP\Dashboard\Service;
 
-
 use OCP\Dashboard\Model\IWidgetConfig;
 
 /**
@@ -37,8 +37,8 @@ use OCP\Dashboard\Model\IWidgetConfig;
  * configuration of a widget for a user.
  *
  * @since 15.0.0
+ * @deprecated 20.0.0
  *
- * @package OCP\Dashboard\Service
  */
 interface IWidgetsService {
 
@@ -46,6 +46,7 @@ interface IWidgetsService {
 	 * Returns the IWidgetConfig for a widgetId and userId
 	 *
 	 * @since 15.0.0
+	 * @deprecated 20.0.0
 	 *
 	 * @param string $widgetId
 	 * @param string $userId
@@ -53,5 +54,4 @@ interface IWidgetsService {
 	 * @return IWidgetConfig
 	 */
 	public function getWidgetConfig(string $widgetId, string $userId): IWidgetConfig;
-
 }

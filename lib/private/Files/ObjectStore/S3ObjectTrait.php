@@ -2,6 +2,8 @@
 /**
  * @copyright Copyright (c) 2017 Robin Appelman <robin@icewind.nl>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Florent <florent@coppint.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -30,8 +32,7 @@ use Aws\S3\MultipartUploader;
 use Aws\S3\ObjectUploader;
 use Aws\S3\S3Client;
 use Icewind\Streams\CallbackWrapper;
-
-const S3_UPLOAD_PART_SIZE = 524288000; // 500MB
+use OC\Files\Stream\SeekableHttpStream;
 
 trait S3ObjectTrait {
 	/**
@@ -48,28 +49,30 @@ trait S3ObjectTrait {
 	 * @throws \Exception when something goes wrong, message will be logged
 	 * @since 7.0.0
 	 */
-	function readObject($urn) {
-		$client = $this->getConnection();
-		$command = $client->getCommand('GetObject', [
-			'Bucket' => $this->bucket,
-			'Key' => $urn
-		]);
-		$request = \Aws\serialize($command);
-		$headers = [];
-		foreach ($request->getHeaders() as $key => $values) {
-			foreach ($values as $value) {
-				$headers[] = "$key: $value";
+	public function readObject($urn) {
+		return SeekableHttpStream::open(function ($range) use ($urn) {
+			$command = $this->getConnection()->getCommand('GetObject', [
+				'Bucket' => $this->bucket,
+				'Key' => $urn,
+				'Range' => 'bytes=' . $range,
+			]);
+			$request = \Aws\serialize($command);
+			$headers = [];
+			foreach ($request->getHeaders() as $key => $values) {
+				foreach ($values as $value) {
+					$headers[] = "$key: $value";
+				}
 			}
-		}
-		$opts = [
-			'http' => [
-				'protocol_version'  => 1.1,
-				'header' => $headers
-			]
-		];
+			$opts = [
+				'http' => [
+					'protocol_version' => 1.1,
+					'header' => $headers,
+				],
+			];
 
-		$context = stream_context_create($opts);
-		return fopen($request->getUri(), 'r', false, $context);
+			$context = stream_context_create($opts);
+			return fopen($request->getUri(), 'r', false, $context);
+		});
 	}
 
 	/**
@@ -78,7 +81,7 @@ trait S3ObjectTrait {
 	 * @throws \Exception when something goes wrong, message will be logged
 	 * @since 7.0.0
 	 */
-	function writeObject($urn, $stream) {
+	public function writeObject($urn, $stream) {
 		$count = 0;
 		$countStream = CallbackWrapper::wrap($stream, function ($read) use (&$count) {
 			$count += $read;
@@ -87,7 +90,7 @@ trait S3ObjectTrait {
 		$uploader = new MultipartUploader($this->getConnection(), $countStream, [
 			'bucket' => $this->bucket,
 			'key' => $urn,
-			'part_size' => S3_UPLOAD_PART_SIZE
+			'part_size' => $this->uploadPartSize,
 		]);
 
 		try {
@@ -111,10 +114,10 @@ trait S3ObjectTrait {
 	 * @throws \Exception when something goes wrong, message will be logged
 	 * @since 7.0.0
 	 */
-	function deleteObject($urn) {
+	public function deleteObject($urn) {
 		$this->getConnection()->deleteObject([
 			'Bucket' => $this->bucket,
-			'Key' => $urn
+			'Key' => $urn,
 		]);
 	}
 

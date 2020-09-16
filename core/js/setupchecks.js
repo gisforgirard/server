@@ -40,6 +40,7 @@
 						'<d:propfind xmlns:d="DAV:">' +
 						'<d:prop><d:resourcetype/></d:prop>' +
 						'</d:propfind>',
+				contentType: 'application/xml; charset=utf-8',
 				complete: afterCall,
 				allowAuthErrors: true
 			});
@@ -263,17 +264,17 @@
 							type: OC.SetupChecks.MESSAGE_TYPE_WARNING
 						});
 					}
-					if(data.phpSupported && data.phpSupported.eol) {
+					if (data.phpSupported && data.phpSupported.eol) {
 						messages.push({
-							msg: t('core', 'You are currently running PHP {version}. Upgrade your PHP version to take advantage of <a target="_blank" rel="noreferrer noopener" href="{phpLink}">performance and security updates provided by the PHP Group</a> as soon as your distribution supports it.', {version: data.phpSupported.version, phpLink: 'https://secure.php.net/supported-versions.php'}),
+							msg: t('core', 'You are currently running PHP {version}. Upgrade your PHP version to take advantage of <a target="_blank" rel="noreferrer noopener" href="{phpLink}">performance and security updates provided by the PHP Group</a> as soon as your distribution supports it.', { version: data.phpSupported.version, phpLink: 'https://secure.php.net/supported-versions.php' }),
 							type: OC.SetupChecks.MESSAGE_TYPE_INFO
-						});
+						})
 					}
-					if(data.phpSupported && data.phpSupported.version.substr(0, 3) === '5.6') {
+					if (data.phpSupported && data.phpSupported.version.substr(0, 3) === '7.2') {
 						messages.push({
-							msg: t('core', 'You are currently running PHP 5.6. The current major version of Nextcloud is the last that is supported on PHP 5.6. It is recommended to upgrade the PHP version to 7.0+ to be able to upgrade to Nextcloud 14.'),
+							msg: t('core', 'Nextcloud 20 is the last release supporting PHP 7.2. Nextcloud 21 requires at least PHP 7.3.'),
 							type: OC.SetupChecks.MESSAGE_TYPE_INFO
-						});
+						})
 					}
 					if(!data.forwardedForHeadersWorking) {
 						messages.push({
@@ -353,6 +354,21 @@
 								'core',
 								'The database is missing some indexes. Due to the fact that adding indexes on big tables could take some time they were not added automatically. By running "occ db:add-missing-indices" those missing indexes could be added manually while the instance keeps running. Once the indexes are added queries to those tables are usually much faster.'
 							) + "<ul>" + listOfMissingIndexes + "</ul>",
+							type: OC.SetupChecks.MESSAGE_TYPE_INFO
+						})
+					}
+					if (data.missingColumns.length > 0) {
+						var listOfMissingColumns = "";
+						data.missingColumns.forEach(function(element){
+							listOfMissingColumns += "<li>";
+							listOfMissingColumns += t('core', 'Missing optional column "{columnName}" in table "{tableName}".', element);
+							listOfMissingColumns += "</li>";
+						});
+						messages.push({
+							msg: t(
+								'core',
+								'The database is missing some optional columns. Due to the fact that adding columns on big tables could take some time they were not added automatically when they can be optional. By running "occ db:add-missing-columns" those missing columns could be added manually while the instance keeps running. Once the columns are added some features might improve responsiveness or usability.'
+							) + "<ul>" + listOfMissingColumns + "</ul>",
 							type: OC.SetupChecks.MESSAGE_TYPE_INFO
 						})
 					}
@@ -459,6 +475,22 @@
 							type: OC.SetupChecks.MESSAGE_TYPE_WARNING
 						})
 					}
+					if (window.location.protocol === 'http:' && data.reverseProxyGeneratedURL.split('/')[0] !== 'https:') {
+						messages.push({
+							msg: t(
+								'core',
+								'You are accessing your instance over a secure connection, however your instance is generating insecure URLs. This most likely means that you are behind a reverse proxy and the overwrite config variables are not set correctly. Please read <a target="_blank" rel="noreferrer noopener" href="{docLink}">the documentation page about this</a>.',
+								{
+									docLink: data.reverseProxyDocs
+								}
+							),
+							type: OC.SetupChecks.MESSAGE_TYPE_WARNING
+						})
+					}
+
+					OC.SetupChecks.addGenericSetupCheck(data, 'OCA\\Settings\\SetupChecks\\PhpDefaultCharset', messages)
+					OC.SetupChecks.addGenericSetupCheck(data, 'OCA\\Settings\\SetupChecks\\PhpOutputBuffering', messages)
+					OC.SetupChecks.addGenericSetupCheck(data, 'OCA\\Settings\\SetupChecks\\LegacySSEKeyFormat', messages)
 
 				} else {
 					messages.push({
@@ -475,6 +507,29 @@
 				allowAuthErrors: true
 			}).then(afterCall, afterCall);
 			return deferred.promise();
+		},
+
+		addGenericSetupCheck: function(data, check, messages) {
+			var setupCheck = data[check] || { pass: true, description: '', severity: 'info', linkToDocumentation: null}
+
+			var type = OC.SetupChecks.MESSAGE_TYPE_INFO
+			if (setupCheck.severity === 'warning') {
+				type = OC.SetupChecks.MESSAGE_TYPE_WARNING
+			} else if (setupCheck.severity === 'error') {
+				type = OC.SetupChecks.MESSAGE_TYPE_ERROR
+			}
+
+			var message = setupCheck.description;
+			if (setupCheck.linkToDocumentation) {
+				message += ' ' + t('core', 'For more details see the <a target="_blank" rel="noreferrer noopener" href="{docLink}">documentation</a>.', {docLink: setupCheck.linkToDocumentation});
+			}
+
+			if (!setupCheck.pass) {
+				messages.push({
+					msg: message,
+					type: type,
+				})
+			}
 		},
 
 		/**
@@ -572,12 +627,8 @@
 					});
 				}
 
-				if (!xhr.getResponseHeader('Referrer-Policy') ||
-					(xhr.getResponseHeader('Referrer-Policy').toLowerCase() !== 'no-referrer' &&
-					xhr.getResponseHeader('Referrer-Policy').toLowerCase() !== 'no-referrer-when-downgrade' &&
-					xhr.getResponseHeader('Referrer-Policy').toLowerCase() !== 'strict-origin' &&
-					xhr.getResponseHeader('Referrer-Policy').toLowerCase() !== 'strict-origin-when-cross-origin' &&
-					xhr.getResponseHeader('Referrer-Policy').toLowerCase() !== 'same-origin')) {
+				const referrerPolicy = xhr.getResponseHeader('Referrer-Policy')
+				if (referrerPolicy === null || !/(no-referrer(-when-downgrade)?|strict-origin(-when-cross-origin)?|same-origin)(,|$)/.test(referrerPolicy)) {
 					messages.push({
 						msg: t('core', 'The "{header}" HTTP header is not set to "{val1}", "{val2}", "{val3}", "{val4}" or "{val5}". This can leak referer information. See the <a target="_blank" rel="noreferrer noopener" href="{link}">W3C Recommendation ↗</a>.',
 							{
@@ -590,7 +641,7 @@
 								link: 'https://www.w3.org/TR/referrer-policy/'
 							}),
 						type: OC.SetupChecks.MESSAGE_TYPE_INFO
-					});
+					})
 				}
 			} else {
 				messages.push({

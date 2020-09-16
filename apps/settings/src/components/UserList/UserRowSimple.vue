@@ -32,12 +32,15 @@
 		<div v-if="subAdminsGroups.length > 0 && settings.isAdmin" class="subAdminsGroups">
 			{{ userSubAdminsGroupsLabels }}
 		</div>
-		<div v-tooltip.auto="usedSpace" class="quota">
-			<progress
-				class="quota-user-progress"
-				:class="{'warn': usedQuota > 80}"
-				:value="usedQuota"
-				max="100" />
+		<div class="userQuota">
+			<div class="quota">
+				{{ userQuota }} ({{ usedSpace }})
+				<progress
+					class="quota-user-progress"
+					:class="{'warn': usedQuota > 80}"
+					:value="usedQuota"
+					max="100" />
+			</div>
 		</div>
 		<div v-if="showConfig.showLanguages" class="languages">
 			{{ userLanguage.name }}
@@ -46,7 +49,7 @@
 			<div v-if="showConfig.showUserBackend" class="userBackend">
 				{{ user.backend }}
 			</div>
-			<div v-if="showConfig.showStoragePath" class="storageLocation subtitle">
+			<div v-if="showConfig.showStoragePath" v-tooltip="user.storageLocation" class="storageLocation subtitle">
 				{{ user.storageLocation }}
 			</div>
 		</div>
@@ -61,9 +64,15 @@
 						{{ t('settings', 'Edit User') }}
 					</ActionButton>
 				</Actions>
-				<div v-click-outside="hideMenu" class="icon-more" @click="$emit('toggleMenu')" />
-				<div class="popovermenu" :class="{ 'open': openedMenu }">
-					<PopoverMenu :menu="userActions" />
+				<div class="userPopoverMenuWrapper">
+					<button
+						v-click-outside="hideMenu"
+						class="icon-more"
+						:aria-label="t('settings', 'Toggle user actions menu')"
+						@click.prevent="$emit('toggleMenu')" />
+					<div class="popovermenu" :class="{ 'open': openedMenu }" :aria-expanded="openedMenu">
+						<PopoverMenu :menu="userActions" />
+					</div>
 				</div>
 			</div>
 			<div class="feedback" :style="{opacity: feedbackMessage !== '' ? 1 : 0}">
@@ -78,7 +87,6 @@
 import { PopoverMenu, Actions, ActionButton } from '@nextcloud/vue'
 import ClickOutside from 'vue-click-outside'
 import { getCurrentUser } from '@nextcloud/auth'
-
 import UserRowMixin from '../../mixins/UserRowMixin'
 export default {
 	name: 'UserRowSimple',
@@ -143,9 +151,17 @@ export default {
 			return t('settings', '{size} used', { size: OC.Util.humanFileSize(0) })
 		},
 		canEdit() {
-			return getCurrentUser().uid !== this.user.id && this.user.id !== 'admin'
+			return getCurrentUser().uid !== this.user.id || this.settings.isAdmin
 		},
-
+		userQuota() {
+			if (this.user.quota.quota === 'none') {
+				return t('settings', 'Unlimited')
+			}
+			if (this.user.quota.quota >= 0) {
+				return OC.Util.humanFileSize(this.user.quota.quota)
+			}
+			return OC.Util.humanFileSize(0)
+		},
 	},
 	methods: {
 		hideMenu() {
@@ -158,10 +174,14 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss">
 	.cellText {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+}
+	.icon-more {
+		background-color: var(--color-main-background);
+		border: 0;
 	}
 </style>

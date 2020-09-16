@@ -30,7 +30,6 @@ namespace OCP\Mail;
 /**
  * Interface IAttachment
  *
- * @package OCP\Mail
  * @since 13.0.0
  */
 interface IAttachment {
@@ -55,5 +54,4 @@ interface IAttachment {
 	 * @since 13.0.0
 	 */
 	public function setBody(string $body): IAttachment;
-
 }

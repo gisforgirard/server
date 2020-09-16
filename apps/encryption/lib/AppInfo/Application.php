@@ -4,8 +4,10 @@
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Clark Tomlinson <fallen013@gmail.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
@@ -26,7 +28,6 @@
  */
 
 namespace OCA\Encryption\AppInfo;
-
 
 use OC\Files\View;
 use OCA\Encryption\Controller\RecoveryController;
@@ -58,7 +59,7 @@ class Application extends \OCP\AppFramework\App {
 	/**
 	 * @param array $urlParams
 	 */
-	public function __construct($urlParams = array()) {
+	public function __construct($urlParams = []) {
 		parent::__construct('encryption', $urlParams);
 		$this->encryptionManager = \OC::$server->getEncryptionManager();
 		$this->config = \OC::$server->getConfig();
@@ -78,7 +79,6 @@ class Application extends \OCP\AppFramework\App {
 	 */
 	public function registerHooks() {
 		if (!$this->config->getSystemValueBool('maintenance')) {
-
 			$container = $this->getContainer();
 			$server = $container->getServer();
 			// Register our hooks and fire them.
@@ -97,7 +97,6 @@ class Application extends \OCP\AppFramework\App {
 			]);
 
 			$hookManager->fireHooks();
-
 		} else {
 			// Logout user if we are in maintenance to force re-login
 			$this->getContainer()->getServer()->getUserSession()->logout();
@@ -111,9 +110,8 @@ class Application extends \OCP\AppFramework\App {
 		$this->encryptionManager->registerEncryptionModule(
 			Encryption::ID,
 			Encryption::DISPLAY_NAME,
-			function() use ($container) {
-
-			return new Encryption(
+			function () use ($container) {
+				return new Encryption(
 				$container->query('Crypt'),
 				$container->query('KeyManager'),
 				$container->query('Util'),
@@ -123,8 +121,7 @@ class Application extends \OCP\AppFramework\App {
 				$container->getServer()->getLogger(),
 				$container->getServer()->getL10N($container->getAppName())
 			);
-		});
-
+			});
 	}
 
 	public function registerServices() {
@@ -156,7 +153,8 @@ class Application extends \OCP\AppFramework\App {
 					$server->getUserSession(),
 					new Session($server->getSession()),
 					$server->getLogger(),
-					$c->query('Util')
+					$c->query('Util'),
+					$server->getLockingProvider()
 				);
 			});
 
@@ -261,6 +259,5 @@ class Application extends \OCP\AppFramework\App {
 				);
 			}
 		);
-
 	}
 }

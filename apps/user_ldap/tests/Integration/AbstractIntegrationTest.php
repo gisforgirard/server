@@ -3,7 +3,9 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author root <root@localhost.localdomain>
  * @author Vinicius Cubas Brand <vinicius@eita.org.br>
@@ -29,10 +31,12 @@ namespace OCA\User_LDAP\Tests\Integration;
 use OCA\User_LDAP\Access;
 use OCA\User_LDAP\Connection;
 use OCA\User_LDAP\FilesystemHelper;
+use OCA\User_LDAP\GroupPluginManager;
 use OCA\User_LDAP\Helper;
 use OCA\User_LDAP\LDAP;
 use OCA\User_LDAP\LogWrapper;
 use OCA\User_LDAP\User\Manager;
+use OCA\User_LDAP\UserPluginManager;
 
 abstract class AbstractIntegrationTest {
 	/** @var  LDAP */
@@ -46,7 +50,7 @@ abstract class AbstractIntegrationTest {
 
 	/** @var Manager */
 	protected $userManager;
-	
+
 	/** @var Helper */
 	protected $helper;
 
@@ -71,10 +75,10 @@ abstract class AbstractIntegrationTest {
 	 * the LDAP backend.
 	 */
 	public function init() {
-		\OC::$server->registerService('LDAPUserPluginManager', function() {
+		\OC::$server->registerService(UserPluginManager::class, function () {
 			return new \OCA\User_LDAP\UserPluginManager();
 		});
-		\OC::$server->registerService('LDAPGroupPluginManager', function() {
+		\OC::$server->registerService(GroupPluginManager::class, function () {
 			return new \OCA\User_LDAP\GroupPluginManager();
 		});
 
@@ -83,7 +87,6 @@ abstract class AbstractIntegrationTest {
 		$this->initUserManager();
 		$this->initHelper();
 		$this->initAccess();
-
 	}
 
 	/**
@@ -128,7 +131,7 @@ abstract class AbstractIntegrationTest {
 			\OC::$server->getNotificationManager()
 		);
 	}
-	
+
 	/**
 	 * initializes the test Helper
 	 */
@@ -151,23 +154,23 @@ abstract class AbstractIntegrationTest {
 	public function run() {
 		$methods = get_class_methods($this);
 		$atLeastOneCaseRan = false;
-		foreach($methods as $method) {
-			if(strpos($method, 'case') === 0) {
+		foreach ($methods as $method) {
+			if (strpos($method, 'case') === 0) {
 				print("running $method " . PHP_EOL);
 				try {
-					if(!$this->$method()) {
+					if (!$this->$method()) {
 						print(PHP_EOL . '>>> !!! Test ' . $method . ' FAILED !!! <<<' . PHP_EOL . PHP_EOL);
 						exit(1);
 					}
 					$atLeastOneCaseRan = true;
-				} catch(\Exception $e) {
+				} catch (\Exception $e) {
 					print(PHP_EOL . '>>> !!! Test ' . $method . ' RAISED AN EXCEPTION !!! <<<' . PHP_EOL);
 					print($e->getMessage() . PHP_EOL . PHP_EOL);
 					exit(1);
 				}
 			}
 		}
-		if($atLeastOneCaseRan) {
+		if ($atLeastOneCaseRan) {
 			print('Tests succeeded' . PHP_EOL);
 		} else {
 			print('No Test was available.' . PHP_EOL);

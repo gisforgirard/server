@@ -25,9 +25,7 @@ namespace OCP\Share\Exceptions;
 /**
  * Class ShareNotFound
  *
- * @package OCP\Share\Exceptions
  * @since 9.0.0
  */
 class ShareNotFound extends GenericShareException {
-
 }

@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
@@ -46,9 +47,10 @@ use OC\Repair\NC14\AddPreviewBackgroundCleanupJob;
 use OC\Repair\NC16\AddClenupLoginFlowV2BackgroundJob;
 use OC\Repair\NC16\CleanupCardDAVPhotoCache;
 use OC\Repair\NC16\ClearCollectionsAccessCache;
-use OC\Repair\NC17\SetEnterpriseLogo;
-use OC\Repair\NC17\SwitchUpdateChannel;
 use OC\Repair\NC18\ResetGeneratedAvatarFlag;
+use OC\Repair\NC20\EncryptionLegacyCipher;
+use OC\Repair\NC20\EncryptionMigration;
+use OC\Repair\NC20\ShippedDashboardEnable;
 use OC\Repair\OldGroupMembershipShares;
 use OC\Repair\Owncloud\DropAccountTermsTable;
 use OC\Repair\Owncloud\SaveAccountsTableData;
@@ -93,7 +95,7 @@ class Repair implements IOutput {
 	 */
 	public function run() {
 		if (count($this->repairSteps) === 0) {
-			$this->emit('\OC\Repair', 'info', array('No repair steps available'));
+			$this->emit('\OC\Repair', 'info', ['No repair steps available']);
 
 			return;
 		}
@@ -156,9 +158,10 @@ class Repair implements IOutput {
 			new AddClenupLoginFlowV2BackgroundJob(\OC::$server->getJobList()),
 			new RemoveLinkShares(\OC::$server->getDatabaseConnection(), \OC::$server->getConfig(), \OC::$server->getGroupManager(), \OC::$server->getNotificationManager(), \OC::$server->query(ITimeFactory::class)),
 			new ClearCollectionsAccessCache(\OC::$server->getConfig(), \OC::$server->query(IManager::class)),
-			\OC::$server->query(SwitchUpdateChannel::class),
-			\OC::$server->query(SetEnterpriseLogo::class),
 			\OC::$server->query(ResetGeneratedAvatarFlag::class),
+			\OC::$server->query(EncryptionLegacyCipher::class),
+			\OC::$server->query(EncryptionMigration::class),
+			\OC::$server->get(ShippedDashboardEnable::class),
 		];
 	}
 
@@ -207,7 +210,7 @@ class Repair implements IOutput {
 
 	public function info($string) {
 		// for now just emit as we did in the past
-		$this->emit('\OC\Repair', 'info', array($string));
+		$this->emit('\OC\Repair', 'info', [$string]);
 	}
 
 	/**

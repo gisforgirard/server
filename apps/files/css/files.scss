@@ -21,9 +21,11 @@
 .actions input, .actions button, .actions .button { margin:0; float:left; }
 .actions .button a { color: #555; }
 .actions .button a:hover,
-.actions .button a:focus,
+.actions .button a:focus {
+	background-color: var(--color-background-hover);
+}
 .actions .button a:active {
-	color: #333;
+	background-color: var(--color-primary-light);
 }
 
 .actions.creatable {
@@ -59,7 +61,7 @@
 	position: relative;
 	width: 100%;
 	min-width: 250px;
-	display: flex;
+	display: block;
 	flex-direction: column;
 	// hide table if emptycontent is not hidden
 	#emptycontent:not(.hidden) ~ & {
@@ -77,6 +79,23 @@
 		display: block;
 		background-color: var(--color-main-background-translucent);
 	}
+
+	/**
+	 * This is a dirty hack as the sticky header requires us to use a different display type on the table element
+	 */
+	tbody {
+		display: table;
+		width: 100%;
+
+		tr[data-permissions="0"],
+		tr[data-permissions="16"] {
+			background-color: var(--color-background-dark);
+
+			td.filename .nametext .innernametext {
+				color: var(--color-text-maxcontrast);
+			}
+		}
+	}
 }
 
 #filestable.hidden {
@@ -90,15 +109,13 @@
 }
 
 .app-files #app-content {
-	transition: background-color 0.3s ease;
 	// force  the width to be the full width to not go bigger than the screen
 	// flex will grow for the mobile view if necessary
 	width: calc(100% - 300px);
 }
 
 .file-drag, .file-drag #filestable tbody tr, .file-drag #filestable tbody tr:hover {
-	transition: background-color 0.3s ease!important;
-	background-color: rgb(179, 230, 255) !important;
+	background-color: var(--color-primary-light) !important;
 }
 
 .app-files #app-content.dir-drop {
@@ -110,7 +127,7 @@
 }
 
 .app-files #app-content.dir-drop #filestable tbody tr.dropping-to-dir{
-	background-color: rgb(179, 230, 255) !important;
+	background-color: var(--color-primary-light) !important;
 }
 
 /* icons for sidebar */
@@ -169,22 +186,23 @@
 }
 
 #filestable tbody tr {
-	transition: background-color 0.3s ease;
 	height: 51px;
 }
 #filestable tbody tr:hover,
 #filestable tbody tr:focus,
 #filestable tbody .name:focus,
+#filestable tbody tr:hover .filename form,
+table tr.mouseOver td {
+	background-color: var(--color-background-hover);
+}
 #filestable tbody tr:active,
 #filestable tbody tr.highlighted,
 #filestable tbody tr.highlighted .name:focus,
 #filestable tbody tr.selected,
-#filestable tbody tr.searchresult,
-#filestable tbody tr:hover .filename form,
-table tr.mouseOver td {
-	transition: background-color 0.3s ease;
-	background-color: var(--color-background-dark);
+#filestable tbody tr.searchresult {
+	background-color: var(--color-primary-light);
 }
+
 tbody a { color: var(--color-main-text); }
 
 span.conflict-path, span.extension, span.uploading, td.date {
@@ -312,7 +330,8 @@ table td.fileaction {
 	width: 32px;
 	text-align: center;
 }
-table td.filename a.name {
+table td.filename a.name,
+table td.filename p.name {
 	display: flex;
 	position:relative; /* Firefox needs to explicitly have this default set … */
 	-moz-box-sizing: border-box;
@@ -347,6 +366,9 @@ table td.filename .thumbnail {
 	cursor: pointer;
 	position: absolute;
 	z-index: 4;
+}
+table td.filename p.name .thumbnail {
+	cursor: default;
 }
 
 // Show slight border around previews for images, txt, etc.
@@ -383,13 +405,12 @@ table {
 			width: 0;
 			flex-grow: 1;
 			display: flex;
-			padding: 0;
 			overflow: hidden;
 			white-space: nowrap;
 			text-overflow: ellipsis;
 			height: 100%;
 			z-index: 10;
-			padding-right: 20px;
+			padding: 0 20px 0 0;
 		}
 	}
 
@@ -470,7 +491,8 @@ table td.selection {
 	-webkit-transition:background-image 500ms; -moz-transition:background-image 500ms; -o-transition:background-image 500ms; transition:background-image 500ms;
 }
 
-#fileList tr td.filename a.name label {
+#fileList tr td.filename a.name label,
+#fileList tr td.filename p.name label {
 	position: absolute;
 	width: 80%;
 	height: 50px;
@@ -603,6 +625,9 @@ a.action > img {
 	}
 	.fileActionsMenu a.action, a.action.action-share.shared-style {
 		opacity: .7;
+	}
+	.fileActionsMenu .action.permanent {
+		opacity: 1;
 	}
 }
 
@@ -857,8 +882,7 @@ table.dragshadow td.size {
 				.thumbnail-wrapper,
 				.nametext,
 				.fileactions {
-					transition: background-color 0.3s ease;
-					background-color: var(--color-background-dark);
+					background-color: var(--color-background-hover);
 				}
 			}
 		}

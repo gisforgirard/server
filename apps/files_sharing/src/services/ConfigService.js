@@ -178,8 +178,11 @@ export default class Config {
 	 * @memberof Config
 	 */
 	get isMailShareAllowed() {
-		return OC.appConfig.shareByMailEnabled !== undefined
-			&& OC.getCapabilities()['files_sharing']['public']['enabled'] === true
+		const capabilities = OC.getCapabilities()
+		// eslint-disable-next-line camelcase
+		return capabilities?.files_sharing?.sharebymail !== undefined
+			// eslint-disable-next-line camelcase
+			&& capabilities?.files_sharing?.public?.enabled === true
 	}
 
 	/**
@@ -223,7 +226,7 @@ export default class Config {
 	 * @memberof Config
 	 */
 	get isPasswordForMailSharesRequired() {
-		return (OC.appConfig.shareByMail === undefined) ? false : OC.appConfig.shareByMail.enforcePasswordProtection === true
+		return (OC.getCapabilities().files_sharing.sharebymail === undefined) ? false : OC.getCapabilities().files_sharing.sharebymail.password.enforced
 	}
 
 	/**

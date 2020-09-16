@@ -4,6 +4,7 @@
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Kenneth Newwood <kenneth@newwood.name>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -27,7 +28,6 @@
 
 namespace OCA\Encryption\Tests\Crypto;
 
-
 use OC\Files\View;
 use OCA\Encryption\Crypto\EncryptAll;
 use OCA\Encryption\KeyManager;
@@ -49,43 +49,43 @@ use Test\TestCase;
 
 class EncryptAllTest extends TestCase {
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCA\Encryption\KeyManager */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCA\Encryption\KeyManager */
 	protected $keyManager;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCA\Encryption\Util */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCA\Encryption\Util */
 	protected $util;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCP\IUserManager */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCP\IUserManager */
 	protected $userManager;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCA\Encryption\Users\Setup */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCA\Encryption\Users\Setup */
 	protected $setupUser;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OC\Files\View */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OC\Files\View */
 	protected $view;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCP\IConfig */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCP\IConfig */
 	protected $config;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCP\Mail\IMailer */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCP\Mail\IMailer */
 	protected $mailer;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCP\IL10N */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCP\IL10N */
 	protected $l;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \Symfony\Component\Console\Helper\QuestionHelper */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \Symfony\Component\Console\Helper\QuestionHelper */
 	protected $questionHelper;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \Symfony\Component\Console\Input\InputInterface */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \Symfony\Component\Console\Input\InputInterface */
 	protected $inputInterface;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \Symfony\Component\Console\Output\OutputInterface */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \Symfony\Component\Console\Output\OutputInterface */
 	protected $outputInterface;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCP\UserInterface */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCP\UserInterface */
 	protected $userInterface;
 
-	/** @var  \PHPUnit_Framework_MockObject_MockObject | \OCP\Security\ISecureRandom  */
+	/** @var  \PHPUnit\Framework\MockObject\MockObject | \OCP\Security\ISecureRandom  */
 	protected $secureRandom;
 
 	/** @var  EncryptAll */
@@ -144,7 +144,7 @@ class EncryptAllTest extends TestCase {
 	}
 
 	public function testEncryptAll() {
-		/** @var EncryptAll  | \PHPUnit_Framework_MockObject_MockObject  $encryptAll */
+		/** @var EncryptAll  | \PHPUnit\Framework\MockObject\MockObject  $encryptAll */
 		$encryptAll = $this->getMockBuilder(EncryptAll::class)
 			->setConstructorArgs(
 				[
@@ -169,11 +169,10 @@ class EncryptAllTest extends TestCase {
 		$encryptAll->expects($this->at(2))->method('encryptAllUsersFiles')->with();
 
 		$encryptAll->encryptAll($this->inputInterface, $this->outputInterface);
-
 	}
 
 	public function testEncryptAllWithMasterKey() {
-		/** @var EncryptAll  | \PHPUnit_Framework_MockObject_MockObject  $encryptAll */
+		/** @var EncryptAll  | \PHPUnit\Framework\MockObject\MockObject  $encryptAll */
 		$encryptAll = $this->getMockBuilder(EncryptAll::class)
 			->setConstructorArgs(
 				[
@@ -199,11 +198,10 @@ class EncryptAllTest extends TestCase {
 		$encryptAll->expects($this->never())->method('outputPasswords');
 
 		$encryptAll->encryptAll($this->inputInterface, $this->outputInterface);
-
 	}
 
 	public function testCreateKeyPairs() {
-		/** @var EncryptAll  | \PHPUnit_Framework_MockObject_MockObject  $encryptAll */
+		/** @var EncryptAll  | \PHPUnit\Framework\MockObject\MockObject  $encryptAll */
 		$encryptAll = $this->getMockBuilder(EncryptAll::class)
 			->setConstructorArgs(
 				[
@@ -252,7 +250,7 @@ class EncryptAllTest extends TestCase {
 	}
 
 	public function testEncryptAllUsersFiles() {
-		/** @var EncryptAll  | \PHPUnit_Framework_MockObject_MockObject  $encryptAll */
+		/** @var EncryptAll  | \PHPUnit\Framework\MockObject\MockObject  $encryptAll */
 		$encryptAll = $this->getMockBuilder(EncryptAll::class)
 			->setConstructorArgs(
 				[
@@ -281,11 +279,10 @@ class EncryptAllTest extends TestCase {
 		$encryptAll->expects($this->at(1))->method('encryptUsersFiles')->with('user2');
 
 		$this->invokePrivate($encryptAll, 'encryptAllUsersFiles');
-
 	}
 
 	public function testEncryptUsersFiles() {
-		/** @var EncryptAll  | \PHPUnit_Framework_MockObject_MockObject  $encryptAll */
+		/** @var EncryptAll  | \PHPUnit\Framework\MockObject\MockObject  $encryptAll */
 		$encryptAll = $this->getMockBuilder(EncryptAll::class)
 			->setConstructorArgs(
 				[
@@ -323,7 +320,7 @@ class EncryptAllTest extends TestCase {
 
 		$this->view->expects($this->any())->method('is_dir')
 			->willReturnCallback(
-				function($path) {
+				function ($path) {
 					if ($path === '/user1/files/foo') {
 						return true;
 					}
@@ -340,7 +337,6 @@ class EncryptAllTest extends TestCase {
 		$progressBar = new ProgressBar($this->outputInterface);
 
 		$this->invokePrivate($encryptAll, 'encryptUsersFiles', ['user1', $progressBar, '']);
-
 	}
 
 	public function testGenerateOneTimePassword() {
@@ -365,7 +361,7 @@ class EncryptAllTest extends TestCase {
 			->willReturn($fileInfo);
 
 
-		if($isEncrypted) {
+		if ($isEncrypted) {
 			$this->view->expects($this->never())->method('copy');
 			$this->view->expects($this->never())->method('rename');
 		} else {
@@ -384,5 +380,4 @@ class EncryptAllTest extends TestCase {
 			[false],
 		];
 	}
-
 }

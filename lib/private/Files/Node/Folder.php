@@ -3,6 +3,8 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -30,6 +32,7 @@
 namespace OC\Files\Node;
 
 use OC\DB\QueryBuilder\Literal;
+use OC\Files\Storage\Wrapper\Jail;
 use OCA\Files_Sharing\SharedStorage;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\Files\Config\ICachedMountInfo;
@@ -72,7 +75,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 		}
 		if ($path === $this->path) {
 			return '/';
-		} else if (strpos($path, $this->path . '/') !== 0) {
+		} elseif (strpos($path, $this->path . '/') !== 0) {
 			return null;
 		} else {
 			$path = substr($path, strlen($this->path));
@@ -160,7 +163,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 			$fullPath = $this->getFullPath($path);
 			$nonExisting = new NonExistingFolder($this->root, $this->view, $fullPath);
 			$this->sendHooks(['preWrite', 'preCreate'], [$nonExisting]);
-			if(!$this->view->mkdir($fullPath)) {
+			if (!$this->view->mkdir($fullPath)) {
 				throw new NotPermittedException('Could not create folder');
 			}
 			$node = new Folder($this->root, $this->view, $fullPath);
@@ -173,15 +176,21 @@ class Folder extends Node implements \OCP\Files\Folder {
 
 	/**
 	 * @param string $path
+	 * @param string | resource | null $content
 	 * @return \OC\Files\Node\File
 	 * @throws \OCP\Files\NotPermittedException
 	 */
-	public function newFile($path) {
+	public function newFile($path, $content = null) {
 		if ($this->checkPermissions(\OCP\Constants::PERMISSION_CREATE)) {
 			$fullPath = $this->getFullPath($path);
 			$nonExisting = new NonExistingFile($this->root, $this->view, $fullPath);
 			$this->sendHooks(['preWrite', 'preCreate'], [$nonExisting]);
-			if (!$this->view->touch($fullPath)) {
+			if ($content !== null) {
+				$result = $this->view->file_put_contents($fullPath, $content);
+			} else {
+				$result = $this->view->touch($fullPath);
+			}
+			if ($result === false) {
 				throw new NotPermittedException('Could not create path');
 			}
 			$node = new File($this->root, $this->view, $fullPath);
@@ -199,9 +208,9 @@ class Folder extends Node implements \OCP\Files\Folder {
 	 */
 	public function search($query) {
 		if (is_string($query)) {
-			return $this->searchCommon('search', array('%' . $query . '%'));
+			return $this->searchCommon('search', ['%' . $query . '%']);
 		} else {
-			return $this->searchCommon('searchQuery', array($query));
+			return $this->searchCommon('searchQuery', [$query]);
 		}
 	}
 
@@ -212,7 +221,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 	 * @return Node[]
 	 */
 	public function searchByMime($mimetype) {
-		return $this->searchCommon('searchByMime', array($mimetype));
+		return $this->searchCommon('searchByMime', [$mimetype]);
 	}
 
 	/**
@@ -223,7 +232,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 	 * @return Node[]
 	 */
 	public function searchByTag($tag, $userId) {
-		return $this->searchCommon('searchByTag', array($tag, $userId));
+		return $this->searchCommon('searchByTag', [$tag, $userId]);
 	}
 
 	/**
@@ -237,7 +246,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 			throw new \InvalidArgumentException('searching by owner is only allows on the users home folder');
 		}
 
-		$files = array();
+		$files = [];
 		$rootLength = strlen($this->path);
 		$mount = $this->root->getMount($this->path);
 		$storage = $mount->getStorage();
@@ -250,7 +259,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 
 		$cache = $storage->getCache('');
 
-		$results = call_user_func_array(array($cache, $method), $args);
+		$results = call_user_func_array([$cache, $method], $args);
 		foreach ($results as $result) {
 			if ($internalRootLength === 0 or substr($result['path'], 0, $internalRootLength) === $internalPath) {
 				$result['internalPath'] = $result['path'];
@@ -388,7 +397,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 
 	public function delete() {
 		if ($this->checkPermissions(\OCP\Constants::PERMISSION_DELETE)) {
-			$this->sendHooks(array('preDelete'));
+			$this->sendHooks(['preDelete']);
 			$fileInfo = $this->getFileInfo();
 			$this->view->rmdir($this->path);
 			$nonExisting = new NonExistingFolder($this->root, $this->view, $this->path, $fileInfo);
@@ -431,13 +440,33 @@ class Folder extends Node implements \OCP\Files\Folder {
 		$mountMap = array_combine($storageIds, $mounts);
 		$folderMimetype = $mimetypeLoader->getId(FileInfo::MIMETYPE_FOLDER);
 
+		/*
+		 * Construct an array of the storage id with their prefix path
+		 * This helps us to filter in the final query
+		 */
+		$filters = array_map(function (IMountPoint $mount) {
+			$storage = $mount->getStorage();
+
+			$storageId = $storage->getCache()->getNumericStorageId();
+			$prefix = '';
+
+			if ($storage->instanceOfStorage(Jail::class)) {
+				$prefix = $storage->getUnJailedPath('');
+			}
+
+			return [
+				'storageId' => $storageId,
+				'pathPrefix' => $prefix,
+			];
+		}, $mounts);
+
 		// Search in batches of 500 entries
 		$searchLimit = 500;
 		$results = [];
 		$searchResultCount = 0;
 		$count = 0;
 		do {
-			$searchResult = $this->recentSearch($searchLimit, $offset, $storageIds, $folderMimetype);
+			$searchResult = $this->recentSearch($searchLimit, $offset, $folderMimetype, $filters);
 
 			// Exit condition if there are no more results
 			if (count($searchResult) === 0) {
@@ -459,13 +488,36 @@ class Folder extends Node implements \OCP\Files\Folder {
 		return array_slice($results, 0, $limit);
 	}
 
-	private function recentSearch($limit, $offset, $storageIds, $folderMimetype) {
-		$builder = \OC::$server->getDatabaseConnection()->getQueryBuilder();
+	private function recentSearch($limit, $offset, $folderMimetype, $filters) {
+		$dbconn = \OC::$server->getDatabaseConnection();
+		$builder = $dbconn->getQueryBuilder();
 		$query = $builder
 			->select('f.*')
-			->from('filecache', 'f')
-			->andWhere($builder->expr()->in('f.storage', $builder->createNamedParameter($storageIds, IQueryBuilder::PARAM_INT_ARRAY)))
-			->andWhere($builder->expr()->orX(
+			->from('filecache', 'f');
+
+		/*
+		 * Here is where we construct the filtering.
+		 * Note that this is expensive filtering as it is a lot of like queries.
+		 * However the alternative is we do this filtering and parsing later in php with the risk of looping endlessly
+		 */
+		$storageFilters = $builder->expr()->orX();
+		foreach ($filters as $filter) {
+			$storageFilter = $builder->expr()->andX(
+				$builder->expr()->eq('f.storage', $builder->createNamedParameter($filter['storageId']))
+			);
+
+			if ($filter['pathPrefix'] !== '') {
+				$storageFilter->add(
+					$builder->expr()->like('f.path', $builder->createNamedParameter($dbconn->escapeLikeParameter($filter['pathPrefix']) . '/%'))
+				);
+			}
+
+			$storageFilters->add($storageFilter);
+		}
+
+		$query->andWhere($storageFilters);
+
+		$query->andWhere($builder->expr()->orX(
 			// handle non empty folders separate
 				$builder->expr()->neq('f.mimetype', $builder->createNamedParameter($folderMimetype, IQueryBuilder::PARAM_INT)),
 				$builder->expr()->eq('f.size', new Literal(0))
@@ -475,6 +527,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 			->orderBy('f.mtime', 'DESC')
 			->setMaxResults($limit)
 			->setFirstResult($offset);
+
 		return $query->execute()->fetchAll();
 	}
 
@@ -514,7 +567,7 @@ class Folder extends Node implements \OCP\Files\Folder {
 			$rootLength = strlen($jailRoot) + 1;
 			if ($path === $jailRoot) {
 				return $mount->getMountPoint();
-			} else if (substr($path, 0, $rootLength) === $jailRoot . '/') {
+			} elseif (substr($path, 0, $rootLength) === $jailRoot . '/') {
 				return $mount->getMountPoint() . substr($path, $rootLength);
 			} else {
 				return null;

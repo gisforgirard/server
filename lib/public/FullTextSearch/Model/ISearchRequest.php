@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCP\FullTextSearch\Model;
 
-
 /**
  * Interface ISearchRequest
  *
@@ -43,7 +42,6 @@ namespace OCP\FullTextSearch\Model;
  * @since 15.0.0
  *
  *
- * @package OCP\FullTextSearch\Model
  */
 interface ISearchRequest {
 
@@ -359,5 +357,4 @@ interface ISearchRequest {
 	 * @since 17.0.0
 	 */
 	public function getSimpleQueries(): array;
-
 }

@@ -2,6 +2,7 @@
 /**
  * @copyright 2017 Christoph Wurst <christoph@winzerhof-wurst.at>
  *
+ * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Julius Härtl <jus@bitgrid.net>
@@ -66,7 +67,7 @@ class Manager {
 		$minSearchStringLength = $this->config->getSystemValueInt('sharing.minSearchStringLength', 0);
 		$topEntries = [];
 		if (strlen($filter) >= $minSearchStringLength) {
-			$entries = $this->store->getContacts($user, $filter);
+			$entries = $this->store->getContacts($user, $filter, $maxAutocompleteResults);
 
 			$sortedEntries = $this->sortEntries($entries);
 			$topEntries = array_slice($sortedEntries, 0, $maxAutocompleteResults);
@@ -100,7 +101,7 @@ class Manager {
 	 * @return IEntry[]
 	 */
 	private function sortEntries(array $entries) {
-		usort($entries, function(IEntry $entryA, IEntry $entryB) {
+		usort($entries, function (IEntry $entryA, IEntry $entryB) {
 			return strcasecmp($entryA->getFullName(), $entryB->getFullName());
 		});
 		return $entries;
@@ -118,5 +119,4 @@ class Manager {
 			}
 		}
 	}
-
 }

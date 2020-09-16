@@ -16,6 +16,8 @@
 !/apps/accessibility
 !/apps/cloud_federation_api
 !/apps/comments
+!/apps/contactsinteraction
+!/apps/dashboard
 !/apps/dav
 !/apps/files
 !/apps/federation
@@ -37,6 +39,8 @@
 !/apps/updatenotification
 !/apps/theming
 !/apps/twofactor_backupcodes
+!/apps/user_status
+!/apps/weather_status
 !/apps/workflowengine
 /apps/files_external/3rdparty/irodsphp/PHPUnitTest
 /apps/files_external/3rdparty/irodsphp/web
@@ -69,6 +73,7 @@ CVS/*
 .svn/*
 RCS/*
 *.backup*
+.php_cs.cache
 
 # kdevelop
 .kdev

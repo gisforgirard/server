@@ -38,7 +38,6 @@ namespace OCP\WorkflowEngine;
  *   when direct storage access is required, adding a wrapper or listening to
  *   a specific one is required over usual file events.
  *
- * @package OCP\WorkflowEngine
  *
  * @since 18.0.0
  */
@@ -54,5 +53,4 @@ interface IComplexOperation extends IOperation {
 	 * @since 18.0.0
 	 */
 	public function getTriggerHint(): string;
-
 }

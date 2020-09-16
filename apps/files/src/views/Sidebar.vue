@@ -47,7 +47,7 @@
 				:close-after-click="true"
 				icon="icon-tag"
 				@click="toggleTags">
-				{{ t('files_sharing', 'Tags') }}
+				{{ t('files', 'Tags') }}
 			</ActionButton>
 		</template>
 
@@ -454,7 +454,7 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
-#app-sidebar {
+.app-sidebar {
 	&.has-preview::v-deep {
 		.app-sidebar-header__figure {
 			background-size: cover;

@@ -38,7 +38,6 @@ use OCP\Share\Exceptions\IllegalIDChangeException;
 /**
  * Interface IShare
  *
- * @package OCP\Share
  * @since 9.0.0
  */
 interface IShare {
@@ -550,7 +549,7 @@ interface IShare {
 	 * This is mainly for public shares. It will signal that the share page should
 	 * hide download buttons etc.
 	 *
-	 * @param bool $ro
+	 * @param bool $hide
 	 * @return IShare
 	 * @since 15.0.0
 	 */

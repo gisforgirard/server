@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2017, ownCloud GmbH
  *
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
@@ -24,7 +25,6 @@
 
 namespace OCA\DAV\Tests\Unit\Avatars;
 
-
 use OCA\DAV\Avatars\AvatarHome;
 use OCA\DAV\Avatars\AvatarNode;
 use OCP\IAvatar;
@@ -38,7 +38,7 @@ class AvatarHomeTest extends TestCase {
 	/** @var AvatarHome */
 	private $home;
 
-	/** @var IAvatarManager | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IAvatarManager | \PHPUnit\Framework\MockObject\MockObject */
 	private $avatarManager;
 
 	protected function setUp(): void {
@@ -122,5 +122,4 @@ class AvatarHomeTest extends TestCase {
 	public function testGetLastModified() {
 		self::assertNull($this->home->getLastModified());
 	}
-
 }

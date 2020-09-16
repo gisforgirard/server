@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCP\FullTextSearch;
 
-
 use OCP\FullTextSearch\Model\IDocumentAccess;
 use OCP\FullTextSearch\Model\IIndex;
 use OCP\FullTextSearch\Model\IIndexDocument;
@@ -70,7 +69,6 @@ use OCP\FullTextSearch\Model\ISearchResult;
  *
  * @since 15.0.0
  *
- * @package OCP\FullTextSearch
  */
 interface IFullTextSearchPlatform {
 
@@ -216,6 +214,4 @@ interface IFullTextSearchPlatform {
 	 * @return IIndexDocument
 	 */
 	public function getDocument(string $providerId, string $documentId): IIndexDocument;
-
-
 }

@@ -32,7 +32,7 @@ use Test\TestCase;
 
 class UserControllerTest extends TestCase {
 
-	/** @var IUserManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUserManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $userManager;
 
 	/** @var UserController */
@@ -56,12 +56,12 @@ class UserControllerTest extends TestCase {
 
 		$this->userManager
 			->method('get')
-			->will($this->returnCallback(function ($uid) use ($user) {
+			->willReturnCallback(function ($uid) use ($user) {
 				if ($uid === 'foo') {
 					return $user;
 				}
 				return null;
-			}));
+			});
 
 		$expected = new JSONResponse([
 			'users' => [

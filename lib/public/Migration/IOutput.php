@@ -27,7 +27,6 @@ namespace OCP\Migration;
 /**
  * Interface IOutput
  *
- * @package OCP\Migration
  * @since 9.1.0
  */
 interface IOutput {
@@ -62,5 +61,4 @@ interface IOutput {
 	 * @since 9.1.0
 	 */
 	public function finishProgress();
-
 }

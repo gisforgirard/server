@@ -2,7 +2,9 @@
 /**
  * @copyright Copyright (c) 2018, Georg Ehrke
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -34,10 +36,10 @@ use Test\TestCase;
 
 class RefreshWebcalJobRegistrarTest extends TestCase {
 
-	/** @var IDBConnection | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IDBConnection | \PHPUnit\Framework\MockObject\MockObject */
 	private $db;
 
-	/** @var IJobList | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IJobList | \PHPUnit\Framework\MockObject\MockObject */
 	private $jobList;
 
 	/** @var RefreshWebcalJobRegistrar */
@@ -64,45 +66,45 @@ class RefreshWebcalJobRegistrarTest extends TestCase {
 
 		$this->db->expects($this->once())
 			->method('getQueryBuilder')
-			->will($this->returnValue($queryBuilder));
+			->willReturn($queryBuilder);
 
 		$queryBuilder->expects($this->at(0))
 			->method('select')
 			->with(['principaluri', 'uri'])
-			->will($this->returnValue($queryBuilder));
+			->willReturn($queryBuilder);
 		$queryBuilder->expects($this->at(1))
 			->method('from')
 			->with('calendarsubscriptions')
-			->will($this->returnValue($queryBuilder));
+			->willReturn($queryBuilder);
 		$queryBuilder->expects($this->at(2))
 			->method('execute')
-			->will($this->returnValue($statement));
+			->willReturn($statement);
 
 		$statement->expects($this->at(0))
 			->method('fetch')
 			->with(\PDO::FETCH_ASSOC)
-			->will($this->returnValue([
+			->willReturn([
 				'principaluri' => 'foo1',
 				'uri' => 'bar1',
-			]));
+			]);
 		$statement->expects($this->at(1))
 			->method('fetch')
 			->with(\PDO::FETCH_ASSOC)
-			->will($this->returnValue([
+			->willReturn([
 				'principaluri' => 'foo2',
 				'uri' => 'bar2',
-			]));
+			]);
 		$statement->expects($this->at(2))
 			->method('fetch')
 			->with(\PDO::FETCH_ASSOC)
-			->will($this->returnValue([
+			->willReturn([
 				'principaluri' => 'foo3',
 				'uri' => 'bar3',
-			]));
+			]);
 		$statement->expects($this->at(0))
 			->method('fetch')
 			->with(\PDO::FETCH_ASSOC)
-			->will($this->returnValue(null));
+			->willReturn(null);
 
 		$this->jobList->expects($this->at(0))
 			->method('has')
@@ -110,7 +112,7 @@ class RefreshWebcalJobRegistrarTest extends TestCase {
 				'principaluri' => 'foo1',
 				'uri' => 'bar1',
 			])
-			->will($this->returnValue(false));
+			->willReturn(false);
 		$this->jobList->expects($this->at(1))
 			->method('add')
 			->with(RefreshWebcalJob::class, [
@@ -123,14 +125,14 @@ class RefreshWebcalJobRegistrarTest extends TestCase {
 				'principaluri' => 'foo2',
 				'uri' => 'bar2',
 			])
-			->will($this->returnValue(true));
+			->willReturn(true);
 		$this->jobList->expects($this->at(3))
 			->method('has')
 			->with(RefreshWebcalJob::class, [
 				'principaluri' => 'foo3',
 				'uri' => 'bar3',
 			])
-			->will($this->returnValue(false));
+			->willReturn(false);
 		$this->jobList->expects($this->at(4))
 			->method('add')
 			->with(RefreshWebcalJob::class, [
@@ -144,5 +146,4 @@ class RefreshWebcalJobRegistrarTest extends TestCase {
 
 		$this->migration->run($output);
 	}
-
 }

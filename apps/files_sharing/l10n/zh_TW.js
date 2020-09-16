@@ -12,10 +12,13 @@ OC.L10N.register(
     "Files and folders you share by link will show up here" : "您分享的檔案與資料夾連結將會顯示在這裡",
     "Deleted shares" : "移除分享",
     "No deleted shares" : "沒有移除的分享",
+    "Pending shares" : "等待分享",
     "Shares" : "分享",
     "No shares" : "無分享",
+    "Restore" : "回復",
     "Restore share" : "還原分享",
     "Something happened. Unable to restore the share." : "出了些狀況，無法還原分享。",
+    "error" : "錯誤",
     "This will stop your current uploads." : "這會終止目前任何的上傳。",
     "Move or copy" : "移動或複製",
     "Download" : "下載",
@@ -72,6 +75,7 @@ OC.L10N.register(
     "{actor} shared {file} with you" : "{actor} 與你分享了 {file}",
     "A file or folder shared by mail or by public link was <strong>downloaded</strong>" : "email或公開連結分享的檔案與資料夾已被 <strong>下載</strong>",
     "A file or folder was shared from <strong>another server</strong>" : "檔案或目錄已被 <strong>其他伺服器</strong> 分享",
+    "Files" : "檔案",
     "A file or folder has been <strong>shared</strong>" : "檔案或目錄已被 <strong>分享</strong>",
     "Wrong share ID, share doesn't exist" : "錯誤的分享 ID ，分享不存在",
     "Could not delete share" : "無法刪除分享",
@@ -151,8 +155,8 @@ OC.L10N.register(
     "Upload files to %s" : "上傳檔案到 %s",
     "Note" : "筆記",
     "Select or drop files" : "選擇或拖曳檔案至此",
-    "Uploading files…" : "上傳檔案中…",
     "Uploaded files:" : "已上傳的檔案：",
-    "could not delete share" : "無法刪除分享"
+    "could not delete share" : "無法刪除分享",
+    "Uploading files…" : "上傳檔案中…"
 },
 "nplurals=1; plural=0;");

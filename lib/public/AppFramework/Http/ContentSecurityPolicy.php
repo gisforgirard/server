@@ -6,7 +6,7 @@
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author sualko <klaus@jsxc.org>
- * @author Thomas Citharel <tcit@tcit.fr>
+ * @author Thomas Citharel <nextcloud@tcit.fr>
  *
  * @license AGPL-3.0
  *
@@ -38,7 +38,6 @@ namespace OCP\AppFramework\Http;
  *
  * This class allows unsafe-eval of javascript and unsafe-inline of CSS.
  *
- * @package OCP\AppFramework\Http
  * @since 8.1.0
  */
 class ContentSecurityPolicy extends EmptyContentSecurityPolicy {

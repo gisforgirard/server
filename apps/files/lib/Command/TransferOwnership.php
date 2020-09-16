@@ -12,6 +12,7 @@ declare(strict_types=1);
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Sujith H <sharidasan@owncloud.com>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
+ * @author Tobia De Koninck <LEDfan@users.noreply.github.com>
  * @author Vincent Petry <pvince81@owncloud.com>
  *
  * @license AGPL-3.0
@@ -77,10 +78,15 @@ class TransferOwnership extends Command {
 				InputOption::VALUE_REQUIRED,
 				'selectively provide the path to transfer. For example --path="folder_name"',
 				''
-			);
+			)->addOption(
+				'move',
+				null,
+				InputOption::VALUE_NONE,
+				'move data from source user to root directory of destination user, which must be empty'
+		);
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$sourceUserObject = $this->userManager->get($input->getArgument('source-user'));
 		$destinationUserObject = $this->userManager->get($input->getArgument('destination-user'));
 
@@ -99,7 +105,8 @@ class TransferOwnership extends Command {
 				$sourceUserObject,
 				$destinationUserObject,
 				ltrim($input->getOption('path'), '/'),
-				$output
+				$output,
+				$input->getOption('move') === true
 			);
 		} catch (TransferOwnershipException $e) {
 			$output->writeln("<error>" . $e->getMessage() . "</error>");
@@ -108,5 +115,4 @@ class TransferOwnership extends Command {
 
 		return 0;
 	}
-
 }

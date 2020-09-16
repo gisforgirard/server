@@ -4,6 +4,7 @@
  *
  * @author Björn Schießle <bjoern@schiessle.org>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license AGPL-3.0
@@ -24,14 +25,13 @@
 
 namespace OCA\Federation\Tests;
 
-
 use OCA\Federation\Hooks;
 use OCA\Federation\TrustedServers;
 use Test\TestCase;
 
 class HooksTest extends TestCase {
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject | TrustedServers */
+	/** @var \PHPUnit\Framework\MockObject\MockObject | TrustedServers */
 	private $trustedServers;
 
 	/** @var  Hooks */
@@ -67,7 +67,6 @@ class HooksTest extends TestCase {
 		}
 
 		$this->hooks->addServerHook(['server' => 'url']);
-
 	}
 
 	public function dataTestAddServerHook() {

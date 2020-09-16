@@ -39,14 +39,14 @@ class RepairMimeTypesTest extends \Test\TestCase {
 		$this->savedMimetypeLoader = \OC::$server->getMimeTypeLoader();
 		$this->mimetypeLoader = \OC::$server->getMimeTypeLoader();
 
-		/** @var IConfig | \PHPUnit_Framework_MockObject_MockObject $config */
+		/** @var IConfig | \PHPUnit\Framework\MockObject\MockObject $config */
 		$config = $this->getMockBuilder(IConfig::class)
 			->disableOriginalConstructor()
 			->getMock();
 		$config->expects($this->any())
 			->method('getSystemValue')
 			->with('version')
-			->will($this->returnValue('11.0.0.0'));
+			->willReturn('11.0.0.0');
 
 		$this->storage = new \OC\Files\Storage\Temporary([]);
 
@@ -87,7 +87,6 @@ class RepairMimeTypesTest extends \Test\TestCase {
 				]
 			);
 		}
-
 	}
 
 	private function checkEntries($entries) {
@@ -100,7 +99,7 @@ class RepairMimeTypesTest extends \Test\TestCase {
 	private function renameMimeTypes($currentMimeTypes, $fixedMimeTypes) {
 		$this->addEntries($currentMimeTypes);
 
-		/** @var IOutput | \PHPUnit_Framework_MockObject_MockObject $outputMock */
+		/** @var IOutput | \PHPUnit\Framework\MockObject\MockObject $outputMock */
 		$outputMock = $this->getMockBuilder('\OCP\Migration\IOutput')
 			->disableOriginalConstructor()
 			->getMock();

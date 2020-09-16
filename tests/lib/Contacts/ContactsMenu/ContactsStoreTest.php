@@ -31,19 +31,18 @@ use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\IUserManager;
-use PHPUnit_Framework_MockObject_MockObject;
 use Test\TestCase;
 
 class ContactsStoreTest extends TestCase {
 	/** @var ContactsStore */
 	private $contactsStore;
-	/** @var IManager|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $contactsManager;
-	/** @var IUserManager|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUserManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $userManager;
-	/** @var IGroupManager|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IGroupManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $groupManager;
-	/** @var IConfig|PHPUnit_Framework_MockObject_MockObject */
+	/** @var IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	private $config;
 
 	protected function setUp(): void {
@@ -57,7 +56,7 @@ class ContactsStoreTest extends TestCase {
 	}
 
 	public function testGetContactsWithoutFilter() {
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$this->contactsManager->expects($this->once())
 			->method('search')
@@ -73,7 +72,7 @@ class ContactsStoreTest extends TestCase {
 						'darren@roner.au'
 					],
 				],
-		]);
+			]);
 		$user->expects($this->once())
 			->method('getUID')
 			->willReturn('user123');
@@ -83,11 +82,11 @@ class ContactsStoreTest extends TestCase {
 		$this->assertCount(2, $entries);
 		$this->assertEquals([
 			'darren@roner.au'
-			], $entries[1]->getEMailAddresses());
+		], $entries[1]->getEMailAddresses());
 	}
 
 	public function testGetContactsHidesOwnEntry() {
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$this->contactsManager->expects($this->once())
 			->method('search')
@@ -103,7 +102,7 @@ class ContactsStoreTest extends TestCase {
 						'darren@roner.au'
 					],
 				],
-		]);
+			]);
 		$user->expects($this->once())
 			->method('getUID')
 			->willReturn('user123');
@@ -114,7 +113,7 @@ class ContactsStoreTest extends TestCase {
 	}
 
 	public function testGetContactsWithoutBinaryImage() {
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$this->contactsManager->expects($this->once())
 			->method('search')
@@ -131,7 +130,7 @@ class ContactsStoreTest extends TestCase {
 					],
 					'PHOTO' => base64_encode('photophotophoto'),
 				],
-		]);
+			]);
 		$user->expects($this->once())
 			->method('getUID')
 			->willReturn('user123');
@@ -143,7 +142,7 @@ class ContactsStoreTest extends TestCase {
 	}
 
 	public function testGetContactsWithoutAvatarURI() {
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$this->contactsManager->expects($this->once())
 			->method('search')
@@ -160,7 +159,7 @@ class ContactsStoreTest extends TestCase {
 					],
 					'PHOTO' => 'VALUE=uri:https://photo',
 				],
-		]);
+			]);
 		$user->expects($this->once())
 			->method('getUID')
 			->willReturn('user123');
@@ -178,20 +177,25 @@ class ContactsStoreTest extends TestCase {
 
 		$this->config->expects($this->at(1))
 			->method('getAppValue')
-			->with($this->equalTo('core'), $this->equalTo('shareapi_exclude_groups'), $this->equalTo('no'))
-			->willReturn('yes');
+			->with($this->equalTo('core'), $this->equalTo('shareapi_restrict_user_enumeration_to_group'), $this->equalTo('no'))
+			->willReturn('no');
 
 		$this->config->expects($this->at(2))
 			->method('getAppValue')
-			->with($this->equalTo('core'), $this->equalTo('shareapi_only_share_with_group_members'), $this->equalTo('no'))
+			->with($this->equalTo('core'), $this->equalTo('shareapi_exclude_groups'), $this->equalTo('no'))
 			->willReturn('yes');
 
 		$this->config->expects($this->at(3))
 			->method('getAppValue')
+			->with($this->equalTo('core'), $this->equalTo('shareapi_only_share_with_group_members'), $this->equalTo('no'))
+			->willReturn('yes');
+
+		$this->config->expects($this->at(4))
+			->method('getAppValue')
 			->with($this->equalTo('core'), $this->equalTo('shareapi_exclude_groups_list'), $this->equalTo(''))
 			->willReturn('["group1", "group5", "group6"]');
 
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $currentUser */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $currentUser */
 		$currentUser = $this->createMock(IUser::class);
 		$currentUser->expects($this->once())
 			->method('getUID')
@@ -223,21 +227,111 @@ class ContactsStoreTest extends TestCase {
 		$this->assertCount(0, $entries);
 	}
 
-	public function testGetContactsOnlyIfInTheSameGroup() {
+	public function testGetContactsOnlyShareIfInTheSameGroup() {
 		$this->config->expects($this->at(0))->method('getAppValue')
 			->with($this->equalTo('core'), $this->equalTo('shareapi_allow_share_dialog_user_enumeration'), $this->equalTo('yes'))
 			->willReturn('yes');
 
 		$this->config->expects($this->at(1)) ->method('getAppValue')
+			->with($this->equalTo('core'), $this->equalTo('shareapi_restrict_user_enumeration_to_group'), $this->equalTo('no'))
+			->willReturn('no');
+
+		$this->config->expects($this->at(2)) ->method('getAppValue')
 			->with($this->equalTo('core'), $this->equalTo('shareapi_exclude_groups'), $this->equalTo('no'))
 			->willReturn('no');
 
-		$this->config->expects($this->at(2))
+		$this->config->expects($this->at(3))
 			->method('getAppValue')
 			->with($this->equalTo('core'), $this->equalTo('shareapi_only_share_with_group_members'), $this->equalTo('no'))
 			->willReturn('yes');
 
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $currentUser */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $currentUser */
+		$currentUser = $this->createMock(IUser::class);
+		$currentUser->expects($this->once())
+			->method('getUID')
+			->willReturn('user001');
+
+		$this->groupManager->expects($this->at(0))
+			->method('getUserGroupIds')
+			->with($this->equalTo($currentUser))
+			->willReturn(['group1', 'group2', 'group3']);
+
+		$user1 = $this->createMock(IUser::class);
+		$this->userManager->expects($this->at(0))
+			->method('get')
+			->with('user1')
+			->willReturn($user1);
+		$this->groupManager->expects($this->at(1))
+			->method('getUserGroupIds')
+			->with($this->equalTo($user1))
+			->willReturn(['group1']);
+		$user2 = $this->createMock(IUser::class);
+		$this->userManager->expects($this->at(1))
+			->method('get')
+			->with('user2')
+			->willReturn($user2);
+		$this->groupManager->expects($this->at(2))
+			->method('getUserGroupIds')
+			->with($this->equalTo($user2))
+			->willReturn(['group2', 'group3']);
+		$user3 = $this->createMock(IUser::class);
+		$this->userManager->expects($this->at(2))
+			->method('get')
+			->with('user3')
+			->willReturn($user3);
+		$this->groupManager->expects($this->at(3))
+			->method('getUserGroupIds')
+			->with($this->equalTo($user3))
+			->willReturn(['group8', 'group9']);
+
+		$this->contactsManager->expects($this->once())
+			->method('search')
+			->with($this->equalTo(''), $this->equalTo(['FN', 'EMAIL']))
+			->willReturn([
+				[
+					'UID' => 'user1',
+					'isLocalSystemBook' => true
+				],
+				[
+					'UID' => 'user2',
+					'isLocalSystemBook' => true
+				],
+				[
+					'UID' => 'user3',
+					'isLocalSystemBook' => true
+				],
+				[
+					'UID' => 'contact',
+				],
+			]);
+
+		$entries = $this->contactsStore->getContacts($currentUser, '');
+
+		$this->assertCount(3, $entries);
+		$this->assertEquals('user1', $entries[0]->getProperty('UID'));
+		$this->assertEquals('user2', $entries[1]->getProperty('UID'));
+		$this->assertEquals('contact', $entries[2]->getProperty('UID'));
+	}
+
+	public function testGetContactsOnlyEnumerateIfInTheSameGroup() {
+		$this->config->expects($this->at(0))->method('getAppValue')
+			->with($this->equalTo('core'), $this->equalTo('shareapi_allow_share_dialog_user_enumeration'), $this->equalTo('yes'))
+			->willReturn('yes');
+
+		$this->config->expects($this->at(1)) ->method('getAppValue')
+			->with($this->equalTo('core'), $this->equalTo('shareapi_restrict_user_enumeration_to_group'), $this->equalTo('no'))
+			->willReturn('yes');
+
+		$this->config->expects($this->at(2)) ->method('getAppValue')
+			->with($this->equalTo('core'), $this->equalTo('shareapi_exclude_groups'), $this->equalTo('no'))
+			->willReturn('no');
+
+		$this->config->expects($this->at(3))
+			->method('getAppValue')
+			->with($this->equalTo('core'), $this->equalTo('shareapi_only_share_with_group_members'), $this->equalTo('no'))
+			->willReturn('no');
+
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $currentUser */
 		$currentUser = $this->createMock(IUser::class);
 		$currentUser->expects($this->once())
 			->method('getUID')
@@ -310,7 +404,7 @@ class ContactsStoreTest extends TestCase {
 			->with($this->equalTo('core'), $this->equalTo('shareapi_allow_share_dialog_user_enumeration'), $this->equalTo('yes'))
 			->willReturn('no');
 
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$this->contactsManager->expects($this->any())
 			->method('search')
@@ -394,7 +488,7 @@ class ContactsStoreTest extends TestCase {
 			->with($this->equalTo('core'), $this->equalTo('shareapi_allow_share_dialog_user_enumeration'), $this->equalTo('yes'))
 			->willReturn('yes');
 
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$this->contactsManager->expects($this->once())
 			->method('search')
@@ -425,7 +519,7 @@ class ContactsStoreTest extends TestCase {
 	}
 
 	public function testFindOneEMail() {
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$this->contactsManager->expects($this->once())
 			->method('search')
@@ -456,7 +550,7 @@ class ContactsStoreTest extends TestCase {
 	}
 
 	public function testFindOneNotSupportedType() {
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 
 		$entry = $this->contactsStore->findOne($user, 42, 'darren@roner.au');
@@ -465,7 +559,7 @@ class ContactsStoreTest extends TestCase {
 	}
 
 	public function testFindOneNoMatches() {
-		/** @var IUser|PHPUnit_Framework_MockObject_MockObject $user */
+		/** @var IUser|\PHPUnit\Framework\MockObject\MockObject $user */
 		$user = $this->createMock(IUser::class);
 		$this->contactsManager->expects($this->once())
 			->method('search')

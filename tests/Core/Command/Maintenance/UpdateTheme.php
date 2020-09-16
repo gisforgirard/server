@@ -23,12 +23,9 @@
 
 namespace Tests\Core\Command\Maintenance;
 
-use OC\Core\Command\Maintenance\Mimetype\UpdateDB;
 use OC\Core\Command\Maintenance\UpdateTheme;
 use OC\Files\Type\Detection;
-use OC\Files\Type\Loader;
 use OCP\Files\IMimeTypeDetector;
-use OCP\Files\IMimeTypeLoader;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use Symfony\Component\Console\Input\InputInterface;
@@ -42,9 +39,9 @@ class UpdateThemeTest extends TestCase {
 	protected $cacheFactory;
 
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject */
+	/** @var \PHPUnit\Framework\MockObject\MockObject */
 	protected $consoleInput;
-	/** @var \PHPUnit_Framework_MockObject_MockObject */
+	/** @var \PHPUnit\Framework\MockObject\MockObject */
 	protected $consoleOutput;
 
 	/** @var \Symfony\Component\Console\Command\Command */

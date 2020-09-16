@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2019, Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Morris Jobke <hey@morrisjobke.de>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -27,9 +28,10 @@ declare(strict_types=1);
 namespace OCP\User\Events;
 
 use OCP\EventDispatcher\Event;
-use OCP\IUser;
 
 /**
+ * Emitted before a user is logged in via remember-me cookies.
+ *
  * @since 18.0.0
  */
 class BeforeUserLoggedInWithCookieEvent extends Event {
@@ -51,5 +53,4 @@ class BeforeUserLoggedInWithCookieEvent extends Event {
 	public function getUsername(): string {
 		return $this->username;
 	}
-
 }

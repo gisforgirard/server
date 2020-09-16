@@ -2,9 +2,11 @@
 /**
  * @copyright Copyright (c) 2018, Georg Ehrke
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Thomas Citharel <tcit@tcit.fr>
+ * @author Thomas Citharel <nextcloud@tcit.fr>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -27,13 +29,7 @@ namespace OCA\DAV\Command;
 
 use OCA\DAV\CalDAV\BirthdayService;
 use OCA\DAV\CalDAV\CalDavBackend;
-use OCA\DAV\Connector\Sabre\Principal;
-use OCP\IConfig;
-use OCP\IDBConnection;
-use OCP\IGroupManager;
 use OCP\IUserManager;
-use OCP\IUserSession;
-use OCP\Share\IManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
@@ -52,7 +48,7 @@ class ListCalendars extends Command {
 	 * @param IUserManager $userManager
 	 * @param CalDavBackend $caldav
 	 */
-	function __construct(IUserManager $userManager, CalDavBackend $caldav) {
+	public function __construct(IUserManager $userManager, CalDavBackend $caldav) {
 		parent::__construct();
 		$this->userManager = $userManager;
 		$this->caldav = $caldav;
@@ -67,7 +63,7 @@ class ListCalendars extends Command {
 				'User for whom all calendars will be listed');
 	}
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$user = $input->getArgument('uid');
 		if (!$this->userManager->userExists($user)) {
 			throw new \InvalidArgumentException("User <$user> is unknown.");
@@ -76,7 +72,7 @@ class ListCalendars extends Command {
 		$calendars = $this->caldav->getCalendarsForUser("principals/users/$user");
 
 		$calendarTableData = [];
-		foreach($calendars as $calendar) {
+		foreach ($calendars as $calendar) {
 			// skip birthday calendar
 			if ($calendar['uri'] === BirthdayService::BIRTHDAY_CALENDAR_URI) {
 				continue;
@@ -106,6 +102,6 @@ class ListCalendars extends Command {
 		} else {
 			$output->writeln("<info>User <$user> has no calendars</info>");
 		}
+		return 0;
 	}
-
 }

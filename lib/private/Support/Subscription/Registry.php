@@ -7,6 +7,7 @@ declare(strict_types=1);
  *
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Morris Jobke <hey@morrisjobke.de>
+ * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -27,6 +28,9 @@ declare(strict_types=1);
 
 namespace OC\Support\Subscription;
 
+use OCP\AppFramework\QueryException;
+use OCP\IConfig;
+use OCP\IServerContainer;
 use OCP\Support\Subscription\Exception\AlreadyRegisteredException;
 use OCP\Support\Subscription\IRegistry;
 use OCP\Support\Subscription\ISubscription;
@@ -36,6 +40,32 @@ class Registry implements IRegistry {
 
 	/** @var ISubscription */
 	private $subscription = null;
+
+	/** @var string */
+	private $subscriptionService = null;
+
+	/** @var IConfig */
+	private $config;
+
+	/** @var IServerContainer */
+	private $container;
+
+	public function __construct(IConfig $config, IServerContainer $container) {
+		$this->config = $config;
+		$this->container = $container;
+	}
+
+	private function getSubscription(): ?ISubscription {
+		if ($this->subscription === null && $this->subscriptionService !== null) {
+			try {
+				$this->subscription = $this->container->query($this->subscriptionService);
+			} catch (QueryException $e) {
+				// Ignore this
+			}
+		}
+
+		return $this->subscription;
+	}
 
 	/**
 	 * Register a subscription instance. In case it is called multiple times the
@@ -47,11 +77,20 @@ class Registry implements IRegistry {
 	 * @since 17.0.0
 	 */
 	public function register(ISubscription $subscription): void {
-		if ($this->subscription !== null) {
+		if ($this->subscription !== null || $this->subscriptionService !== null) {
 			throw new AlreadyRegisteredException();
 		}
 		$this->subscription = $subscription;
 	}
+
+	public function registerService(string $subscriptionService): void {
+		if ($this->subscription !== null || $this->subscriptionService !== null) {
+			throw new AlreadyRegisteredException();
+		}
+
+		$this->subscriptionService = $subscriptionService;
+	}
+
 
 	/**
 	 * Fetches the list of app IDs that are supported by the subscription
@@ -59,8 +98,8 @@ class Registry implements IRegistry {
 	 * @since 17.0.0
 	 */
 	public function delegateGetSupportedApps(): array {
-		if ($this->subscription instanceof ISupportedApps) {
-			return $this->subscription->getSupportedApps();
+		if ($this->getSubscription() instanceof ISupportedApps) {
+			return $this->getSubscription()->getSupportedApps();
 		}
 		return [];
 	}
@@ -71,8 +110,13 @@ class Registry implements IRegistry {
 	 * @since 17.0.0
 	 */
 	public function delegateHasValidSubscription(): bool {
-		if ($this->subscription instanceof ISubscription) {
-			return $this->subscription->hasValidSubscription();
+		// Allow overwriting this manually for environments where the subscription information cannot be fetched
+		if ($this->config->getSystemValueBool('has_valid_subscription')) {
+			return true;
+		}
+
+		if ($this->getSubscription() instanceof ISubscription) {
+			return $this->getSubscription()->hasValidSubscription();
 		}
 		return false;
 	}
@@ -83,8 +127,8 @@ class Registry implements IRegistry {
 	 * @since 17.0.0
 	 */
 	public function delegateHasExtendedSupport(): bool {
-		if ($this->subscription instanceof ISubscription && method_exists($this->subscription, 'hasExtendedSupport')) {
-			return $this->subscription->hasExtendedSupport();
+		if ($this->getSubscription() instanceof ISubscription && method_exists($this->subscription, 'hasExtendedSupport')) {
+			return $this->getSubscription()->hasExtendedSupport();
 		}
 		return false;
 	}

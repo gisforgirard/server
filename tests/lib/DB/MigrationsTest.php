@@ -31,9 +31,9 @@ use OCP\Migration\IMigrationStep;
  */
 class MigrationsTest extends \Test\TestCase {
 
-	/** @var MigrationService | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var MigrationService | \PHPUnit\Framework\MockObject\MockObject */
 	private $migrationService;
-	/** @var \PHPUnit_Framework_MockObject_MockObject | IDBConnection $db */
+	/** @var \PHPUnit\Framework\MockObject\MockObject | IDBConnection $db */
 	private $db;
 
 	protected function setUp(): void {
@@ -92,7 +92,6 @@ class MigrationsTest extends \Test\TestCase {
 	}
 
 	public function testExecuteStepWithSchemaChange() {
-
 		$schema = $this->createMock(Schema::class);
 		$this->db->expects($this->any())
 			->method('createSchema')
@@ -136,7 +135,6 @@ class MigrationsTest extends \Test\TestCase {
 	}
 
 	public function testExecuteStepWithoutSchemaChange() {
-
 		$schema = $this->createMock(Schema::class);
 		$this->db->expects($this->any())
 			->method('createSchema')
@@ -326,7 +324,7 @@ class MigrationsTest extends \Test\TestCase {
 		$defaultName = 'PRIMARY';
 		if ($this->db->getDatabasePlatform() instanceof PostgreSqlPlatform) {
 			$defaultName = \str_repeat('a', 26) . '_' . \str_repeat('b', 30) . '_seq';
-		} else if ($this->db->getDatabasePlatform() instanceof OraclePlatform) {
+		} elseif ($this->db->getDatabasePlatform() instanceof OraclePlatform) {
 			$defaultName = \str_repeat('a', 26) . '_seq';
 		}
 
@@ -407,7 +405,7 @@ class MigrationsTest extends \Test\TestCase {
 		$defaultName = 'PRIMARY';
 		if ($this->db->getDatabasePlatform() instanceof PostgreSqlPlatform) {
 			$defaultName = \str_repeat('a', 27) . '_' . \str_repeat('b', 30) . '_seq';
-		} else if ($this->db->getDatabasePlatform() instanceof OraclePlatform) {
+		} elseif ($this->db->getDatabasePlatform() instanceof OraclePlatform) {
 			$defaultName = \str_repeat('a', 27) . '_seq';
 		}
 

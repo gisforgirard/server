@@ -23,10 +23,8 @@ namespace Test\Notification;
 
 use OC\Notification\Manager;
 use OCP\ILogger;
-use OCP\Notification\IApp;
 use OCP\Notification\IManager;
 use OCP\Notification\INotification;
-use OCP\Notification\INotifier;
 use OCP\RichObjectStrings\IValidator;
 use PHPUnit\Framework\MockObject\MockObject;
 use Test\TestCase;
@@ -48,7 +46,6 @@ class ManagerTest extends TestCase {
 	}
 
 	public function testRegisterApp() {
-
 		$this->assertEquals([], self::invokePrivate($this->manager, 'getApps'));
 
 		$this->manager->registerApp(DummyApp::class);
@@ -96,7 +93,7 @@ class ManagerTest extends TestCase {
 	}
 
 	public function testNotify() {
-		/** @var \OCP\Notification\INotification|\PHPUnit_Framework_MockObject_MockObject $notification */
+		/** @var \OCP\Notification\INotification|\PHPUnit\Framework\MockObject\MockObject $notification */
 		$notification = $this->getMockBuilder(INotification::class)
 			->disableOriginalConstructor()
 			->getMock();
@@ -119,11 +116,11 @@ class ManagerTest extends TestCase {
 		$manager->notify($notification);
 	}
 
-	
+
 	public function testNotifyInvalid() {
 		$this->expectException(\InvalidArgumentException::class);
 
-		/** @var \OCP\Notification\INotification|\PHPUnit_Framework_MockObject_MockObject $notification */
+		/** @var \OCP\Notification\INotification|\PHPUnit\Framework\MockObject\MockObject $notification */
 		$notification = $this->getMockBuilder(INotification::class)
 			->disableOriginalConstructor()
 			->getMock();
@@ -146,7 +143,7 @@ class ManagerTest extends TestCase {
 	}
 
 	public function testMarkProcessed() {
-		/** @var \OCP\Notification\INotification|\PHPUnit_Framework_MockObject_MockObject $notification */
+		/** @var \OCP\Notification\INotification|\PHPUnit\Framework\MockObject\MockObject $notification */
 		$notification = $this->getMockBuilder(INotification::class)
 			->disableOriginalConstructor()
 			->getMock();
@@ -167,7 +164,7 @@ class ManagerTest extends TestCase {
 	}
 
 	public function testGetCount() {
-		/** @var \OCP\Notification\INotification|\PHPUnit_Framework_MockObject_MockObject $notification */
+		/** @var \OCP\Notification\INotification|\PHPUnit\Framework\MockObject\MockObject $notification */
 		$notification = $this->getMockBuilder(INotification::class)
 			->disableOriginalConstructor()
 			->getMock();

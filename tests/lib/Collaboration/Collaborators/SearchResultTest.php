@@ -23,18 +23,15 @@
 
 namespace Test\Collaboration\Collaborators;
 
-
 use OC\Collaboration\Collaborators\Search;
 use OC\Collaboration\Collaborators\SearchResult;
 use OCP\Collaboration\Collaborators\ISearch;
-use OCP\Collaboration\Collaborators\ISearchPlugin;
 use OCP\Collaboration\Collaborators\SearchResultType;
 use OCP\IContainer;
-use OCP\Share;
 use Test\TestCase;
 
 class SearchResultTest extends TestCase {
-	/** @var  IContainer|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IContainer|\PHPUnit\Framework\MockObject\MockObject */
 	protected $container;
 	/** @var  ISearch */
 	protected $search;
@@ -101,5 +98,4 @@ class SearchResultTest extends TestCase {
 
 		$this->assertSame($expected, $result->hasResult(new SearchResultType($type), $id));
 	}
-
 }

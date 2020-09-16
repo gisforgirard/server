@@ -39,12 +39,12 @@ class DBSchemaTest extends TestCase {
 
 		$r = '_' . \OC::$server->getSecureRandom()->
 			generate(4, ISecureRandom::CHAR_LOWER . ISecureRandom::CHAR_DIGITS) . '_';
-		$content = file_get_contents( $dbfile );
-		$content = str_replace( '*dbprefix*', '*dbprefix*'.$r, $content );
-		file_put_contents( $this->schema_file, $content );
-		$content = file_get_contents( $dbfile2 );
-		$content = str_replace( '*dbprefix*', '*dbprefix*'.$r, $content );
-		file_put_contents( $this->schema_file2, $content );
+		$content = file_get_contents($dbfile);
+		$content = str_replace('*dbprefix*', '*dbprefix*'.$r, $content);
+		file_put_contents($this->schema_file, $content);
+		$content = file_get_contents($dbfile2);
+		$content = str_replace('*dbprefix*', '*dbprefix*'.$r, $content);
+		file_put_contents($this->schema_file2, $content);
 
 		$this->table1 = $r.'cntcts_addrsbks';
 		$this->table2 = $r.'cntcts_cards';
@@ -83,8 +83,8 @@ class DBSchemaTest extends TestCase {
 		$outfile = $this->tempManager->getTemporaryFile();
 		OC_DB::getDbStructure($outfile);
 		$content = file_get_contents($outfile);
-		$this->assertContains($this->table1, $content);
-		$this->assertContains($this->table2, $content);
+		$this->assertStringContainsString($this->table1, $content);
+		$this->assertStringContainsString($this->table2, $content);
 	}
 
 	public function doTestSchemaRemoving() {

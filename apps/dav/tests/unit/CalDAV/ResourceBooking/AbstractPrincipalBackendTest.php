@@ -2,7 +2,9 @@
 /**
  * @copyright Copyright (c) 2018, Georg Ehrke
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -26,7 +28,6 @@ namespace OCA\DAV\Tests\unit\CalDAV\ResourceBooking;
 
 use OCA\DAV\CalDAV\Proxy\Proxy;
 use OCA\DAV\CalDAV\Proxy\ProxyMapper;
-use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IGroupManager;
 use OCP\ILogger;
 use OCP\IUser;
@@ -39,16 +40,16 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 	/** @var \OCA\DAV\CalDAV\ResourceBooking\ResourcePrincipalBackend|\OCA\DAV\CalDAV\ResourceBooking\RoomPrincipalBackend */
 	protected $principalBackend;
 
-	/** @var IUserSession|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	protected $userSession;
 
-	/** @var IGroupManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IGroupManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $groupManager;
 
-	/** @var ILogger|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ILogger|\PHPUnit\Framework\MockObject\MockObject */
 	protected $logger;
 
-	/** @var ProxyMapper|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ProxyMapper|\PHPUnit\Framework\MockObject\MockObject */
 	protected $proxyMapper;
 
 	/** @var string */
@@ -130,7 +131,6 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 				'{http://nextcloud.com/ns}meta99' => 'value99'
 			]
 		], $actual);
-
 	}
 
 	public function testGetNoPrincipalsByPrefixForWrongPrincipalPrefix() {
@@ -236,7 +236,7 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 
 		$this->proxyMapper->expects($this->at(1))
 			->method('insert')
-			->with($this->callback(function($proxy) {
+			->with($this->callback(function ($proxy) {
 				/** @var Proxy $proxy */
 				if ($proxy->getOwnerId() !== $this->principalPrefix . '/backend1-res1') {
 					return false;
@@ -252,7 +252,7 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 			}));
 		$this->proxyMapper->expects($this->at(2))
 			->method('insert')
-			->with($this->callback(function($proxy) {
+			->with($this->callback(function ($proxy) {
 				/** @var Proxy $proxy */
 				if ($proxy->getOwnerId() !== $this->principalPrefix . '/backend1-res1') {
 					return false;
@@ -285,11 +285,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->searchPrincipals($this->principalPrefix, [
 			'{http://sabredav.org/ns}email-address' => 'foo',
@@ -325,11 +325,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->searchPrincipals($this->principalPrefix, [
 			'{http://nextcloud.com/ns}meta3' => 'value',
@@ -344,10 +344,10 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$user = $this->createMock(IUser::class);
 		$this->userSession->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->searchPrincipals($this->principalPrefix, [
 			'{urn:ietf:params:xml:ns:caldav}calendar-user-address-set' => 'res2@foo.bar',
@@ -385,11 +385,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->findByUri('mailto:res1@foo.bar', $this->principalPrefix);
 		$this->assertEquals($this->principalPrefix . '/backend1-res1', $actual);
@@ -400,11 +400,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->findByUri('mailto:res5@foo.bar', $this->principalPrefix);
 		$this->assertEquals(null, $actual);
@@ -415,11 +415,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->findByUri('mailto:res99@foo.bar', $this->principalPrefix);
 		$this->assertEquals(null, $actual);
@@ -430,11 +430,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->findByUri('mailto:res6@foo.bar', $this->principalPrefix);
 		$this->assertEquals($this->principalPrefix . '/backend3-res6', $actual);
@@ -445,11 +445,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->findByUri('principal:' . $this->principalPrefix . '/backend3-res5', $this->principalPrefix);
 		$this->assertEquals(null, $actual);
@@ -460,11 +460,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->findByUri('principal:' . $this->principalPrefix . '/db-123', $this->principalPrefix);
 		$this->assertEquals(null, $actual);
@@ -475,11 +475,11 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 		$this->userSession->expects($this->once())
 			->method('getUser')
 			->with()
-			->will($this->returnValue($user));
+			->willReturn($user);
 		$this->groupManager->expects($this->once())
 			->method('getUserGroupIds')
 			->with($user)
-			->will($this->returnValue(['group1', 'group2']));
+			->willReturn(['group1', 'group2']);
 
 		$actual = $this->principalBackend->findByUri('foobar:blub', $this->principalPrefix);
 		$this->assertEquals(null, $actual);
@@ -586,5 +586,4 @@ abstract class AbstractPrincipalBackendTest extends TestCase {
 			])
 			->execute();
 	}
-
 }

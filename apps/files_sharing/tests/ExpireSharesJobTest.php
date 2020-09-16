@@ -2,6 +2,8 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  *
@@ -24,6 +26,7 @@
 namespace OCA\Files_Sharing\Tests;
 
 use OCA\Files_Sharing\ExpireSharesJob;
+use OCP\Share\IShare;
 
 /**
  * Class ExpireSharesJobTest
@@ -78,11 +81,11 @@ class ExpireSharesJobTest extends \Test\TestCase {
 
 		$userManager = \OC::$server->getUserManager();
 		$user1 = $userManager->get($this->user1);
-		if($user1) {
+		if ($user1) {
 			$user1->delete();
 		}
 		$user2 = $userManager->get($this->user2);
-		if($user2) {
+		if ($user2) {
 			$user2->delete();
 		}
 
@@ -139,7 +142,7 @@ class ExpireSharesJobTest extends \Test\TestCase {
 		$share = $shareManager->newShare();
 
 		$share->setNode($testFolder)
-			->setShareType(\OCP\Share::SHARE_TYPE_LINK)
+			->setShareType(IShare::TYPE_LINK)
 			->setPermissions(\OCP\Constants::PERMISSION_READ)
 			->setSharedBy($this->user1);
 
@@ -196,7 +199,7 @@ class ExpireSharesJobTest extends \Test\TestCase {
 		$share = $shareManager->newShare();
 
 		$share->setNode($testFolder)
-			->setShareType(\OCP\Share::SHARE_TYPE_USER)
+			->setShareType(IShare::TYPE_USER)
 			->setPermissions(\OCP\Constants::PERMISSION_READ)
 			->setSharedBy($this->user1)
 			->setSharedWith($this->user2);
@@ -213,5 +216,4 @@ class ExpireSharesJobTest extends \Test\TestCase {
 		$shares = $this->getShares();
 		$this->assertCount(1, $shares);
 	}
-
 }

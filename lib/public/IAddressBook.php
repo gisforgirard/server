@@ -4,6 +4,7 @@
  *
  * @author Bart Visscher <bartv@thisnet.nl>
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Morris Jobke <hey@morrisjobke.de>
@@ -39,7 +40,6 @@ namespace OCP {
 	/**
 	 * Interface IAddressBook
 	 *
-	 * @package OCP
 	 * @since 5.0.0
 	 */
 	interface IAddressBook {
@@ -71,6 +71,8 @@ namespace OCP {
 		 * 	- 'types' boolean (since 15.0.0) If set to true, fields that come with a TYPE property will be an array
 		 *    example: ['id' => 5, 'FN' => 'Thomas Tanghus', 'EMAIL' => ['type => 'HOME', 'value' => 'g@h.i']]
 		 * 	- 'escape_like_param' - If set to false wildcards _ and % are not escaped
+		 * 	- 'limit' - Set a numeric limit for the search results
+		 * 	- 'offset' - Set the offset for the limited search results
 		 * @return array an array of contacts which are arrays of key-value-pairs
 		 *  example result:
 		 *  [
@@ -105,5 +107,20 @@ namespace OCP {
 		 * @since 5.0.0
 		 */
 		public function delete($id);
+
+		/**
+		 * Returns true if this address-book is not owned by the current user,
+		 * but shared with them.
+		 *
+		 * @return bool
+		 * @since 20.0.0
+		 */
+		public function isShared(): bool;
+
+		/**
+		 * @return bool
+		 * @since 20.0.0
+		 */
+		public function isSystemAddressBook(): bool;
 	}
 }

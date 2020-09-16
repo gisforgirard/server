@@ -4,6 +4,7 @@
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -34,10 +35,10 @@ use Test\TestCase;
 
 class RegenerateBirthdayCalendarsTest extends TestCase {
 
-	/** @var IJobList | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IJobList | \PHPUnit\Framework\MockObject\MockObject */
 	private $jobList;
 
-	/** @var IConfig | \PHPUnit_Framework_MockObject_MockObject */
+	/** @var IConfig | \PHPUnit\Framework\MockObject\MockObject */
 	private $config;
 
 	/** @var RegenerateBirthdayCalendars */
@@ -98,6 +99,4 @@ class RegenerateBirthdayCalendarsTest extends TestCase {
 
 		$this->migration->run($output);
 	}
-
-
 }

@@ -4,6 +4,7 @@
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -46,31 +47,31 @@ class EncryptionTest extends TestCase {
 	/** @var Encryption */
 	private $instance;
 
-	/** @var \OCA\Encryption\KeyManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCA\Encryption\KeyManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $keyManagerMock;
 
-	/** @var \OCA\Encryption\Crypto\EncryptAll|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCA\Encryption\Crypto\EncryptAll|\PHPUnit\Framework\MockObject\MockObject */
 	private $encryptAllMock;
 
-	/** @var \OCA\Encryption\Crypto\DecryptAll|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCA\Encryption\Crypto\DecryptAll|\PHPUnit\Framework\MockObject\MockObject */
 	private $decryptAllMock;
 
-	/** @var \OCA\Encryption\Session|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCA\Encryption\Session|\PHPUnit\Framework\MockObject\MockObject */
 	private $sessionMock;
 
-	/** @var \OCA\Encryption\Crypto\Crypt|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCA\Encryption\Crypto\Crypt|\PHPUnit\Framework\MockObject\MockObject */
 	private $cryptMock;
 
-	/** @var \OCA\Encryption\Util|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCA\Encryption\Util|\PHPUnit\Framework\MockObject\MockObject */
 	private $utilMock;
 
-	/** @var \OCP\ILogger|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\ILogger|\PHPUnit\Framework\MockObject\MockObject */
 	private $loggerMock;
 
-	/** @var \OCP\IL10N|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\IL10N|\PHPUnit\Framework\MockObject\MockObject */
 	private $l10nMock;
 
-	/** @var \OCP\Files\Storage|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var \OCP\Files\Storage|\PHPUnit\Framework\MockObject\MockObject */
 	private $storageMock;
 
 	protected function setUp(): void {
@@ -117,14 +118,13 @@ class EncryptionTest extends TestCase {
 			$this->loggerMock,
 			$this->l10nMock
 		);
-
 	}
 
 	/**
 	 * test if public key from one of the recipients is missing
 	 */
 	public function testEndUser1() {
-		$this->instance->begin('/foo/bar', 'user1', 'r', array(), array('users' => array('user1', 'user2', 'user3')));
+		$this->instance->begin('/foo/bar', 'user1', 'r', [], ['users' => ['user1', 'user2', 'user3']]);
 		$this->endTest();
 	}
 
@@ -135,7 +135,7 @@ class EncryptionTest extends TestCase {
 	public function testEndUser2() {
 		$this->expectException(\OCA\Encryption\Exceptions\PublicKeyMissingException::class);
 
-		$this->instance->begin('/foo/bar', 'user2', 'r', array(), array('users' => array('user1', 'user2', 'user3')));
+		$this->instance->begin('/foo/bar', 'user2', 'r', [], ['users' => ['user1', 'user2', 'user3']]);
 		$this->endTest();
 	}
 
@@ -151,10 +151,10 @@ class EncryptionTest extends TestCase {
 
 		$this->keyManagerMock->expects($this->any())
 			->method('getPublicKey')
-			->will($this->returnCallback([$this, 'getPublicKeyCallback']));
+			->willReturnCallback([$this, 'getPublicKeyCallback']);
 		$this->keyManagerMock->expects($this->any())
 			->method('addSystemKeys')
-			->will($this->returnCallback([$this, 'addSystemKeysCallback']));
+			->willReturnCallback([$this, 'addSystemKeysCallback']);
 		$this->cryptMock->expects($this->any())
 			->method('multiKeyEncrypt')
 			->willReturn(true);
@@ -182,24 +182,23 @@ class EncryptionTest extends TestCase {
 	 */
 	public function testGetPathToRealFile($path, $expected) {
 		$this->assertSame($expected,
-			self::invokePrivate($this->instance, 'getPathToRealFile', array($path))
+			self::invokePrivate($this->instance, 'getPathToRealFile', [$path])
 		);
 	}
 
 	public function dataProviderForTestGetPathToRealFile() {
-		return array(
-			array('/user/files/foo/bar.txt', '/user/files/foo/bar.txt'),
-			array('/user/files/foo.txt', '/user/files/foo.txt'),
-			array('/user/files_versions/foo.txt.v543534', '/user/files/foo.txt'),
-			array('/user/files_versions/foo/bar.txt.v5454', '/user/files/foo/bar.txt'),
-		);
+		return [
+			['/user/files/foo/bar.txt', '/user/files/foo/bar.txt'],
+			['/user/files/foo.txt', '/user/files/foo.txt'],
+			['/user/files_versions/foo.txt.v543534', '/user/files/foo.txt'],
+			['/user/files_versions/foo/bar.txt.v5454', '/user/files/foo/bar.txt'],
+		];
 	}
 
 	/**
 	 * @dataProvider dataTestBegin
 	 */
 	public function testBegin($mode, $header, $legacyCipher, $defaultCipher, $fileKey, $expected) {
-
 		$this->sessionMock->expects($this->once())
 			->method('decryptAllModeActivated')
 			->willReturn(false);
@@ -241,12 +240,12 @@ class EncryptionTest extends TestCase {
 	}
 
 	public function dataTestBegin() {
-		return array(
-			array('w', ['cipher' => 'myCipher'], 'legacyCipher', 'defaultCipher', 'fileKey', 'defaultCipher'),
-			array('r', ['cipher' => 'myCipher'], 'legacyCipher', 'defaultCipher', 'fileKey', 'myCipher'),
-			array('w', [], 'legacyCipher', 'defaultCipher', '', 'defaultCipher'),
-			array('r', [], 'legacyCipher', 'defaultCipher', 'file_key', 'legacyCipher'),
-		);
+		return [
+			['w', ['cipher' => 'myCipher'], 'legacyCipher', 'defaultCipher', 'fileKey', 'defaultCipher'],
+			['r', ['cipher' => 'myCipher'], 'legacyCipher', 'defaultCipher', 'fileKey', 'myCipher'],
+			['w', [], 'legacyCipher', 'defaultCipher', '', 'defaultCipher'],
+			['r', [], 'legacyCipher', 'defaultCipher', 'file_key', 'legacyCipher'],
+		];
 	}
 
 
@@ -254,7 +253,6 @@ class EncryptionTest extends TestCase {
 	 * test begin() if decryptAll mode was activated
 	 */
 	public function testBeginDecryptAll() {
-
 		$path = '/user/files/foo.txt';
 		$recoveryKeyId = 'recoveryKeyId';
 		$recoveryShareKey = 'recoveryShareKey';
@@ -298,7 +296,6 @@ class EncryptionTest extends TestCase {
 	 * and continue
 	 */
 	public function testBeginInitMasterKey() {
-
 		$this->sessionMock->expects($this->once())->method('isReady')->willReturn(false);
 		$this->utilMock->expects($this->once())->method('isMasterKeyEnabled')
 			->willReturn(true);
@@ -322,7 +319,7 @@ class EncryptionTest extends TestCase {
 
 		$this->keyManagerMock->expects($this->any())
 			->method('addSystemKeys')
-			->willReturnCallback(function($accessList, $publicKeys) {
+			->willReturnCallback(function ($accessList, $publicKeys) {
 				return $publicKeys;
 			});
 
@@ -335,21 +332,20 @@ class EncryptionTest extends TestCase {
 	}
 
 	public function dataTestUpdate() {
-		return array(
-			array('', false),
-			array('fileKey', true)
-		);
+		return [
+			['', false],
+			['fileKey', true]
+		];
 	}
 
 	public function testUpdateNoUsers() {
-
 		$this->invokePrivate($this->instance, 'rememberVersion', [['path' => 2]]);
 
 		$this->keyManagerMock->expects($this->never())->method('getFileKey');
 		$this->keyManagerMock->expects($this->never())->method('getPublicKey');
 		$this->keyManagerMock->expects($this->never())->method('addSystemKeys');
 		$this->keyManagerMock->expects($this->once())->method('setVersion')
-			->willReturnCallback(function($path, $version, $view) {
+			->willReturnCallback(function ($path, $version, $view) {
 				$this->assertSame('path', $path);
 				$this->assertSame(2, $version);
 				$this->assertTrue($view instanceof \OC\Files\View);
@@ -367,20 +363,20 @@ class EncryptionTest extends TestCase {
 
 		$this->keyManagerMock->expects($this->any())
 			->method('getPublicKey')->willReturnCallback(
-				function($user) {
+				function ($user) {
 					throw new PublicKeyMissingException($user);
 				}
 			);
 
 		$this->keyManagerMock->expects($this->any())
 			->method('addSystemKeys')
-			->willReturnCallback(function($accessList, $publicKeys) {
+			->willReturnCallback(function ($accessList, $publicKeys) {
 				return $publicKeys;
 			});
 
 		$this->cryptMock->expects($this->once())->method('multiKeyEncrypt')
 			->willReturnCallback(
-				function($fileKey, $publicKeys) {
+				function ($fileKey, $publicKeys) {
 					$this->assertEmpty($publicKeys);
 					$this->assertSame('fileKey', $fileKey);
 				}
@@ -417,22 +413,22 @@ class EncryptionTest extends TestCase {
 	}
 
 	public function dataTestShouldEncrypt() {
-		return array(
-			array('/user1/files/foo.txt', true, true, true),
-			array('/user1/files_versions/foo.txt', true, true, true),
-			array('/user1/files_trashbin/foo.txt', true, true, true),
-			array('/user1/some_folder/foo.txt', true, true, false),
-			array('/user1/foo.txt', true, true, false),
-			array('/user1/files', true, true, false),
-			array('/user1/files_trashbin', true, true, false),
-			array('/user1/files_versions', true, true, false),
+		return [
+			['/user1/files/foo.txt', true, true, true],
+			['/user1/files_versions/foo.txt', true, true, true],
+			['/user1/files_trashbin/foo.txt', true, true, true],
+			['/user1/some_folder/foo.txt', true, true, false],
+			['/user1/foo.txt', true, true, false],
+			['/user1/files', true, true, false],
+			['/user1/files_trashbin', true, true, false],
+			['/user1/files_versions', true, true, false],
 			// test if shouldEncryptHomeStorage is set to false
-			array('/user1/files/foo.txt', false, true, false),
-			array('/user1/files_versions/foo.txt', false, false, true),
-		);
+			['/user1/files/foo.txt', false, true, false],
+			['/user1/files_versions/foo.txt', false, false, true],
+		];
 	}
 
-	
+
 	public function testDecrypt() {
 		$this->expectException(\OC\Encryption\Exceptions\DecryptionFailedException::class);
 		$this->expectExceptionMessage('Can not decrypt this file, probably this is a shared file. Please ask the file owner to reshare the file with you.');
@@ -451,5 +447,4 @@ class EncryptionTest extends TestCase {
 
 		$this->instance->prepareDecryptAll($input, $output, 'user');
 	}
-
 }

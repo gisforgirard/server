@@ -21,7 +21,6 @@
 
 namespace Tests\Core\Command\Config\System;
 
-
 use OC\Core\Command\Config\System\SetConfig;
 use OC\SystemConfig;
 use Symfony\Component\Console\Input\InputInterface;
@@ -29,12 +28,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Test\TestCase;
 
 class SetConfigTest extends TestCase {
-	/** @var \PHPUnit_Framework_MockObject_MockObject */
+	/** @var \PHPUnit\Framework\MockObject\MockObject */
 	protected $systemConfig;
 
-	/** @var \PHPUnit_Framework_MockObject_MockObject */
+	/** @var \PHPUnit\Framework\MockObject\MockObject */
 	protected $consoleInput;
-	/** @var \PHPUnit_Framework_MockObject_MockObject */
+	/** @var \PHPUnit\Framework\MockObject\MockObject */
 	protected $consoleOutput;
 
 	/** @var \Symfony\Component\Console\Command\Command */
@@ -83,10 +82,10 @@ class SetConfigTest extends TestCase {
 			->with('name')
 			->willReturn($configNames);
 		$this->consoleInput->method('getOption')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				['value', $newValue],
 				['type', 'string'],
-			]));
+			]);
 
 		$this->invokePrivate($this->command, 'execute', [$this->consoleInput, $this->consoleOutput]);
 	}
@@ -119,11 +118,11 @@ class SetConfigTest extends TestCase {
 			->with('name')
 			->willReturn($configNames);
 		$this->consoleInput->method('getOption')
-			->will($this->returnValueMap([
+			->willReturnMap([
 				['value', 'foobar'],
 				['type', 'string'],
 				['update-only', true],
-			]));
+			]);
 
 		$this->invokePrivate($this->command, 'execute', [$this->consoleInput, $this->consoleOutput]);
 	}
@@ -176,5 +175,4 @@ class SetConfigTest extends TestCase {
 
 		$this->invokePrivate($this->command, 'castValue', [$value, $type]);
 	}
-
 }

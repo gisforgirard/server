@@ -4,6 +4,7 @@
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Joel S <joel.devbox@protonmail.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -38,6 +39,7 @@ use OCP\Files\StorageNotAvailableException;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -67,6 +69,8 @@ class ScanAppData extends Base {
 		$this
 			->setName('files:scan-app-data')
 			->setDescription('rescan the AppData folder');
+
+		$this->addArgument('folder', InputArgument::OPTIONAL, 'The appdata subfolder to scan', '');
 	}
 
 	public function checkScanWarning($fullPath, OutputInterface $output) {
@@ -78,12 +82,21 @@ class ScanAppData extends Base {
 		}
 	}
 
-	protected function scanFiles(OutputInterface $output) {
+	protected function scanFiles(OutputInterface $output, string $folder): int {
 		try {
 			$appData = $this->getAppDataFolder();
 		} catch (NotFoundException $e) {
-			$output->writeln('NoAppData folder found');
-			return;
+			$output->writeln('<error>NoAppData folder found</error>');
+			return 1;
+		}
+
+		if ($folder !== '') {
+			try {
+				$appData = $appData->get($folder);
+			} catch (NotFoundException $e) {
+				$output->writeln('<error>Could not find folder: ' . $folder . '</error>');
+				return 1;
+			}
 		}
 
 		$connection = $this->reconnectToDatabase($output);
@@ -118,32 +131,43 @@ class ScanAppData extends Base {
 			$scanner->scan($appData->getPath());
 		} catch (ForbiddenException $e) {
 			$output->writeln('<error>Storage not writable</error>');
-			$output->writeln('Make sure you\'re running the scan command only as the user the web server runs as');
+			$output->writeln('<info>Make sure you\'re running the scan command only as the user the web server runs as</info>');
+			return 1;
 		} catch (InterruptedException $e) {
 			# exit the function if ctrl-c has been pressed
-			$output->writeln('Interrupted by user');
+			$output->writeln('<info>Interrupted by user</info>');
+			return 1;
 		} catch (NotFoundException $e) {
 			$output->writeln('<error>Path not found: ' . $e->getMessage() . '</error>');
+			return 1;
 		} catch (\Exception $e) {
 			$output->writeln('<error>Exception during scan: ' . $e->getMessage() . '</error>');
 			$output->writeln('<error>' . $e->getTraceAsString() . '</error>');
+			return 1;
 		}
+
+		return 0;
 	}
 
 
-	protected function execute(InputInterface $input, OutputInterface $output) {
+	protected function execute(InputInterface $input, OutputInterface $output): int {
 		# restrict the verbosity level to VERBOSITY_VERBOSE
 		if ($output->getVerbosity() > OutputInterface::VERBOSITY_VERBOSE) {
 			$output->setVerbosity(OutputInterface::VERBOSITY_VERBOSE);
 		}
 
-		$output->writeln("\nScanning AppData for files");
+		$output->writeln('Scanning AppData for files');
+		$output->writeln('');
+
+		$folder = $input->getArgument('folder');
 
 		$this->initTools();
 
-		$this->scanFiles($output);
-
-		$this->presentStats($output);
+		$exitCode = $this->scanFiles($output, $folder);
+		if ($exitCode === 0) {
+			$this->presentStats($output);
+		}
+		return $exitCode;
 	}
 
 	/**
@@ -182,7 +206,6 @@ class ScanAppData extends Base {
 	protected function presentStats(OutputInterface $output) {
 		// Stop the timer
 		$this->execTime += microtime(true);
-		$output->writeln("");
 
 		$headers = [
 			'Folders', 'Files', 'Elapsed time'

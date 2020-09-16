@@ -23,27 +23,18 @@
 
 namespace Test\AppFramework\Controller;
 
-use OC\AppFramework\Middleware\PublicShare\Exceptions\NeedAuthenticationException;
-use OC\AppFramework\Middleware\PublicShare\PublicShareMiddleware;
-use OCP\AppFramework\AuthPublicShareController;
-use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http\NotFoundResponse;
-use OCP\AppFramework\Http\RedirectResponse;
 use OCP\AppFramework\PublicShareController;
-use OCP\Files\NotFoundException;
-use OCP\IConfig;
 use OCP\IRequest;
 use OCP\ISession;
-use OCP\IURLGenerator;
 
 class PublicShareControllerTest extends \Test\TestCase {
 
-	/** @var IRequest|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IRequest|\PHPUnit\Framework\MockObject\MockObject */
 	private $request;
-	/** @var ISession|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ISession|\PHPUnit\Framework\MockObject\MockObject */
 	private $session;
 
-	/** @var PublicShareController|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var PublicShareController|\PHPUnit\Framework\MockObject\MockObject */
 	private $controller;
 
 
@@ -98,5 +89,4 @@ class PublicShareControllerTest extends \Test\TestCase {
 
 		$this->assertEquals($expected, $this->controller->isAuthenticated());
 	}
-
 }

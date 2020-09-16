@@ -1,11 +1,13 @@
 /* eslint-disable camelcase */
-const path = require('path')
-const merge = require('webpack-merge')
+const { merge } = require('webpack-merge')
 const { VueLoaderPlugin } = require('vue-loader')
+const BabelLoaderExcludeNodeModulesExcept = require('babel-loader-exclude-node-modules-except')
+const path = require('path')
 
 const accessibility = require('./apps/accessibility/webpack')
 const comments = require('./apps/comments/webpack')
 const core = require('./core/webpack')
+const dashboard = require('./apps/dashboard/webpack')
 const files = require('./apps/files/webpack')
 const files_sharing = require('./apps/files_sharing/webpack')
 const files_trashbin = require('./apps/files_trashbin/webpack')
@@ -13,14 +15,17 @@ const files_versions = require('./apps/files_versions/webpack')
 const oauth2 = require('./apps/oauth2/webpack')
 const settings = require('./apps/settings/webpack')
 const systemtags = require('./apps/systemtags/webpack')
+const user_status = require('./apps/user_status/webpack')
+const weather_status = require('./apps/weather_status/webpack')
 const twofactor_backupscodes = require('./apps/twofactor_backupcodes/webpack')
-const updatenotifications = require('./apps/updatenotification/webpack')
+const updatenotification = require('./apps/updatenotification/webpack')
 const workflowengine = require('./apps/workflowengine/webpack')
 
 const modules = {
 	accessibility,
 	comments,
 	core,
+	dashboard,
 	files,
 	files_sharing,
 	files_trashbin,
@@ -28,8 +33,10 @@ const modules = {
 	oauth2,
 	settings,
 	systemtags,
+	user_status,
+	weather_status,
 	twofactor_backupscodes,
-	updatenotifications,
+	updatenotification,
 	workflowengine
 }
 
@@ -48,16 +55,16 @@ module.exports = []
 	.concat(
 		...modulesToBuild()
 	)
-	.map(config => merge.smart({
+	.map(config => merge({
 		module: {
 			rules: [
 				{
 					test: /\.css$/,
-					use: ['vue-style-loader', 'css-loader']
+					use: ['vue-style-loader', 'css-loader'],
 				},
 				{
 					test: /\.scss$/,
-					use: ['vue-style-loader', 'css-loader', 'sass-loader']
+					use: ['vue-style-loader', 'css-loader', 'sass-loader'],
 				},
 				{
 					test: /\.(js|vue)$/,
@@ -70,39 +77,54 @@ module.exports = []
 						// don't want to parse all the js files so let's
 						// use it from within webpack and only check
 						// against our compiled files
-						fix: process.env.ESLINT_FIX === 'true'
-					}
+						fix: process.env.ESLINT_FIX === 'true',
+					},
 				},
 				{
 					test: /\.vue$/,
 					loader: 'vue-loader',
-					exclude: /node_modules/
+					exclude: BabelLoaderExcludeNodeModulesExcept([
+						'vue-material-design-icons',
+					]),
 				},
 				{
 					test: /\.js$/,
 					loader: 'babel-loader',
 					// automatically detect necessary packages to
 					// transpile in the node_modules folder
-					exclude: /node_modules(?!(\/|\\)(nextcloud-vue-collections|p-finally|p-limit|p-locate|p-queue|p-timeout|p-try)(\/|\\))/
-
+					exclude: BabelLoaderExcludeNodeModulesExcept([
+						'@nextcloud/dialogs',
+						'@nextcloud/event-bus',
+						'davclient.js',
+						'nextcloud-vue-collections',
+						'p-finally',
+						'p-limit',
+						'p-locate',
+						'p-queue',
+						'p-timeout',
+						'p-try',
+						'semver',
+						'toastify-js',
+						'v-tooltip',
+					]),
 				},
 				{
 					test: /\.(png|jpg|gif)$/,
 					loader: 'url-loader',
 					options: {
 						name: '[name].[ext]?[hash]',
-						limit: 8192
-					}
+						limit: 8192,
+					},
 				},
 				{
 					test: /\.handlebars/,
 					loader: 'handlebars-loader',
 					query: {
-						extensions: '.handlebars'
-					}
-				}
+						extensions: '.handlebars',
+					},
+				},
 
-			]
+			],
 		},
 		plugins: [new VueLoaderPlugin()],
 		resolve: {
@@ -110,9 +132,9 @@ module.exports = []
 				OC: path.resolve(__dirname, './core/src/OC'),
 				OCA: path.resolve(__dirname, './core/src/OCA'),
 				// make sure to use the handlebar runtime when importing
-				handlebars: 'handlebars/runtime'
+				handlebars: 'handlebars/runtime',
 			},
 			extensions: ['*', '.js', '.vue'],
-			symlinks: false
-		}
+			symlinks: false,
+		},
 	}, config))

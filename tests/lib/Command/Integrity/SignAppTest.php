@@ -30,13 +30,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Test\TestCase;
 
 class SignAppTest extends TestCase {
-	/** @var Checker|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var Checker|\PHPUnit\Framework\MockObject\MockObject */
 	private $checker;
 	/** @var SignApp */
 	private $signApp;
-	/** @var FileAccessHelper|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var FileAccessHelper|\PHPUnit\Framework\MockObject\MockObject */
 	private $fileAccessHelper;
-	/** @var IURLGenerator|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IURLGenerator|\PHPUnit\Framework\MockObject\MockObject */
 	private $urlGenerator;
 
 	protected function setUp(): void {
@@ -59,24 +59,24 @@ class SignAppTest extends TestCase {
 			->expects($this->at(0))
 			->method('getOption')
 			->with('path')
-			->will($this->returnValue(null));
+			->willReturn(null);
 		$inputInterface
 			->expects($this->at(1))
 			->method('getOption')
 			->with('privateKey')
-			->will($this->returnValue('PrivateKey'));
+			->willReturn('PrivateKey');
 		$inputInterface
 			->expects($this->at(2))
 			->method('getOption')
 			->with('certificate')
-			->will($this->returnValue('Certificate'));
+			->willReturn('Certificate');
 
 		$outputInterface
 			->expects($this->at(0))
 			->method('writeln')
 			->with('This command requires the --path, --privateKey and --certificate.');
 
-		$this->assertNull(self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
+		$this->assertSame(1, self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
 	}
 
 	public function testExecuteWithMissingPrivateKey() {
@@ -87,24 +87,24 @@ class SignAppTest extends TestCase {
 			->expects($this->at(0))
 			->method('getOption')
 			->with('path')
-			->will($this->returnValue('AppId'));
+			->willReturn('AppId');
 		$inputInterface
 			->expects($this->at(1))
 			->method('getOption')
 			->with('privateKey')
-			->will($this->returnValue(null));
+			->willReturn(null);
 		$inputInterface
 			->expects($this->at(2))
 			->method('getOption')
 			->with('certificate')
-			->will($this->returnValue('Certificate'));
+			->willReturn('Certificate');
 
 		$outputInterface
 				->expects($this->at(0))
 				->method('writeln')
 				->with('This command requires the --path, --privateKey and --certificate.');
 
-		$this->assertNull(self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
+		$this->assertSame(1, self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
 	}
 
 	public function testExecuteWithMissingCertificate() {
@@ -115,24 +115,24 @@ class SignAppTest extends TestCase {
 			->expects($this->at(0))
 			->method('getOption')
 			->with('path')
-			->will($this->returnValue('AppId'));
+			->willReturn('AppId');
 		$inputInterface
 			->expects($this->at(1))
 			->method('getOption')
 			->with('privateKey')
-			->will($this->returnValue('privateKey'));
+			->willReturn('privateKey');
 		$inputInterface
 			->expects($this->at(2))
 			->method('getOption')
 			->with('certificate')
-			->will($this->returnValue(null));
+			->willReturn(null);
 
 		$outputInterface
 			->expects($this->at(0))
 			->method('writeln')
 			->with('This command requires the --path, --privateKey and --certificate.');
 
-		$this->assertNull(self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
+		$this->assertSame(1, self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
 	}
 
 	public function testExecuteWithNotExistingPrivateKey() {
@@ -143,30 +143,30 @@ class SignAppTest extends TestCase {
 			->expects($this->at(0))
 			->method('getOption')
 			->with('path')
-			->will($this->returnValue('AppId'));
+			->willReturn('AppId');
 		$inputInterface
 			->expects($this->at(1))
 			->method('getOption')
 			->with('privateKey')
-			->will($this->returnValue('privateKey'));
+			->willReturn('privateKey');
 		$inputInterface
 			->expects($this->at(2))
 			->method('getOption')
 			->with('certificate')
-			->will($this->returnValue('certificate'));
+			->willReturn('certificate');
 
 		$this->fileAccessHelper
 			->expects($this->at(0))
 			->method('file_get_contents')
 			->with('privateKey')
-			->will($this->returnValue(false));
+			->willReturn(false);
 
 		$outputInterface
 			->expects($this->at(0))
 			->method('writeln')
 			->with('Private key "privateKey" does not exists.');
 
-		$this->assertNull(self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
+		$this->assertSame(1, self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
 	}
 
 	public function testExecuteWithNotExistingCertificate() {
@@ -177,35 +177,35 @@ class SignAppTest extends TestCase {
 			->expects($this->at(0))
 			->method('getOption')
 			->with('path')
-			->will($this->returnValue('AppId'));
+			->willReturn('AppId');
 		$inputInterface
 			->expects($this->at(1))
 			->method('getOption')
 			->with('privateKey')
-			->will($this->returnValue('privateKey'));
+			->willReturn('privateKey');
 		$inputInterface
 			->expects($this->at(2))
 			->method('getOption')
 			->with('certificate')
-			->will($this->returnValue('certificate'));
+			->willReturn('certificate');
 
 		$this->fileAccessHelper
 			->expects($this->at(0))
 			->method('file_get_contents')
 			->with('privateKey')
-			->will($this->returnValue(\OC::$SERVERROOT . '/tests/data/integritycheck/core.key'));
+			->willReturn(\OC::$SERVERROOT . '/tests/data/integritycheck/core.key');
 		$this->fileAccessHelper
 			->expects($this->at(1))
 			->method('file_get_contents')
 			->with('certificate')
-			->will($this->returnValue(false));
+			->willReturn(false);
 
 		$outputInterface
 			->expects($this->at(0))
 			->method('writeln')
 			->with('Certificate "certificate" does not exists.');
 
-		$this->assertNull(self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
+		$this->assertSame(1, self::invokePrivate($this->signApp, 'execute', [$inputInterface, $outputInterface]));
 	}
 
 	public function testExecuteWithException() {
@@ -216,17 +216,17 @@ class SignAppTest extends TestCase {
 			->expects($this->at(0))
 			->method('getOption')
 			->with('path')
-			->will($this->returnValue('AppId'));
+			->willReturn('AppId');
 		$inputInterface
 			->expects($this->at(1))
 			->method('getOption')
 			->with('privateKey')
-			->will($this->returnValue('privateKey'));
+			->willReturn('privateKey');
 		$inputInterface
 			->expects($this->at(2))
 			->method('getOption')
 			->with('certificate')
-			->will($this->returnValue('certificate'));
+			->willReturn('certificate');
 
 		$this->fileAccessHelper
 			->expects($this->at(0))
@@ -260,17 +260,17 @@ class SignAppTest extends TestCase {
 			->expects($this->at(0))
 			->method('getOption')
 			->with('path')
-			->will($this->returnValue('AppId'));
+			->willReturn('AppId');
 		$inputInterface
 			->expects($this->at(1))
 			->method('getOption')
 			->with('privateKey')
-			->will($this->returnValue('privateKey'));
+			->willReturn('privateKey');
 		$inputInterface
 			->expects($this->at(2))
 			->method('getOption')
 			->with('certificate')
-			->will($this->returnValue('certificate'));
+			->willReturn('certificate');
 
 		$this->fileAccessHelper
 			->expects($this->at(0))

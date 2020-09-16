@@ -3,6 +3,8 @@
  * @copyright Copyright (c) 2017 Arthur Schiwon <blizzz@arthur-schiwon.de>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -24,15 +26,13 @@
 
 namespace OCA\Comments\Tests\Unit\Collaboration;
 
-
 use OCA\Comments\Collaboration\CommentersSorter;
 use OCP\Comments\IComment;
 use OCP\Comments\ICommentsManager;
-use OCP\IConfig;
 use Test\TestCase;
 
 class CommentersSorterTest extends TestCase {
-	/** @var  ICommentsManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  ICommentsManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $commentsManager;
 	/** @var  CommentersSorter */
 	protected $sorter;
@@ -51,9 +51,9 @@ class CommentersSorterTest extends TestCase {
 	 */
 	public function testSort($data) {
 		$commentMocks = [];
-		foreach($data['actors'] as $actorType => $actors) {
+		foreach ($data['actors'] as $actorType => $actors) {
 			foreach ($actors as $actorId => $noOfComments) {
-				for($i=0;$i<$noOfComments;$i++) {
+				for ($i=0;$i<$noOfComments;$i++) {
 					$mock = $this->createMock(IComment::class);
 					$mock->expects($this->atLeastOnce())
 						->method('getActorType')

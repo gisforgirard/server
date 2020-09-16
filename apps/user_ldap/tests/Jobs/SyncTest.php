@@ -3,6 +3,8 @@
  * @copyright Copyright (c) 2017 Arthur Schiwon <blizzz@arthur-schiwon.de>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -38,36 +40,35 @@ use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\IUserManager;
 use OCP\Notification\IManager;
-use function Sodium\memcmp;
 use Test\TestCase;
 
 class SyncTest extends TestCase {
 
 	/** @var  array */
 	protected $arguments;
-	/** @var  Helper|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  Helper|\PHPUnit\Framework\MockObject\MockObject */
 	protected $helper;
-	/** @var  LDAP|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  LDAP|\PHPUnit\Framework\MockObject\MockObject */
 	protected $ldapWrapper;
-	/** @var  Manager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  Manager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $userManager;
-	/** @var  UserMapping|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  UserMapping|\PHPUnit\Framework\MockObject\MockObject */
 	protected $mapper;
 	/** @var  Sync */
 	protected $sync;
-	/** @var  IConfig|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IConfig|\PHPUnit\Framework\MockObject\MockObject */
 	protected $config;
-	/** @var  IAvatarManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IAvatarManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $avatarManager;
-	/** @var  IDBConnection|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IDBConnection|\PHPUnit\Framework\MockObject\MockObject */
 	protected $dbc;
-	/** @var  IUserManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IUserManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $ncUserManager;
-	/** @var  IManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var  IManager|\PHPUnit\Framework\MockObject\MockObject */
 	protected $notificationManager;
-	/** @var ConnectionFactory|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var ConnectionFactory|\PHPUnit\Framework\MockObject\MockObject */
 	protected $connectionFactory;
-	/** @var AccessFactory|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var AccessFactory|\PHPUnit\Framework\MockObject\MockObject */
 	protected $accessFactory;
 
 	protected function setUp(): void {
@@ -129,7 +130,7 @@ class SyncTest extends TestCase {
 		$this->config->expects($this->once())
 			->method('setAppValue')
 			->with('user_ldap', 'background_sync_interval', $this->anything())
-			->willReturnCallback(function($a, $k, $interval) {
+			->willReturnCallback(function ($a, $k, $interval) {
 				$this->assertTrue($interval >= SYNC::MIN_INTERVAL);
 				$this->assertTrue($interval <= SYNC::MAX_INTERVAL);
 				return true;
@@ -176,22 +177,29 @@ class SyncTest extends TestCase {
 		$connection->expects($this->any())
 			->method('__get')
 			->willReturnCallback(function ($key) use ($pagingSize) {
-				if($key === 'ldapPagingSize') {
+				if ($key === 'ldapPagingSize') {
 					return $pagingSize;
 				}
 				return null;
 			});
 
-		/** @var Access|\PHPUnit_Framework_MockObject_MockObject $access */
+		/** @var Access|\PHPUnit\Framework\MockObject\MockObject $access */
 		$access = $this->createMock(Access::class);
 		$this->accessFactory->expects($this->any())
 			->method('get')
 			->with($connection)
 			->willReturn($access);
 
+		$this->userManager->expects($this->any())
+			->method('getAttributes')
+			->willReturn(['dn', 'uid', 'mail', 'displayname']);
+
 		$access->expects($this->once())
 			->method('fetchListOfUsers')
 			->willReturn(array_pad([], $results, 'someUser'));
+		$access->expects($this->any())
+			->method('combineFilterWithAnd')
+			->willReturn('pseudo=filter');
 		$access->connection = $connection;
 		$access->userManager = $this->userManager;
 
@@ -222,7 +230,7 @@ class SyncTest extends TestCase {
 			->with(true)
 			->willReturn($prefixes);
 
-		if(is_array($expectedCycle)) {
+		if (is_array($expectedCycle)) {
 			$this->config->expects($this->exactly(2))
 				->method('setAppValue')
 				->withConsecutive(
@@ -237,7 +245,7 @@ class SyncTest extends TestCase {
 		$this->sync->setArgument($this->arguments);
 		$nextCycle = $this->sync->determineNextCycle($cycleData);
 
-		if($expectedCycle === null) {
+		if ($expectedCycle === null) {
 			$this->assertNull($nextCycle);
 		} else {
 			$this->assertSame($expectedCycle['prefix'], $nextCycle['prefix']);
@@ -295,24 +303,24 @@ class SyncTest extends TestCase {
 	public function testRun($runData) {
 		$this->config->expects($this->any())
 			->method('getAppValue')
-			->willReturnCallback(function($app, $key, $default) use ($runData) {
-				if($app === 'core' && $key === 'backgroundjobs_mode') {
+			->willReturnCallback(function ($app, $key, $default) use ($runData) {
+				if ($app === 'core' && $key === 'backgroundjobs_mode') {
 					return 'cron';
 				}
-				if($app = 'user_ldap') {
+				if ($app = 'user_ldap') {
 					// for getCycle()
-					if($key === 'background_sync_prefix') {
+					if ($key === 'background_sync_prefix') {
 						return $runData['scheduledCycle']['prefix'];
 					}
-					if($key === 'background_sync_offset') {
+					if ($key === 'background_sync_offset') {
 						return $runData['scheduledCycle']['offset'];
 					}
 					// for qualifiesToRun()
-					if($key === $runData['scheduledCycle']['prefix'] . '_lastChange') {
+					if ($key === $runData['scheduledCycle']['prefix'] . '_lastChange') {
 						return time() - 60*40;
 					}
 					// for getMinPagingSize
-					if($key === $runData['scheduledCycle']['prefix'] . 'ldap_paging_size') {
+					if ($key === $runData['scheduledCycle']['prefix'] . 'ldap_paging_size') {
 						return $runData['pagingSize'];
 					}
 				}
@@ -343,22 +351,29 @@ class SyncTest extends TestCase {
 		$connection->expects($this->any())
 			->method('__get')
 			->willReturnCallback(function ($key) use ($runData) {
-				if($key === 'ldapPagingSize') {
+				if ($key === 'ldapPagingSize') {
 					return $runData['pagingSize'];
 				}
 				return null;
 			});
 
-		/** @var Access|\PHPUnit_Framework_MockObject_MockObject $access */
+		/** @var Access|\PHPUnit\Framework\MockObject\MockObject $access */
 		$access = $this->createMock(Access::class);
 		$this->accessFactory->expects($this->any())
 			->method('get')
 			->with($connection)
 			->willReturn($access);
 
+		$this->userManager->expects($this->any())
+			->method('getAttributes')
+			->willReturn(['dn', 'uid', 'mail', 'displayname']);
+
 		$access->expects($this->once())
 			->method('fetchListOfUsers')
 			->willReturn(array_pad([], $runData['usersThisCycle'], 'someUser'));
+		$access->expects($this->any())
+			->method('combineFilterWithAnd')
+			->willReturn('pseudo=filter');
 		$access->connection = $connection;
 		$access->userManager = $this->userManager;
 
@@ -368,5 +383,4 @@ class SyncTest extends TestCase {
 
 		$this->sync->run($this->arguments);
 	}
-
 }

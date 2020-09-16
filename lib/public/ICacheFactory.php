@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -30,10 +31,9 @@ namespace OCP;
 /**
  * Interface ICacheFactory
  *
- * @package OCP
  * @since 7.0.0
  */
-interface ICacheFactory{
+interface ICacheFactory {
 	/**
 	 * Get a distributed memory cache instance
 	 *

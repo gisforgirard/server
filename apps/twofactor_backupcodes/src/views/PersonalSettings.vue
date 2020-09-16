@@ -2,8 +2,10 @@
 	<div>
 		<button v-if="!enabled"
 			id="generate-backup-codes"
+			:disabled="generatingCodes"
 			@click="generateBackupCodes">
 			{{ t('twofactor_backupcodes', 'Generate backup codes') }}
+			<span :class="{'icon-loading-small': generatingCodes}" />
 		</button>
 		<template v-else>
 			<p>
@@ -28,7 +30,6 @@
 			</p>
 			<p>
 				<button id="generate-backup-codes"
-					:class="{'icon-loading-small': generatingCodes}"
 					@click="generateBackupCodes">
 					{{ t('twofactor_backupcodes', 'Regenerate backup codes') }}
 				</button>
@@ -43,7 +44,7 @@
 </template>
 
 <script>
-import confirmPassword from 'nextcloud-password-confirmation'
+import confirmPassword from '@nextcloud/password-confirmation'
 import { print } from '../service/PrintService'
 
 export default {
@@ -54,7 +55,7 @@ export default {
 		}
 	},
 	computed: {
-		downloadUrl: function() {
+		downloadUrl() {
 			if (!this.codes) {
 				return ''
 			}
@@ -62,23 +63,23 @@ export default {
 				return prev + code + '\r\n'
 			}, ''))
 		},
-		downloadFilename: function() {
+		downloadFilename() {
 			const name = OC.theme.name || 'Nextcloud'
 			return name + '-backup-codes.txt'
 		},
-		enabled: function() {
+		enabled() {
 			return this.$store.state.enabled
 		},
-		total: function() {
+		total() {
 			return this.$store.state.total
 		},
-		used: function() {
+		used() {
 			return this.$store.state.used
 		},
-		codes: function() {
+		codes() {
 			return this.$store.state.codes
 		},
-		name: function() {
+		name() {
 			return OC.theme.name || 'Nextcloud'
 		},
 		haveCodes() {
@@ -86,7 +87,7 @@ export default {
 		},
 	},
 	methods: {
-		generateBackupCodes: function() {
+		generateBackupCodes() {
 			confirmPassword().then(() => {
 				// Hide old codes
 				this.generatingCodes = true
@@ -101,7 +102,7 @@ export default {
 			}).catch(console.error.bind(this))
 		},
 
-		getPrintData: function(codes) {
+		getPrintData(codes) {
 			if (!codes) {
 				return ''
 			}
@@ -110,7 +111,7 @@ export default {
 			}, '')
 		},
 
-		printCodes: function() {
+		printCodes() {
 			print(this.getPrintData(this.codes))
 		},
 	},

@@ -2,6 +2,7 @@
 /**
  * @copyright Copyright (c) 2016 Julius Härtl <jus@bitgrid.net>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Julius Haertl <jus@bitgrid.net>
  * @author Julius Härtl <jus@bitgrid.net>
@@ -30,7 +31,6 @@ namespace OCA\Theming\Tests;
 use OCA\Theming\Util;
 use OCP\App\IAppManager;
 use OCP\Files\IAppData;
-use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use OCP\Files\SimpleFS\ISimpleFile;
 use OCP\Files\SimpleFS\ISimpleFolder;
@@ -106,6 +106,11 @@ class UtilTest extends TestCase {
 		$this->assertEquals('#000000', $elementColor);
 	}
 
+	public function testElementColorOnDarkBackground() {
+		$elementColor = $this->util->elementColor("#000000", false);
+		$this->assertEquals('#555555', $elementColor);
+	}
+
 	public function testElementColorOnBrightBackground() {
 		$elementColor = $this->util->elementColor('#ffffff');
 		$this->assertEquals('#aaaaaa', $elementColor);
@@ -166,7 +171,7 @@ class UtilTest extends TestCase {
 	 * @dataProvider dataGetAppImage
 	 */
 	public function testGetAppImage($app, $image, $expected) {
-		if($app !== 'core') {
+		if ($app !== 'core') {
 			$this->appManager->expects($this->once())
 				->method('getAppPath')
 				->with($app)
@@ -239,5 +244,4 @@ class UtilTest extends TestCase {
 			->willReturn($folder);
 		$this->assertEquals($expected, $this->util->isBackgroundThemed());
 	}
-
 }

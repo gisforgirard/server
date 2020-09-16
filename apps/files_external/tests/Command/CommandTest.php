@@ -2,7 +2,9 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  *
  * @license AGPL-3.0
@@ -34,7 +36,7 @@ use Test\TestCase;
 abstract class CommandTest extends TestCase {
 	/**
 	 * @param StorageConfig[] $mounts
-	 * @return \OCA\Files_External\Service\GlobalStoragesService|\PHPUnit_Framework_MockObject_MockObject
+	 * @return \OCA\Files_External\Service\GlobalStoragesService|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	protected function getGlobalStorageService(array $mounts = []) {
 		$mock = $this->getMockBuilder('OCA\Files_External\Service\GlobalStoragesService')
@@ -47,20 +49,20 @@ abstract class CommandTest extends TestCase {
 	}
 
 	/**
-	 * @param \PHPUnit_Framework_MockObject_MockObject $mock
+	 * @param \PHPUnit\Framework\MockObject\MockObject $mock
 	 * @param StorageConfig[] $mounts
 	 */
-	protected function bindMounts(\PHPUnit_Framework_MockObject_MockObject $mock, array $mounts) {
+	protected function bindMounts(\PHPUnit\Framework\MockObject\MockObject $mock, array $mounts) {
 		$mock->expects($this->any())
 			->method('getStorage')
-			->will($this->returnCallback(function ($id) use ($mounts) {
+			->willReturnCallback(function ($id) use ($mounts) {
 				foreach ($mounts as $mount) {
 					if ($mount->getId() === $id) {
 						return $mount;
 					}
 				}
 				throw new NotFoundException();
-			}));
+			});
 	}
 
 	/**

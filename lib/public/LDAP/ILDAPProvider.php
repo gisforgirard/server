@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, Roger Szabo (roger.szabo@web.de)
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Roger Szabo <roger.szabo@web.de>
  * @author root <root@localhost.localdomain>
@@ -30,7 +31,6 @@ namespace OCP\LDAP;
 /**
  * Interface ILDAPProvider
  *
- * @package OCP\LDAP
  * @since 11.0.0
  */
 interface ILDAPProvider {
@@ -76,7 +76,7 @@ interface ILDAPProvider {
 	public function sanitizeDN($dn);
 	
 	/**
-	 * Return a new LDAP connection resource for the specified user. 
+	 * Return a new LDAP connection resource for the specified user.
 	 * @param string $uid user id
 	 * @return resource of the LDAP connection
 	 * @since 11.0.0
@@ -157,5 +157,4 @@ interface ILDAPProvider {
 	 * @since 13.0.0
 	 */
 	public function getLDAPGroupMemberAssoc($gid);
-
 }

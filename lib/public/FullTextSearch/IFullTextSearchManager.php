@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCP\FullTextSearch;
 
-
 use OCP\FullTextSearch\Model\IIndex;
 use OCP\FullTextSearch\Model\ISearchResult;
 use OCP\FullTextSearch\Service\IIndexService;
@@ -41,7 +40,6 @@ use OCP\FullTextSearch\Service\ISearchService;
  *
  * @since 15.0.0
  *
- * @package OCP\FullTextSearch
  */
 interface IFullTextSearchManager {
 
@@ -185,6 +183,4 @@ interface IFullTextSearchManager {
 	 * @return ISearchResult[]
 	 */
 	public function search(array $request, string $userId = ''): array;
-
-
 }

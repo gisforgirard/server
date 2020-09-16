@@ -2,7 +2,10 @@
 /**
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Vincent Petry <pvince81@owncloud.com>
@@ -25,9 +28,9 @@
 
 namespace OCA\Files\Tests\Service;
 
-use OC\Tags;
 use OCA\Files\Service\TagService;
 use OCP\Activity\IManager;
+use OCP\ITags;
 use OCP\IUser;
 use OCP\IUserSession;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -46,10 +49,10 @@ class TagServiceTest extends \Test\TestCase {
 	 */
 	private $user;
 
-	/** @var IUserSession|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	private $userSession;
 
-	/** @var IManager|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var IManager|\PHPUnit\Framework\MockObject\MockObject */
 	private $activityManager;
 
 	/**
@@ -57,11 +60,11 @@ class TagServiceTest extends \Test\TestCase {
 	 */
 	private $root;
 
-	/** @var EventDispatcherInterface|\PHPUnit_Framework_MockObject_MockObject */
+	/** @var EventDispatcherInterface|\PHPUnit\Framework\MockObject\MockObject */
 	private $dispatcher;
 
 	/**
-	 * @var \OCA\Files\Service\TagService|\PHPUnit_Framework_MockObject_MockObject
+	 * @var \OCA\Files\Service\TagService|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	private $tagService;
 
@@ -85,7 +88,7 @@ class TagServiceTest extends \Test\TestCase {
 		$this->userSession->expects($this->any())
 			->method('getUser')
 			->withAnyParameters()
-			->will($this->returnValue($user));
+			->willReturn($user);
 
 		$this->root = \OC::$server->getUserFolder();
 		$this->dispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -96,7 +99,7 @@ class TagServiceTest extends \Test\TestCase {
 
 	/**
 	 * @param array $methods
-	 * @return TagService|\PHPUnit_Framework_MockObject_MockObject
+	 * @return TagService|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	protected function getTagService(array $methods = []) {
 		return $this->getMockBuilder(TagService::class)
@@ -109,13 +112,14 @@ class TagServiceTest extends \Test\TestCase {
 			])
 			->setMethods($methods)
 			->getMock();
-
 	}
 
 	protected function tearDown(): void {
 		\OC_User::setUserId('');
 		$user = \OC::$server->getUserManager()->get($this->user);
-		if ($user !== null) { $user->delete(); }
+		if ($user !== null) {
+			$user->delete();
+		}
 	}
 
 	public function testUpdateFileTags() {
@@ -132,25 +136,25 @@ class TagServiceTest extends \Test\TestCase {
 		$fileId = $testFile->getId();
 
 		// set tags
-		$this->tagService->updateFileTags('subdir/test.txt', array($tag1, $tag2));
+		$this->tagService->updateFileTags('subdir/test.txt', [$tag1, $tag2]);
 
-		$this->assertEquals(array($fileId), $this->tagger->getIdsForTag($tag1));
-		$this->assertEquals(array($fileId), $this->tagger->getIdsForTag($tag2));
+		$this->assertEquals([$fileId], $this->tagger->getIdsForTag($tag1));
+		$this->assertEquals([$fileId], $this->tagger->getIdsForTag($tag2));
 
 		// remove tag
-		$this->tagService->updateFileTags('subdir/test.txt', array($tag2));
-		$this->assertEquals(array(), $this->tagger->getIdsForTag($tag1));
-		$this->assertEquals(array($fileId), $this->tagger->getIdsForTag($tag2));
+		$this->tagService->updateFileTags('subdir/test.txt', [$tag2]);
+		$this->assertEquals([], $this->tagger->getIdsForTag($tag1));
+		$this->assertEquals([$fileId], $this->tagger->getIdsForTag($tag2));
 
 		// clear tags
-		$this->tagService->updateFileTags('subdir/test.txt', array());
-		$this->assertEquals(array(), $this->tagger->getIdsForTag($tag1));
-		$this->assertEquals(array(), $this->tagger->getIdsForTag($tag2));
+		$this->tagService->updateFileTags('subdir/test.txt', []);
+		$this->assertEquals([], $this->tagger->getIdsForTag($tag1));
+		$this->assertEquals([], $this->tagger->getIdsForTag($tag2));
 
 		// non-existing file
 		$caught = false;
 		try {
-			$this->tagService->updateFileTags('subdir/unexist.txt', array($tag1));
+			$this->tagService->updateFileTags('subdir/unexist.txt', [$tag1]);
 		} catch (\OCP\Files\NotFoundException $e) {
 			$caught = true;
 		}
@@ -160,7 +164,6 @@ class TagServiceTest extends \Test\TestCase {
 	}
 
 	public function testFavoriteActivity() {
-
 		$subdir = $this->root->newFolder('subdir');
 		$file = $subdir->newFile('test.txt');
 
@@ -172,7 +175,7 @@ class TagServiceTest extends \Test\TestCase {
 			);
 
 		// set tags
-		$this->tagService->updateFileTags('subdir/test.txt', [Tags::TAG_FAVORITE]);
+		$this->tagService->updateFileTags('subdir/test.txt', [ITags::TAG_FAVORITE]);
 
 		// remove tag
 		$this->tagService->updateFileTags('subdir/test.txt', []);

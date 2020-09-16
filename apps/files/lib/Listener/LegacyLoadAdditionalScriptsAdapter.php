@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2019, Roeland Jago Douma <roeland@famdouma.nl>
  *
- * @author Robin Appelman <robin@icewind.nl>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -31,7 +31,7 @@ use OC\EventDispatcher\SymfonyAdapter;
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
-use OCP\EventDispatcher\GenericEvent;
+use Symfony\Component\EventDispatcher\GenericEvent;
 
 class LegacyLoadAdditionalScriptsAdapter implements IEventListener {
 
@@ -55,5 +55,4 @@ class LegacyLoadAdditionalScriptsAdapter implements IEventListener {
 			$event->addHiddenField($name, $value);
 		}
 	}
-
 }

@@ -20,6 +20,8 @@
  *
  */
 
+import { generateUrl } from '@nextcloud/router'
+
 export default {
 	props: {
 		user: {
@@ -158,11 +160,11 @@ export default {
 		 * @returns {string}
 		 */
 		generateAvatar(user, size = 32) {
-			return OC.generateUrl(
+			return generateUrl(
 				'/avatar/{user}/{size}?v={version}',
 				{
-					user: user,
-					size: size,
+					user,
+					size,
 					version: oc_userconfig.avatar.version,
 				}
 			)

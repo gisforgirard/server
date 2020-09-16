@@ -4,7 +4,7 @@
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Bart Visscher <bartv@thisnet.nl>
- * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Greta Doci <gretadoci@gmail.com>
  * @author hkjolhede <hkjolhede@gmail.com>
  * @author Joas Schilling <coding@schilljs.com>
@@ -52,6 +52,7 @@ use OC\Files\Storage\Wrapper\Jail;
 use OC\Files\Storage\Wrapper\Wrapper;
 use OCP\Files\EmptyFileNameException;
 use OCP\Files\FileNameTooLongException;
+use OCP\Files\GenericFileException;
 use OCP\Files\InvalidCharacterInPathException;
 use OCP\Files\InvalidDirectoryException;
 use OCP\Files\InvalidPathException;
@@ -75,7 +76,6 @@ use OCP\Lock\LockedException;
  * in classes which extend it, e.g. $this->stat() .
  */
 abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
-
 	use LocalTempFileTrait;
 
 	protected $cache;
@@ -103,7 +103,7 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 	protected function remove($path) {
 		if ($this->is_dir($path)) {
 			return $this->rmdir($path);
-		} else if ($this->is_file($path)) {
+		} elseif ($this->is_file($path)) {
 			return $this->unlink($path);
 		} else {
 			return false;
@@ -234,7 +234,7 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 		} else {
 			$source = $this->fopen($path1, 'r');
 			$target = $this->fopen($path2, 'w');
-			list(, $result) = \OC_Helper::streamCopy($source, $target);
+			[, $result] = \OC_Helper::streamCopy($source, $target);
 			if (!$result) {
 				\OC::$server->getLogger()->warning("Failed to write data while copying $path1 to $path2");
 			}
@@ -296,11 +296,13 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 	 * @return array
 	 */
 	protected function searchInDir($query, $dir = '') {
-		$files = array();
+		$files = [];
 		$dh = $this->opendir($dir);
 		if (is_resource($dh)) {
 			while (($item = readdir($dh)) !== false) {
-				if (\OC\Files\Filesystem::isIgnoredDir($item)) continue;
+				if (\OC\Files\Filesystem::isIgnoredDir($item)) {
+					continue;
+				}
 				if (strstr(strtolower($item), strtolower($query)) !== false) {
 					$files[] = $dir . '/' . $item;
 				}
@@ -434,11 +436,11 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 			$path = '/' . $path;
 		}
 
-		$output = array();
+		$output = [];
 		foreach (explode('/', $path) as $chunk) {
 			if ($chunk == '..') {
 				array_pop($output);
-			} else if ($chunk == '.') {
+			} elseif ($chunk == '.') {
 			} else {
 				$output[] = $chunk;
 			}
@@ -459,8 +461,8 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 			\OC::$server->getLogger()->info("External storage not available: stat() failed");
 			return false;
 		} catch (\Exception $e) {
-			\OC::$server->getLogger()->info("External storage not available: " . $e->getMessage());
-			\OC::$server->getLogger()->logException($e, ['level' => ILogger::DEBUG]);
+			\OC::$server->getLogger()->warning("External storage not available: " . $e->getMessage());
+			\OC::$server->getLogger()->logException($e, ['level' => ILogger::WARN]);
 			return false;
 		}
 	}
@@ -618,18 +620,19 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 			}
 		} else {
 			$source = $sourceStorage->fopen($sourceInternalPath, 'r');
-			// TODO: call fopen in a way that we execute again all storage wrappers
-			// to avoid that we bypass storage wrappers which perform important actions
-			// for this operation. Same is true for all other operations which
-			// are not the same as the original one.Once this is fixed we also
-			// need to adjust the encryption wrapper.
-			$target = $this->fopen($targetInternalPath, 'w');
-			list(, $result) = \OC_Helper::streamCopy($source, $target);
+			$result = false;
+			if ($source) {
+				try {
+					$this->writeStream($targetInternalPath, $source);
+					$result = true;
+				} catch (\Exception $e) {
+					\OC::$server->getLogger()->logException($e, ['level' => ILogger::WARN, 'message' => 'Failed to copy stream to storage']);
+				}
+			}
+
 			if ($result and $preserveMtime) {
 				$this->touch($targetInternalPath, $sourceStorage->filemtime($sourceInternalPath));
 			}
-			fclose($source);
-			fclose($target);
 
 			if (!$result) {
 				// delete partially written target file
@@ -717,6 +720,7 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 		$data['etag'] = $this->getETag($path);
 		$data['storage_mtime'] = $data['mtime'];
 		$data['permissions'] = $permissions;
+		$data['name'] = basename($path);
 
 		return $data;
 	}
@@ -744,7 +748,7 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 			);
 		}
 		try {
-			$provider->acquireLock('files/' . md5($this->getId() . '::' . trim($path, '/')), $type);
+			$provider->acquireLock('files/' . md5($this->getId() . '::' . trim($path, '/')), $type, $this->getId() . '::' . $path);
 		} catch (LockedException $e) {
 			if ($logger) {
 				$logger->logException($e, ['level' => ILogger::INFO]);
@@ -855,11 +859,33 @@ abstract class Common implements Storage, ILockingStorage, IWriteStreamStorage {
 	public function writeStream(string $path, $stream, int $size = null): int {
 		$target = $this->fopen($path, 'w');
 		if (!$target) {
-			return 0;
+			throw new GenericFileException("Failed to open $path for writing");
 		}
-		list($count, $result) = \OC_Helper::streamCopy($stream, $target);
-		fclose($stream);
-		fclose($target);
+		try {
+			[$count, $result] = \OC_Helper::streamCopy($stream, $target);
+			if (!$result) {
+				throw new GenericFileException("Failed to copy stream");
+			}
+		} finally {
+			fclose($target);
+			fclose($stream);
+		}
 		return $count;
+	}
+
+	public function getDirectoryContent($directory): \Traversable {
+		$dh = $this->opendir($directory);
+		if (is_resource($dh)) {
+			$basePath = rtrim($directory, '/');
+			while (($file = readdir($dh)) !== false) {
+				if (!Filesystem::isIgnoredDir($file) && !Filesystem::isFileBlacklisted($file)) {
+					$childPath = $basePath . '/' . trim($file, '/');
+					$metadata = $this->getMetaData($childPath);
+					if ($metadata !== null) {
+						yield $metadata;
+					}
+				}
+			}
+		}
 	}
 }

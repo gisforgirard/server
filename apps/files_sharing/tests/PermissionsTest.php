@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2016, ownCloud, Inc.
  *
  * @author Björn Schießle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -85,7 +86,7 @@ class PermissionsTest extends TestCase {
 		$node = $rootFolder->get('container/shareddir');
 		$share = $this->shareManager->newShare();
 		$share->setNode($node)
-			->setShareType(\OCP\Share::SHARE_TYPE_USER)
+			->setShareType(IShare::TYPE_USER)
 			->setSharedWith(self::TEST_FILES_SHARING_API_USER2)
 			->setSharedBy(self::TEST_FILES_SHARING_API_USER1)
 			->setPermissions(\OCP\Constants::PERMISSION_ALL);
@@ -96,7 +97,7 @@ class PermissionsTest extends TestCase {
 		$node = $rootFolder->get('container/shareddirrestricted');
 		$share = $this->shareManager->newShare();
 		$share->setNode($node)
-			->setShareType(\OCP\Share::SHARE_TYPE_USER)
+			->setShareType(IShare::TYPE_USER)
 			->setSharedWith(self::TEST_FILES_SHARING_API_USER2)
 			->setSharedBy(self::TEST_FILES_SHARING_API_USER1)
 			->setPermissions(\OCP\Constants::PERMISSION_READ | \OCP\Constants::PERMISSION_CREATE | \OCP\Constants::PERMISSION_UPDATE);
@@ -122,7 +123,7 @@ class PermissionsTest extends TestCase {
 
 		self::loginHelper(self::TEST_FILES_SHARING_API_USER1);
 
-		$shares = $this->shareManager->getSharesBy(self::TEST_FILES_SHARING_API_USER1, \OCP\Share::SHARE_TYPE_USER);
+		$shares = $this->shareManager->getSharesBy(self::TEST_FILES_SHARING_API_USER1, IShare::TYPE_USER);
 		foreach ($shares as $share) {
 			$this->shareManager->deleteShare($share);
 		}
@@ -137,7 +138,7 @@ class PermissionsTest extends TestCase {
 	/**
 	 * Test that the permissions of shared directory are returned correctly
 	 */
-	function testGetPermissions() {
+	public function testGetPermissions() {
 		$sharedDirPerms = $this->sharedStorage->getPermissions('');
 		$this->assertEquals(31, $sharedDirPerms);
 		$sharedDirPerms = $this->sharedStorage->getPermissions('textfile.txt');
@@ -151,7 +152,7 @@ class PermissionsTest extends TestCase {
 	/**
 	 * Test that the permissions of shared directory are returned correctly
 	 */
-	function testGetDirectoryPermissions() {
+	public function testGetDirectoryPermissions() {
 		$contents = $this->secondView->getDirectoryContent('files/shareddir');
 		$this->assertEquals('subdir', $contents[0]['name']);
 		$this->assertEquals(31, $contents[0]['permissions']);
