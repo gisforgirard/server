@@ -115,7 +115,6 @@ class Throttler {
 	 * @param string $action
 	 * @param string $ip
 	 * @param array $metadata Optional metadata logged to the database
-	 * @suppress SqlInjectionChecker
 	 */
 	public function registerAttempt(string $action,
 									string $ip,
@@ -196,8 +195,8 @@ class Throttler {
 
 			$valid = true;
 			for ($i = 0; $i < $mask; $i++) {
-				$part = ord($addr[(int)($i/8)]);
-				$orig = ord($ip[(int)($i/8)]);
+				$part = ord($addr[(int)($i / 8)]);
+				$orig = ord($ip[(int)($i / 8)]);
 
 				$bitmask = 1 << (7 - ($i % 8));
 
@@ -227,6 +226,11 @@ class Throttler {
 	 * @return int
 	 */
 	public function getAttempts(string $ip, string $action = '', float $maxAgeHours = 12): int {
+		if ($maxAgeHours > 48) {
+			$this->logger->error('Bruteforce has to use less than 48 hours');
+			$maxAgeHours = 48;
+		}
+
 		if ($ip === '') {
 			return 0;
 		}
@@ -274,7 +278,7 @@ class Throttler {
 			return self::MAX_DELAY_MS;
 		}
 
-		$delay = $firstDelay * 2**$attempts;
+		$delay = $firstDelay * 2 ** $attempts;
 		if ($delay > self::MAX_DELAY) {
 			return self::MAX_DELAY_MS;
 		}

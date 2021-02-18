@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Georg Ehrke
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
@@ -162,7 +163,7 @@ class TasksSearchProvider extends ACalendarSearchProvider {
 			$formattedDate = $this->l10n->l('date', $dueDateTime, ['width' => 'medium']);
 
 			if ($taskComponent->DUE->hasTime()) {
-				$formattedTime =  $this->l10n->l('time', $dueDateTime, ['width' => 'short']);
+				$formattedTime = $this->l10n->l('time', $dueDateTime, ['width' => 'short']);
 				return $this->l10n->t('Due on %s by %s', [$formattedDate, $formattedTime]);
 			}
 

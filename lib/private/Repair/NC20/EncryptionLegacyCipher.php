@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -54,7 +55,12 @@ class EncryptionLegacyCipher implements IRepairStep {
 	}
 
 	public function run(IOutput $output): void {
-		if ($this->manager->isEnabled()) {
+		if (!$this->shouldRun()) {
+			return;
+		}
+
+		$masterKeyId = $this->config->getAppValue('encryption', 'masterKeyId');
+		if ($this->manager->isEnabled() || !empty($masterKeyId)) {
 			if ($this->config->getSystemValue('encryption.legacy_format_support', '') === '') {
 				$this->config->setSystemValue('encryption.legacy_format_support', true);
 			}

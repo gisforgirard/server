@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2018 Julius Härtl <jus@bitgrid.net>
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Julius Härtl <jus@bitgrid.net>
  *
  * @license GNU AGPL version 3 or any later version
@@ -65,4 +66,15 @@ interface IAccountManager {
 	 * @return IAccount
 	 */
 	public function getAccount(IUser $user): IAccount;
+
+	/**
+	 * Search for users based on account data
+	 *
+	 * @param string $property
+	 * @param string[] $values
+	 * @return array
+	 *
+	 * @since 21.0.0
+	 */
+	public function searchUsers(string $property, array $values): array;
 }

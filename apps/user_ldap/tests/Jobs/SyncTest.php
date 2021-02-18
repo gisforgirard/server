@@ -89,7 +89,6 @@ class SyncTest extends TestCase {
 		$this->arguments = [
 			'helper' => $this->helper,
 			'ldapWrapper' => $this->ldapWrapper,
-			'userManager' => $this->userManager,
 			'mapper' => $this->mapper,
 			'config' => $this->config,
 			'avatarManager' => $this->avatarManager,
@@ -100,7 +99,7 @@ class SyncTest extends TestCase {
 			'accessFactory' => $this->accessFactory,
 		];
 
-		$this->sync = new Sync();
+		$this->sync = new Sync($this->userManager);
 	}
 
 	public function intervalDataProvider() {
@@ -258,7 +257,7 @@ class SyncTest extends TestCase {
 
 		$this->config->expects($this->exactly(2))
 			->method('getAppValue')
-			->willReturnOnConsecutiveCalls(time() - 60*40, time() - 60*20);
+			->willReturnOnConsecutiveCalls(time() - 60 * 40, time() - 60 * 20);
 
 		$this->sync->setArgument($this->arguments);
 		$this->assertTrue($this->sync->qualifiesToRun($cycleData));
@@ -317,7 +316,7 @@ class SyncTest extends TestCase {
 					}
 					// for qualifiesToRun()
 					if ($key === $runData['scheduledCycle']['prefix'] . '_lastChange') {
-						return time() - 60*40;
+						return time() - 60 * 40;
 					}
 					// for getMinPagingSize
 					if ($key === $runData['scheduledCycle']['prefix'] . 'ldap_paging_size') {

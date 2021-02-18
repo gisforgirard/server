@@ -46,7 +46,7 @@ class WeatherStatusController extends OCSController {
 								IRequest $request,
 								ILogger $logger,
 								WeatherStatusService $service,
-								string $userId) {
+								?string $userId) {
 		parent::__construct($appName, $request);
 		$this->userId = $userId;
 		$this->logger = $logger;
@@ -120,5 +120,28 @@ class WeatherStatusController extends OCSController {
 		} else {
 			return new DataResponse($forecast);
 		}
+	}
+
+	/**
+	 * @NoAdminRequired
+	 *
+	 * Get favorites list
+	 *
+	 * @return DataResponse which contains the favorite list
+	 */
+	public function getFavorites(): DataResponse {
+		return new DataResponse($this->service->getFavorites());
+	}
+
+	/**
+	 * @NoAdminRequired
+	 *
+	 * Set favorites list
+	 *
+	 * @param array $favorites
+	 * @return DataResponse success state
+	 */
+	public function setFavorites(array $favorites): DataResponse {
+		return new DataResponse($this->service->setFavorites($favorites));
 	}
 }

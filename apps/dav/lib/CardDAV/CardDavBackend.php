@@ -9,7 +9,7 @@
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
- * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author matt <34400929+call-me-matt@users.noreply.github.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
@@ -83,7 +83,8 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 	/** @var array properties to index */
 	public static $indexProperties = [
 		'BDAY', 'UID', 'N', 'FN', 'TITLE', 'ROLE', 'NOTE', 'NICKNAME',
-		'ORG', 'CATEGORIES', 'EMAIL', 'TEL', 'IMPP', 'ADR', 'URL', 'GEO', 'CLOUD'];
+		'ORG', 'CATEGORIES', 'EMAIL', 'TEL', 'IMPP', 'ADR', 'URL', 'GEO',
+		'CLOUD', 'X-SOCIALPROFILE'];
 
 	/**
 	 * @var string[] Map of uid => display name
@@ -138,7 +139,10 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			->from('addressbooks')
 			->where($query->expr()->eq('principaluri', $query->createNamedParameter($principalUri)));
 
-		return (int)$query->execute()->fetchColumn();
+		$result = $query->execute();
+		$column = (int) $result->fetchOne();
+		$result->closeCursor();
+		return $column;
 	}
 
 	/**
@@ -188,9 +192,6 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 		$principals = $this->principalBackend->getGroupMembership($principalUriOriginal, true);
 		$principals = array_merge($principals, $this->principalBackend->getCircleMembership($principalUriOriginal));
 
-		$principals = array_map(function ($principal) {
-			return urldecode($principal);
-		}, $principals);
 		$principals[] = $principalUri;
 
 		$query = $this->db->getQueryBuilder();
@@ -374,9 +375,6 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			'{' . Plugin::NS_CARDDAV . '}addressbook-description',
 		];
 
-		/**
-		 * @suppress SqlInjectionChecker
-		 */
 		$propPatch->handle($supportedProperties, function ($mutations) use ($addressBookId) {
 			$updates = [];
 			foreach ($mutations as $property => $newValue) {
@@ -663,7 +661,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			->andWhere($q->expr()->eq('uid', $q->createNamedParameter($uid)))
 			->setMaxResults(1);
 		$result = $q->execute();
-		$count = (bool)$result->fetchColumn();
+		$count = (bool)$result->fetchOne();
 		$result->closeCursor();
 		if ($count) {
 			throw new \Sabre\DAV\Exception\BadRequest('VCard object with uid already exists in this addressbook collection.');
@@ -859,14 +857,20 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 	 * @param string $addressBookId
 	 * @param string $syncToken
 	 * @param int $syncLevel
-	 * @param int $limit
+	 * @param int|null $limit
 	 * @return array
 	 */
 	public function getChangesForAddressBook($addressBookId, $syncToken, $syncLevel, $limit = null) {
 		// Current synctoken
-		$stmt = $this->db->prepare('SELECT `synctoken` FROM `*PREFIX*addressbooks` WHERE `id` = ?');
-		$stmt->execute([$addressBookId]);
-		$currentToken = $stmt->fetchColumn(0);
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('synctoken')
+			->from('addressbooks')
+			->where(
+				$qb->expr()->eq('id', $qb->createNamedParameter($addressBookId))
+			);
+		$stmt = $qb->execute();
+		$currentToken = $stmt->fetchOne();
+		$stmt->closeCursor();
 
 		if (is_null($currentToken)) {
 			return null;
@@ -880,14 +884,23 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 		];
 
 		if ($syncToken) {
-			$query = "SELECT `uri`, `operation` FROM `*PREFIX*addressbookchanges` WHERE `synctoken` >= ? AND `synctoken` < ? AND `addressbookid` = ? ORDER BY `synctoken`";
-			if ($limit > 0) {
-				$query .= " LIMIT " . (int)$limit;
+			$qb = $this->db->getQueryBuilder();
+			$qb->select('uri', 'operation')
+				->from('addressbookchanges')
+				->where(
+					$qb->expr()->andX(
+						$qb->expr()->gte('synctoken', $qb->createNamedParameter($syncToken)),
+						$qb->expr()->lt('synctoken', $qb->createNamedParameter($currentToken)),
+						$qb->expr()->eq('addressbookid', $qb->createNamedParameter($addressBookId))
+					)
+				)->orderBy('synctoken');
+
+			if (is_int($limit) && $limit > 0) {
+				$qb->setMaxResults($limit);
 			}
 
 			// Fetching all changes
-			$stmt = $this->db->prepare($query);
-			$stmt->execute([$syncToken, $currentToken, $addressBookId]);
+			$stmt = $qb->execute();
 
 			$changes = [];
 
@@ -896,6 +909,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 			while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
 				$changes[$row['uri']] = $row['operation'];
 			}
+			$stmt->closeCursor();
 
 			foreach ($changes as $uri => $operation) {
 				switch ($operation) {
@@ -911,12 +925,16 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 				}
 			}
 		} else {
+			$qb = $this->db->getQueryBuilder();
+			$qb->select('uri')
+				->from('cards')
+				->where(
+					$qb->expr()->eq('addressbookid', $qb->createNamedParameter($addressBookId))
+				);
 			// No synctoken supplied, this is the initial sync.
-			$query = "SELECT `uri` FROM `*PREFIX*cards` WHERE `addressbookid` = ?";
-			$stmt = $this->db->prepare($query);
-			$stmt->execute([$addressBookId]);
-
+			$stmt = $qb->execute();
 			$result['added'] = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+			$stmt->closeCursor();
 		}
 		return $result;
 	}
@@ -1047,7 +1065,7 @@ class CardDavBackend implements BackendInterface, SyncSupport {
 
 		$query2 = $this->db->getQueryBuilder();
 
-		$addressBookOr =  $query2->expr()->orX();
+		$addressBookOr = $query2->expr()->orX();
 		foreach ($addressBookIds as $addressBookId) {
 			$addressBookOr->add($query2->expr()->eq('cp.addressbookid', $query2->createNamedParameter($addressBookId)));
 		}

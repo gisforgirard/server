@@ -32,9 +32,11 @@ declare(strict_types=1);
 namespace OCA\Provisioning_API\Controller;
 
 use OC\Accounts\AccountManager;
+use OC\Group\Manager;
 use OC\User\Backend;
 use OC\User\NoUserException;
 use OC_Helper;
+use OCP\Accounts\IAccountManager;
 use OCP\AppFramework\OCS\OCSException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\AppFramework\OCSController;
@@ -54,7 +56,7 @@ abstract class AUserData extends OCSController {
 	protected $userManager;
 	/** @var IConfig */
 	protected $config;
-	/** @var IGroupManager|\OC\Group\Manager */ // FIXME Requires a method that is not on the interface
+	/** @var IGroupManager|Manager */ // FIXME Requires a method that is not on the interface
 	protected $groupManager;
 	/** @var IUserSession */
 	protected $userSession;
@@ -135,12 +137,12 @@ abstract class AUserData extends OCSController {
 		$data['backend'] = $targetUserObject->getBackendClassName();
 		$data['subadmin'] = $this->getUserSubAdminGroupsData($targetUserObject->getUID());
 		$data['quota'] = $this->fillStorageInfo($targetUserObject->getUID());
-		$data[AccountManager::PROPERTY_EMAIL] = $targetUserObject->getEMailAddress();
-		$data[AccountManager::PROPERTY_DISPLAYNAME] = $targetUserObject->getDisplayName();
-		$data[AccountManager::PROPERTY_PHONE] = $userAccount[AccountManager::PROPERTY_PHONE]['value'];
-		$data[AccountManager::PROPERTY_ADDRESS] = $userAccount[AccountManager::PROPERTY_ADDRESS]['value'];
-		$data[AccountManager::PROPERTY_WEBSITE] = $userAccount[AccountManager::PROPERTY_WEBSITE]['value'];
-		$data[AccountManager::PROPERTY_TWITTER] = $userAccount[AccountManager::PROPERTY_TWITTER]['value'];
+		$data[IAccountManager::PROPERTY_EMAIL] = $targetUserObject->getEMailAddress();
+		$data[IAccountManager::PROPERTY_DISPLAYNAME] = $targetUserObject->getDisplayName();
+		$data[IAccountManager::PROPERTY_PHONE] = $userAccount[IAccountManager::PROPERTY_PHONE]['value'];
+		$data[IAccountManager::PROPERTY_ADDRESS] = $userAccount[IAccountManager::PROPERTY_ADDRESS]['value'];
+		$data[IAccountManager::PROPERTY_WEBSITE] = $userAccount[IAccountManager::PROPERTY_WEBSITE]['value'];
+		$data[IAccountManager::PROPERTY_TWITTER] = $userAccount[IAccountManager::PROPERTY_TWITTER]['value'];
 		$data['groups'] = $gids;
 		$data['language'] = $this->l10nFactory->getUserLanguage($targetUserObject);
 		$data['locale'] = $this->config->getUserValue($targetUserObject->getUID(), 'core', 'locale');
@@ -181,7 +183,7 @@ abstract class AUserData extends OCSController {
 	/**
 	 * @param string $userId
 	 * @return array
-	 * @throws \OCP\Files\NotFoundException
+	 * @throws OCSException
 	 */
 	protected function fillStorageInfo(string $userId): array {
 		try {

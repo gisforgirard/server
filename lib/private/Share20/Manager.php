@@ -19,7 +19,7 @@
  * @author Pauli Järvinen <pauli.jarvinen@gmail.com>
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Vincent Petry <vincent@nextcloud.com>
  *
  * @license AGPL-3.0
  *
@@ -248,6 +248,7 @@ class Manager implements IManager {
 				throw new \InvalidArgumentException('SharedWith is not a valid circle');
 			}
 		} elseif ($share->getShareType() === IShare::TYPE_ROOM) {
+		} elseif ($share->getShareType() === IShare::TYPE_DECK) {
 		} else {
 			// We can't handle other types yet
 			throw new \InvalidArgumentException('unknown share type');
@@ -287,8 +288,7 @@ class Manager implements IManager {
 
 		// Check if we actually have share permissions
 		if (!$share->getNode()->isShareable()) {
-			$path = $userFolder->getRelativePath($share->getNode()->getPath());
-			$message_t = $this->l->t('You are not allowed to share %s', [$path]);
+			$message_t = $this->l->t('You are not allowed to share %s', [$share->getNode()->getName()]);
 			throw new GenericShareException($message_t, $message_t, 404);
 		}
 
@@ -409,9 +409,9 @@ class Manager implements IManager {
 			$expirationDate = new \DateTime();
 			$expirationDate->setTime(0,0,0);
 
-			$days = (int)$this->config->getAppValue('core', 'internal_defaultExpDays', $this->shareApiLinkDefaultExpireDays());
-			if ($days > $this->shareApiLinkDefaultExpireDays()) {
-				$days = $this->shareApiLinkDefaultExpireDays();
+			$days = (int)$this->config->getAppValue('core', 'internal_defaultExpDays', (string)$this->shareApiInternalDefaultExpireDays());
+			if ($days > $this->shareApiInternalDefaultExpireDays()) {
+				$days = $this->shareApiInternalDefaultExpireDays();
 			}
 			$expirationDate->add(new \DateInterval('P'.$days.'D'));
 		}
@@ -542,7 +542,8 @@ class Manager implements IManager {
 					$this->groupManager->getUserGroupIds($sharedWith)
 			);
 			if (empty($groups)) {
-				throw new \Exception('Sharing is only allowed with group members');
+				$message_t = $this->l->t('Sharing is only allowed with group members');
+				throw new \Exception($message_t);
 			}
 		}
 
@@ -1138,6 +1139,7 @@ class Manager implements IManager {
 			$deletedShares = array_merge($deletedShares, $deletedChildren);
 
 			$provider->delete($child);
+			$this->dispatcher->dispatchTyped(new Share\Events\ShareDeletedEvent($child));
 			$deletedShares[] = $child;
 		}
 
@@ -1167,6 +1169,8 @@ class Manager implements IManager {
 		// Do the actual delete
 		$provider = $this->factory->getProviderForType($share->getShareType());
 		$provider->delete($share);
+
+		$this->dispatcher->dispatchTyped(new Share\Events\ShareDeletedEvent($share));
 
 		// All the deleted shares caused by this delete
 		$deletedShares[] = $share;
@@ -1395,7 +1399,7 @@ class Manager implements IManager {
 	 *
 	 * @return Share[]
 	 */
-	public function getSharesByPath(\OCP\Files\Node $path, $page=0, $perPage=50) {
+	public function getSharesByPath(\OCP\Files\Node $path, $page = 0, $perPage = 50) {
 		return [];
 	}
 
@@ -1886,6 +1890,10 @@ class Manager implements IManager {
 		}
 
 		return true;
+	}
+
+	public function registerShareProvider(string $shareProviderClass): void {
+		$this->factory->registerProvider($shareProviderClass);
 	}
 
 	public function getAllShares(): iterable {

@@ -26,7 +26,7 @@
 			:class="{ active: background === 'custom' }"
 			tabindex="0"
 			@click="pickFile">
-			{{ t('dashboard', 'Pick from files') }}
+			{{ t('dashboard', 'Pick from Files') }}
 		</button>
 		<button class="background default"
 			tabindex="0"
@@ -66,6 +66,10 @@ export default {
 			type: String,
 			default: 'default',
 		},
+		themingDefaultBackground: {
+			type: String,
+			default: '',
+		},
 	},
 	data() {
 		return {
@@ -88,8 +92,8 @@ export default {
 	methods: {
 		async update(data) {
 			const background = data.type === 'custom' || data.type === 'default' ? data.type : data.value
-			this.backgroundImage = getBackgroundUrl(background, data.version)
-			if (data.type === 'color') {
+			this.backgroundImage = getBackgroundUrl(background, data.version, this.themingDefaultBackground)
+			if (data.type === 'color' || (data.type === 'default' && this.themingDefaultBackground === 'backgroundColor')) {
 				this.$emit('update:background', data)
 				this.loading = false
 				return

@@ -52,7 +52,7 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome {
 	private $pluginManager;
 
 	/** @var bool */
-	private $returnCachedSubscriptions=false;
+	private $returnCachedSubscriptions = false;
 
 	public function __construct(BackendInterface $caldavBackend, $principalInfo) {
 		parent::__construct($caldavBackend, $principalInfo);
@@ -138,7 +138,7 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome {
 			return new Outbox($this->config, $this->principalInfo['uri']);
 		}
 		if ($name === 'notifications' && $this->caldavBackend instanceof NotificationSupport) {
-			return new \Sabre\CalDAv\Notifications\Collection($this->caldavBackend, $this->principalInfo['uri']);
+			return new \Sabre\CalDAV\Notifications\Collection($this->caldavBackend, $this->principalInfo['uri']);
 		}
 
 		// Calendars
@@ -183,7 +183,7 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome {
 	 * @param integer|null $limit
 	 * @param integer|null $offset
 	 */
-	public function calendarSearch(array $filters, $limit=null, $offset=null) {
+	public function calendarSearch(array $filters, $limit = null, $offset = null) {
 		$principalUri = $this->principalInfo['uri'];
 		return $this->caldavBackend->calendarSearch($principalUri, $filters, $limit, $offset);
 	}

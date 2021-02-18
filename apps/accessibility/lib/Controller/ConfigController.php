@@ -75,11 +75,11 @@ class ConfigController extends OCSController {
 								IUserSession $userSession,
 								AccessibilityProvider $accessibilityProvider) {
 		parent::__construct($appName, $request);
-		$this->appName               = $appName;
-		$this->config                = $config;
-		$this->userSession           = $userSession;
+		$this->appName = $appName;
+		$this->config = $config;
+		$this->userSession = $userSession;
 		$this->accessibilityProvider = $accessibilityProvider;
-		$this->userId				 = $userSession->getUser()->getUID();
+		$this->userId = $userSession->getUser()->getUID();
 	}
 
 	/**
@@ -115,9 +115,9 @@ class ConfigController extends OCSController {
 
 			$themes = $this->accessibilityProvider->getThemes();
 			$highcontrast = [$this->accessibilityProvider->getHighContrast()];
-			$fonts  = $this->accessibilityProvider->getFonts();
+			$fonts = $this->accessibilityProvider->getFonts();
 
-			$availableOptions = array_map(function ($option) {
+			$availableOptions = array_map(function ($option): string {
 				return $option['id'];
 			}, array_merge($themes, $highcontrast, $fonts));
 

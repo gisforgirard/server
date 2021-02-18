@@ -23,7 +23,9 @@ OC.L10N.register(
     "An unknown error has occurred" : "En ukendt fejl er opstået",
     "Uploading …" : "Uploader ...",
     "{loadedSize} of {totalSize} ({bitrate})" : "{loadedSize} af {totalSize} ({bitrate})",
+    "Uploading that item is not supported" : "Upload af dette er ikke supporteret",
     "Target folder does not exist any more" : "Destinationsmappen findes ikke længere",
+    "Operation is blocked by access control" : "Operationen blev blokeret af adgangskontrollen",
     "Error when assembling chunks, status code {status}" : "Fejl ved montering af klumper, statuskode {status}",
     "Actions" : "Handlinger",
     "Rename" : "Omdøb",
@@ -33,6 +35,7 @@ OC.L10N.register(
     "Delete file" : "Slet fil",
     "Delete folder" : "Slet mappe",
     "Disconnect storage" : "Frakobl lager",
+    "Leave this share" : "Forlad dette delte drev",
     "Could not load info for file \"{file}\"" : "Kunne ikke indlæse information for filen \"{file}\"",
     "Files" : "Filer",
     "Details" : "Detaljer",
@@ -171,7 +174,6 @@ OC.L10N.register(
     "A new file or folder has been <strong>created</strong>" : "En ny fil eller mapper er blevet <strong>oprettet</strong>",
     "A file or folder has been <strong>deleted</strong>" : "En fil eller mappe er blevet <strong>slettet</strong>",
     "Limit notifications about creation and changes to your <strong>favorite files</strong> <em>(Stream only)</em>" : "Begræns noter om oprettelse og ændringer af dine <strong>favorit filer</strong> <em>(Kun streaming)</em>",
-    "A file or folder has been <strong>restored</strong>" : "En fil eller mappe er blevet <strong>gendannet</strong>",
-    "Use this address to <a href=\"%s\" target=\"_blank\" rel=\"noreferrer noopener\">access your Files via WebDAV</a>" : "Brug denne adresse til at <a href=\"%s\" target=\"_blank\" rel=\"noreferrer noopener\">få adgang til dine filer via WebDAV</a>"
+    "A file or folder has been <strong>restored</strong>" : "En fil eller mappe er blevet <strong>gendannet</strong>"
 },
 "nplurals=2; plural=(n != 1);");

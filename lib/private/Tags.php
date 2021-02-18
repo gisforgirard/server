@@ -12,7 +12,7 @@
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Tanghus <thomas@tanghus.net>
- * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Vincent Petry <vincent@nextcloud.com>
  *
  * @license AGPL-3.0
  *
@@ -230,10 +230,6 @@ class Tags implements ITags {
 					}
 					$entries[$objId][] = $row['category'];
 				}
-				if ($result === null) {
-					\OCP\Util::writeLog('core', __METHOD__. 'DB error: ' . \OC::$server->getDatabaseConnection()->getError(), ILogger::ERROR);
-					return false;
-				}
 			}
 		} catch (\Exception $e) {
 			\OC::$server->getLogger()->logException($e, [
@@ -285,6 +281,7 @@ class Tags implements ITags {
 			$stmt = \OC_DB::prepare($sql);
 			$result = $stmt->execute([$tagId]);
 			if ($result === null) {
+				$stmt->closeCursor();
 				\OCP\Util::writeLog('core', __METHOD__. 'DB error: ' . \OC::$server->getDatabaseConnection()->getError(), ILogger::ERROR);
 				return false;
 			}
@@ -301,6 +298,7 @@ class Tags implements ITags {
 			while ($row = $result->fetchRow()) {
 				$ids[] = (int)$row['objid'];
 			}
+			$result->closeCursor();
 		}
 
 		return $ids;
@@ -417,7 +415,7 @@ class Tags implements ITags {
 	 * @param int|null $id int Optional object id to add to this|these tag(s)
 	 * @return bool Returns false on error.
 	 */
-	public function addMultiple($names, $sync=false, $id = null) {
+	public function addMultiple($names, $sync = false, $id = null) {
 		if (!is_array($names)) {
 			$names = [$names];
 		}
@@ -538,6 +536,7 @@ class Tags implements ITags {
 						]);
 					}
 				}
+				$result->closeCursor();
 			} catch (\Exception $e) {
 				\OC::$server->getLogger()->logException($e, [
 					'message' => __METHOD__,
@@ -576,7 +575,7 @@ class Tags implements ITags {
 		$updates = $ids;
 		try {
 			$query = 'DELETE FROM `' . self::RELATION_TABLE . '` ';
-			$query .= 'WHERE `objid` IN (' . str_repeat('?,', count($ids)-1) . '?) ';
+			$query .= 'WHERE `objid` IN (' . str_repeat('?,', count($ids) - 1) . '?) ';
 			$query .= 'AND `type`= ?';
 			$updates[] = $this->type;
 			$stmt = \OC_DB::prepare($query);
@@ -642,23 +641,6 @@ class Tags implements ITags {
 	}
 
 	/**
-	 * Get all users who favorited an object
-	 */
-	public function getUsersFavoritingObject($objId) {
-		$entries = [];
-
-		$query = \OC::$server->getDatabaseConnection()->getQueryBuilder();
-		$query->select('uid')
-			->from('vcategory_to_object', 'o')
-			->innerJoin('o', 'vcategory', 'c', $query->expr()->eq('o.categoryid', 'c.id'))
-			->where($query->expr()->eq('objid', $query->createNamedParameter($objId, IQueryBuilder::PARAM_INT)))
-			->andWhere($query->expr()->eq('c.type', $query->createNamedParameter($this->type)))
-			->andWhere($query->expr()->eq('c.category', $query->createNamedParameter(ITags::TAG_FAVORITE)));
-
-		return $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
-	}
-
-	/**
 	 * Creates a tag/object relation.
 	 *
 	 * @param int $objid The id of the object
@@ -675,7 +657,7 @@ class Tags implements ITags {
 			if (!$this->hasTag($tag)) {
 				$this->add($tag);
 			}
-			$tagId =  $this->getTagId($tag);
+			$tagId = $this->getTagId($tag);
 		} else {
 			$tagId = $tag;
 		}
@@ -711,7 +693,7 @@ class Tags implements ITags {
 				\OCP\Util::writeLog('core', __METHOD__.', Tag name is empty', ILogger::DEBUG);
 				return false;
 			}
-			$tagId =  $this->getTagId($tag);
+			$tagId = $this->getTagId($tag);
 		} else {
 			$tagId = $tag;
 		}
@@ -791,7 +773,7 @@ class Tags implements ITags {
 	}
 
 	// case-insensitive array_search
-	protected function array_searchi($needle, $haystack, $mem='getName') {
+	protected function array_searchi($needle, $haystack, $mem = 'getName') {
 		if (!is_array($haystack)) {
 			return false;
 		}
@@ -847,10 +829,10 @@ class Tags implements ITags {
 	 */
 	private function tagMap(Tag $tag) {
 		return [
-			'id'    => $tag->getId(),
-			'name'  => $tag->getName(),
+			'id' => $tag->getId(),
+			'name' => $tag->getName(),
 			'owner' => $tag->getOwner(),
-			'type'  => $tag->getType()
+			'type' => $tag->getType()
 		];
 	}
 }

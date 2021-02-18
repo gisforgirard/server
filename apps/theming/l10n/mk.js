@@ -24,7 +24,6 @@ OC.L10N.register(
     "Could not write file to disk" : "Неможе да се запишува на дискот",
     "A PHP extension stopped the file upload" : "PHP додаток го стопираше прикачувањето на датотеката",
     "No file uploaded" : "Нема прикачено дадотека",
-    "Unsupported image type" : "Неподржан вид на слика",
     "You are already using a custom theme. Theming app settings might be overwritten by that." : "Веќе користите сопствена тема. Апликацијата за сопствена тема може да ја пребрише истата.",
     "Theming" : "Теми",
     "Legal notice" : "Правно известување",

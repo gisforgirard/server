@@ -8,16 +8,20 @@
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Derek <derek.kelly27@gmail.com>
  * @author Georg Ehrke <oc.list@georgehrke.com>
+ * @author J0WI <J0WI@users.noreply.github.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Ko- <k.stoffelen@cs.ru.nl>
  * @author Lauris Binde <laurisb@users.noreply.github.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Michael Weimann <mail@michael-weimann.eu>
  * @author Morris Jobke <hey@morrisjobke.de>
+ * @author nhirokinet <nhirokinet@nhiroki.net>
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Sven Strickroth <email@cs-ware.de>
  * @author Sylvia van Os <sylvia@hackerchick.me>
+ * @author timm2k <timm2k@gmx.de>
  * @author Timo Förster <tfoerster@webfoersterei.de>
  *
  * @license AGPL-3.0
@@ -40,22 +44,26 @@ namespace OCA\Settings\Controller;
 
 use bantu\IniGetWrapper\IniGetWrapper;
 use DirectoryIterator;
-use Doctrine\DBAL\DBALException;
+use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
-use Doctrine\DBAL\Types\Types;
+use Doctrine\DBAL\TransactionIsolationLevel;
+use OCP\DB\Types;
 use GuzzleHttp\Exception\ClientException;
 use OC;
 use OC\AppFramework\Http;
 use OC\DB\Connection;
 use OC\DB\MissingColumnInformation;
 use OC\DB\MissingIndexInformation;
+use OC\DB\MissingPrimaryKeyInformation;
 use OC\DB\SchemaWrapper;
 use OC\IntegrityCheck\Checker;
 use OC\Lock\NoopLockingProvider;
 use OC\MemoryInfo;
+use OCA\Settings\SetupChecks\CheckUserCertificates;
 use OCA\Settings\SetupChecks\LegacySSEKeyFormat;
 use OCA\Settings\SetupChecks\PhpDefaultCharset;
 use OCA\Settings\SetupChecks\PhpOutputBuffering;
+use OCA\Settings\SetupChecks\SupportedDatabase;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\DataDisplayResponse;
 use OCP\AppFramework\Http\DataResponse;
@@ -88,7 +96,7 @@ class CheckSetupController extends Controller {
 	private $logger;
 	/** @var EventDispatcherInterface */
 	private $dispatcher;
-	/** @var IDBConnection|Connection */
+	/** @var Connection */
 	private $db;
 	/** @var ILockingProvider */
 	private $lockingProvider;
@@ -100,6 +108,8 @@ class CheckSetupController extends Controller {
 	private $secureRandom;
 	/** @var IniGetWrapper */
 	private $iniGetWrapper;
+	/** @var IDBConnection */
+	private $connection;
 
 	public function __construct($AppName,
 								IRequest $request,
@@ -110,12 +120,13 @@ class CheckSetupController extends Controller {
 								Checker $checker,
 								ILogger $logger,
 								EventDispatcherInterface $dispatcher,
-								IDBConnection $db,
+								Connection $db,
 								ILockingProvider $lockingProvider,
 								IDateTimeFormatter $dateTimeFormatter,
 								MemoryInfo $memoryInfo,
 								ISecureRandom $secureRandom,
-								IniGetWrapper $iniGetWrapper) {
+								IniGetWrapper $iniGetWrapper,
+								IDBConnection $connection) {
 		parent::__construct($AppName, $request);
 		$this->config = $config;
 		$this->clientService = $clientService;
@@ -130,6 +141,7 @@ class CheckSetupController extends Controller {
 		$this->memoryInfo = $memoryInfo;
 		$this->secureRandom = $secureRandom;
 		$this->iniGetWrapper = $iniGetWrapper;
+		$this->connection = $connection;
 	}
 
 	/**
@@ -232,9 +244,9 @@ class CheckSetupController extends Controller {
 			return '';
 		}
 
-		$features = (string)$this->l10n->t('installing and updating apps via the app store or Federated Cloud Sharing');
+		$features = $this->l10n->t('installing and updating apps via the app store or Federated Cloud Sharing');
 		if (!$this->config->getSystemValue('appstoreenabled', true)) {
-			$features = (string)$this->l10n->t('Federated Cloud Sharing');
+			$features = $this->l10n->t('Federated Cloud Sharing');
 		}
 
 		// Check if at least OpenSSL after 1.01d or 1.0.2b
@@ -260,6 +272,9 @@ class CheckSetupController extends Controller {
 				if ($e->getResponse()->getStatusCode() === 400) {
 					return $this->l10n->t('cURL is using an outdated %1$s version (%2$s). Please update your operating system or features such as %3$s will not work reliably.', ['NSS', $versionString, $features]);
 				}
+			} catch (\Exception $e) {
+				$this->logger->logException($e, ['app' => 'settings', 'level' => \OCP\ILogger::WARN]);
+				return $this->l10n->t('Could not determine if TLS version of cURL is outdated or not because an error happened during the HTTPS request against https://nextcloud.com. Please check the nextcloud log file for more details.');
 			}
 		}
 
@@ -277,7 +292,7 @@ class CheckSetupController extends Controller {
 
 	/**
 	 * Whether the php version is still supported (at time of release)
-	 * according to: https://secure.php.net/supported-versions.php
+	 * according to: https://www.php.net/supported-versions.php
 	 *
 	 * @return array
 	 */
@@ -451,6 +466,15 @@ Raw output
 		return $indexInfo->getListOfMissingIndexes();
 	}
 
+	protected function hasMissingPrimaryKeys(): array {
+		$info = new MissingPrimaryKeyInformation();
+		// Dispatch event so apps can also hint for pending index updates if needed
+		$event = new GenericEvent($info);
+		$this->dispatcher->dispatch(IDBConnection::CHECK_MISSING_PRIMARY_KEYS_EVENT, $event);
+
+		return $info->getListOfMissingPrimaryKeys();
+	}
+
 	protected function hasMissingColumns(): array {
 		$indexInfo = new MissingColumnInformation();
 		// Dispatch event so apps can also hint for pending index updates if needed
@@ -474,8 +498,8 @@ Raw output
 				return true;
 			}
 
-			return $this->db->getTransactionIsolation() === Connection::TRANSACTION_READ_COMMITTED;
-		} catch (DBALException $e) {
+			return $this->db->getTransactionIsolation() === TransactionIsolationLevel::READ_COMMITTED;
+		} catch (Exception $e) {
 			// ignore
 		}
 
@@ -520,10 +544,6 @@ Raw output
 		}
 
 		return [];
-	}
-
-	protected function isPHPMailerUsed(): bool {
-		return $this->config->getSystemValue('mail_smtpmode', 'smtp') === 'php';
 	}
 
 	protected function hasOpcacheLoaded(): bool {
@@ -617,11 +637,14 @@ Raw output
 			'activity_mq' => ['mail_id'],
 			'authtoken' => ['id'],
 			'bruteforce_attempts' => ['id'],
+			'federated_reshares' => ['share_id'],
 			'filecache' => ['fileid', 'storage', 'parent', 'mimetype', 'mimepart', 'mtime', 'storage_mtime'],
+			'filecache_extended' => ['fileid'],
 			'file_locks' => ['id'],
 			'jobs' => ['id'],
 			'mimetypes' => ['id'],
 			'mounts' => ['id', 'storage_id', 'root_id', 'mount_id'],
+			'share_external' => ['id', 'parent'],
 			'storages' => ['numeric_id'],
 		];
 
@@ -684,6 +707,10 @@ Raw output
 		return false;
 	}
 
+	protected function imageMagickLacksSVGSupport(): bool {
+		return extension_loaded('imagick') && count(\Imagick::queryFormats('SVG')) === 0;
+	}
+
 	/**
 	 * @return DataResponse
 	 */
@@ -691,6 +718,9 @@ Raw output
 		$phpDefaultCharset = new PhpDefaultCharset();
 		$phpOutputBuffering = new PhpOutputBuffering();
 		$legacySSEKeyFormat = new LegacySSEKeyFormat($this->l10n, $this->config, $this->urlGenerator);
+		$checkUserCertificates = new CheckUserCertificates($this->l10n, $this->config, $this->urlGenerator);
+		$supportedDatabases = new SupportedDatabase($this->l10n, $this->connection);
+
 		return new DataResponse(
 			[
 				'isGetenvServerWorking' => !empty(getenv('PATH')),
@@ -718,12 +748,11 @@ Raw output
 				'phpOpcacheDocumentation' => $this->urlGenerator->linkToDocs('admin-php-opcache'),
 				'isSettimelimitAvailable' => $this->isSettimelimitAvailable(),
 				'hasFreeTypeSupport' => $this->hasFreeTypeSupport(),
+				'missingPrimaryKeys' => $this->hasMissingPrimaryKeys(),
 				'missingIndexes' => $this->hasMissingIndexes(),
 				'missingColumns' => $this->hasMissingColumns(),
 				'isSqliteUsed' => $this->isSqliteUsed(),
 				'databaseConversionDocumentation' => $this->urlGenerator->linkToDocs('admin-db-conversion'),
-				'isPHPMailerUsed' => $this->isPHPMailerUsed(),
-				'mailSettingsDocumentation' => $this->urlGenerator->getAbsoluteURL('index.php/settings/admin'),
 				'isMemoryLimitSufficient' => $this->memoryInfo->isMemoryLimitSufficient(),
 				'appDirsWithDifferentOwner' => $this->getAppDirsWithDifferentOwner(),
 				'recommendedPHPModules' => $this->hasRecommendedPHPModules(),
@@ -731,9 +760,13 @@ Raw output
 				'isMysqlUsedWithoutUTF8MB4' => $this->isMysqlUsedWithoutUTF8MB4(),
 				'isEnoughTempSpaceAvailableIfS3PrimaryStorageIsUsed' => $this->isEnoughTempSpaceAvailableIfS3PrimaryStorageIsUsed(),
 				'reverseProxyGeneratedURL' => $this->urlGenerator->getAbsoluteURL('index.php'),
+				'imageMagickLacksSVGSupport' => $this->imageMagickLacksSVGSupport(),
 				PhpDefaultCharset::class => ['pass' => $phpDefaultCharset->run(), 'description' => $phpDefaultCharset->description(), 'severity' => $phpDefaultCharset->severity()],
 				PhpOutputBuffering::class => ['pass' => $phpOutputBuffering->run(), 'description' => $phpOutputBuffering->description(), 'severity' => $phpOutputBuffering->severity()],
 				LegacySSEKeyFormat::class => ['pass' => $legacySSEKeyFormat->run(), 'description' => $legacySSEKeyFormat->description(), 'severity' => $legacySSEKeyFormat->severity(), 'linkToDocumentation' => $legacySSEKeyFormat->linkToDocumentation()],
+				CheckUserCertificates::class => ['pass' => $checkUserCertificates->run(), 'description' => $checkUserCertificates->description(), 'severity' => $checkUserCertificates->severity(), 'elements' => $checkUserCertificates->elements()],
+				'isDefaultPhoneRegionSet' => $this->config->getSystemValueString('default_phone_region', '') !== '',
+				SupportedDatabase::class => ['pass' => $supportedDatabases->run(), 'description' => $supportedDatabases->description(), 'severity' => $supportedDatabases->severity()],
 			]
 		);
 	}

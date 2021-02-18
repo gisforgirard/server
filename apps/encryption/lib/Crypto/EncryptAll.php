@@ -264,7 +264,7 @@ class EncryptAll {
 	protected function encryptUsersFiles($uid, ProgressBar $progress, $userCount) {
 		$this->setupUserFS($uid);
 		$directories = [];
-		$directories[] =  '/' . $uid . '/files';
+		$directories[] = '/' . $uid . '/files';
 
 		while ($root = array_pop($directories)) {
 			$content = $this->rootView->getDirectoryContent($root);
@@ -417,12 +417,12 @@ class EncryptAll {
 				$recipientDisplayName = $recipient->getDisplayName();
 				$to = $recipient->getEMailAddress();
 
-				if ($to === '') {
+				if ($to === '' || $to === null) {
 					$noMail[] = $uid;
 					continue;
 				}
 
-				$subject = (string)$this->l->t('one-time password for server-side-encryption');
+				$subject = $this->l->t('one-time password for server-side-encryption');
 				list($htmlBody, $textBody) = $this->createMailBody($password);
 
 				// send it out now

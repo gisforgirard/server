@@ -9,7 +9,7 @@
  * @author Robin Appelman <robin@icewind.nl>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Vincent Petry <vincent@nextcloud.com>
  *
  * @license AGPL-3.0
  *
@@ -304,6 +304,9 @@ class DirectoryTest extends \Test\TestCase {
 			->method('getFileInfo')
 			->willReturn($this->info);
 
+		$mountPoint->method('getMountPoint')
+			->willReturn('/user/files/mymountpoint');
+
 		$dir = new Directory($this->view, $this->info);
 		$this->assertEquals([200, -3], $dir->getQuotaInfo()); //200 used, unlimited
 	}
@@ -338,6 +341,9 @@ class DirectoryTest extends \Test\TestCase {
 		$this->info->expects($this->once())
 			->method('getMountPoint')
 			->willReturn($mountPoint);
+
+		$mountPoint->method('getMountPoint')
+			->willReturn('/user/files/mymountpoint');
 
 		$this->view->expects($this->once())
 			->method('getFileInfo')

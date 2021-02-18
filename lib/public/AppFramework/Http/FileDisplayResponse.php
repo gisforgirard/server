@@ -2,6 +2,7 @@
 /**
  * @copyright 2016 Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -43,8 +44,8 @@ class FileDisplayResponse extends Response implements ICallbackResponse {
 	 * @param array $headers
 	 * @since 11.0.0
 	 */
-	public function __construct($file, $statusCode=Http::STATUS_OK,
-								$headers=[]) {
+	public function __construct($file, $statusCode = Http::STATUS_OK,
+								$headers = []) {
 		parent::__construct();
 
 		$this->file = $file;

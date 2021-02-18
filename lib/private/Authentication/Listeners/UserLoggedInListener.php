@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -31,6 +32,9 @@ use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\User\Events\PostLoginEvent;
 
+/**
+ * @template-implements IEventListener<\OCP\User\Events\PostLoginEvent>
+ */
 class UserLoggedInListener implements IEventListener {
 
 	/** @var Manager */

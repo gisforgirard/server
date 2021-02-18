@@ -26,7 +26,7 @@ declare(strict_types=1);
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Vincent Petry <vincent@nextcloud.com>
  *
  * @license AGPL-3.0
  *
@@ -436,7 +436,7 @@ class Database extends ABackend implements
 			->from($this->table);
 		$result = $query->execute();
 
-		return $result->fetchColumn();
+		return $result->fetchOne();
 	}
 
 	/**

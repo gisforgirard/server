@@ -7,6 +7,7 @@ declare(strict_types=1);
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
@@ -30,7 +31,7 @@ declare(strict_types=1);
 namespace OC\Core\Migrations;
 
 use Closure;
-use Doctrine\DBAL\Types\Types;
+use OCP\DB\Types;
 use OCP\DB\ISchemaWrapper;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
@@ -67,7 +68,8 @@ class Version17000Date20190514105811 extends SimpleMigrationStep {
 				'length' => 20,
 				'default' => 0,
 			]);
-			$table->addUniqueIndex(['fileid'], 'fce_fileid_idx');
+			$table->setPrimaryKey(['fileid'], 'fce_pk');
+//			$table->addUniqueIndex(['fileid'], 'fce_fileid_idx');
 			$table->addIndex(['creation_time'], 'fce_ctime_idx');
 			$table->addIndex(['upload_time'], 'fce_utime_idx');
 		}

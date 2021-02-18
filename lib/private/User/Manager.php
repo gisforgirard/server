@@ -34,16 +34,20 @@
 
 namespace OC\User;
 
+use OC\HintException;
 use OC\Hooks\PublicEmitter;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\ICache;
+use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IUser;
 use OCP\IUserBackend;
 use OCP\IUserManager;
+use OCP\Support\Subscription\IRegistry;
 use OCP\User\Backend\IGetRealUIDBackend;
-use OCP\User\Events\CreateUserEvent;
+use OCP\User\Events\BeforeUserCreatedEvent;
 use OCP\User\Events\UserCreatedEvent;
 use OCP\UserInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -82,14 +86,19 @@ class Manager extends PublicEmitter implements IUserManager {
 	/** @var EventDispatcherInterface */
 	private $dispatcher;
 
+	/** @var ICache */
+	private $cache;
+
 	/** @var IEventDispatcher */
 	private $eventDispatcher;
 
 	public function __construct(IConfig $config,
 								EventDispatcherInterface $oldDispatcher,
+								ICacheFactory $cacheFactory,
 								IEventDispatcher $eventDispatcher) {
 		$this->config = $config;
 		$this->dispatcher = $oldDispatcher;
+		$this->cache = $cacheFactory->createDistributed('user_backend_map');
 		$cachedUsers = &$this->cachedUsers;
 		$this->listen('\OC\User', 'postDelete', function ($user) use (&$cachedUsers) {
 			/** @var \OC\User\User $user */
@@ -148,8 +157,24 @@ class Manager extends PublicEmitter implements IUserManager {
 		if (isset($this->cachedUsers[$uid])) { //check the cache first to prevent having to loop over the backends
 			return $this->cachedUsers[$uid];
 		}
-		foreach ($this->backends as $backend) {
+
+		$cachedBackend = $this->cache->get($uid);
+		if ($cachedBackend !== null && isset($this->backends[$cachedBackend])) {
+			// Cache has the info of the user backend already, so ask that one directly
+			$backend = $this->backends[$cachedBackend];
 			if ($backend->userExists($uid)) {
+				return $this->getUserObject($uid, $backend);
+			}
+		}
+
+		foreach ($this->backends as $i => $backend) {
+			if ($i === $cachedBackend) {
+				// Tried that one already
+				continue;
+			}
+
+			if ($backend->userExists($uid)) {
+				$this->cache->set($uid, $i, 300);
 				return $this->getUserObject($uid, $backend);
 			}
 		}
@@ -229,6 +254,20 @@ class Manager extends PublicEmitter implements IUserManager {
 			}
 		}
 
+		// since http basic auth doesn't provide a standard way of handling non ascii password we allow password to be urlencoded
+		// we only do this decoding after using the plain password fails to maintain compatibility with any password that happens
+		// to contains urlencoded patterns by "accident".
+		$password = urldecode($password);
+
+		foreach ($this->backends as $backend) {
+			if ($backend->implementsActions(Backend::CHECK_PASSWORD)) {
+				$uid = $backend->checkPassword($loginName, $password);
+				if ($uid !== false) {
+					return $this->getUserObject($uid, $backend);
+				}
+			}
+		}
+
 		return false;
 	}
 
@@ -297,6 +336,12 @@ class Manager extends PublicEmitter implements IUserManager {
 	 * @return bool|IUser the created user or false
 	 */
 	public function createUser($uid, $password) {
+		// DI injection is not used here as IRegistry needs the user manager itself for user count and thus it would create a cyclic dependency
+		if (\OC::$server->get(IRegistry::class)->delegateIsHardUserLimitReached()) {
+			$l = \OC::$server->getL10N('lib');
+			throw new HintException($l->t('The user limit has been reached and the user was not created.'));
+		}
+
 		$localBackends = [];
 		foreach ($this->backends as $backend) {
 			if ($backend instanceof Database) {
@@ -365,14 +410,16 @@ class Manager extends PublicEmitter implements IUserManager {
 			throw new \InvalidArgumentException($l->t('The username is already being used'));
 		}
 
+		/** @deprecated 21.0.0 use BeforeUserCreatedEvent event with the IEventDispatcher instead */
 		$this->emit('\OC\User', 'preCreateUser', [$uid, $password]);
-		$this->eventDispatcher->dispatchTyped(new CreateUserEvent($uid, $password));
+		$this->eventDispatcher->dispatchTyped(new BeforeUserCreatedEvent($uid, $password));
 		$state = $backend->createUser($uid, $password);
 		if ($state === false) {
 			throw new \InvalidArgumentException($l->t('Could not create user'));
 		}
 		$user = $this->getUserObject($uid, $backend);
 		if ($user instanceof IUser) {
+			/** @deprecated 21.0.0 use UserCreatedEvent event with the IEventDispatcher instead */
 			$this->emit('\OC\User', 'postCreateUser', [$user, $password]);
 			$this->eventDispatcher->dispatchTyped(new UserCreatedEvent($user, $password));
 		}
@@ -481,7 +528,7 @@ class Manager extends PublicEmitter implements IUserManager {
 
 
 		$result = $queryBuilder->execute();
-		$count = $result->fetchColumn();
+		$count = $result->fetchOne();
 		$result->closeCursor();
 
 		if ($count !== false) {
@@ -511,7 +558,7 @@ class Manager extends PublicEmitter implements IUserManager {
 			->andWhere($queryBuilder->expr()->in('gid', $queryBuilder->createNamedParameter($groups, IQueryBuilder::PARAM_STR_ARRAY)));
 
 		$result = $queryBuilder->execute();
-		$count = $result->fetchColumn();
+		$count = $result->fetchOne();
 		$result->closeCursor();
 
 		if ($count !== false) {
@@ -539,7 +586,7 @@ class Manager extends PublicEmitter implements IUserManager {
 
 		$query = $queryBuilder->execute();
 
-		$result = (int)$query->fetchColumn();
+		$result = (int)$query->fetchOne();
 		$query->closeCursor();
 
 		return $result;
@@ -547,6 +594,7 @@ class Manager extends PublicEmitter implements IUserManager {
 
 	/**
 	 * @param \Closure $callback
+	 * @psalm-param \Closure(\OCP\IUser):?bool $callback
 	 * @since 11.0.0
 	 */
 	public function callForSeenUsers(\Closure $callback) {

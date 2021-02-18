@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright Copyright (c) 2020 Arthur Schiwon <blizzz@arthur-schiwon.de>
  *
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
+ * @author Morris Jobke <hey@morrisjobke.de>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -30,6 +31,11 @@ use OCA\User_LDAP\IUserLDAP;
 use OCA\User_LDAP\UserPluginManager;
 use OCP\EventDispatcher\Event;
 
+/**
+ * This event is triggered right after the LDAP user backend is registered.
+ *
+ * @since 20.0.0
+ */
 class UserBackendRegistered extends Event {
 
 	/** @var IUserLDAP */

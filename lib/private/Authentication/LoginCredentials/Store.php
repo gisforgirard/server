@@ -6,7 +6,7 @@ declare(strict_types=1);
  * @copyright 2016 Christoph Wurst <christoph@winzerhof-wurst.at>
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
- * @author Lionel Elie Mamane <lionel@mamane.lu>
+ * @author Joas Schilling <coding@schilljs.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -33,28 +33,25 @@ use OC\Authentication\Token\IProvider;
 use OCP\Authentication\Exceptions\CredentialsUnavailableException;
 use OCP\Authentication\LoginCredentials\ICredentials;
 use OCP\Authentication\LoginCredentials\IStore;
-use OCP\ILogger;
 use OCP\ISession;
 use OCP\Session\Exceptions\SessionNotAvailableException;
 use OCP\Util;
+use Psr\Log\LoggerInterface;
 
 class Store implements IStore {
 
 	/** @var ISession */
 	private $session;
 
-	/** @var ILogger */
+	/** @var LoggerInterface */
 	private $logger;
 
 	/** @var IProvider|null */
 	private $tokenProvider;
 
-	/**
-	 * @param ISession $session
-	 * @param ILogger $logger
-	 * @param IProvider $tokenProvider
-	 */
-	public function __construct(ISession $session, ILogger $logger, IProvider $tokenProvider = null) {
+	public function __construct(ISession $session,
+								LoggerInterface $logger,
+								IProvider $tokenProvider = null) {
 		$this->session = $session;
 		$this->logger = $logger;
 		$this->tokenProvider = $tokenProvider;

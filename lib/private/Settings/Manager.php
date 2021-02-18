@@ -38,8 +38,8 @@ use OCP\ILogger;
 use OCP\IServerContainer;
 use OCP\IURLGenerator;
 use OCP\L10N\IFactory;
+use OCP\Settings\IIconSection;
 use OCP\Settings\IManager;
-use OCP\Settings\ISection;
 use OCP\Settings\ISettings;
 use OCP\Settings\ISubAdminSettings;
 
@@ -80,7 +80,7 @@ class Manager implements IManager {
 
 	/**
 	 * @param string $type 'admin' or 'personal'
-	 * @param string $section Class must implement OCP\Settings\ISection
+	 * @param string $section Class must implement OCP\Settings\IIconSection
 	 *
 	 * @return void
 	 */
@@ -95,7 +95,7 @@ class Manager implements IManager {
 	/**
 	 * @param string $type 'admin' or 'personal'
 	 *
-	 * @return ISection[]
+	 * @return IIconSection[]
 	 */
 	protected function getSections(string $type): array {
 		if (!isset($this->sections[$type])) {
@@ -108,21 +108,16 @@ class Manager implements IManager {
 
 		foreach (array_unique($this->sectionClasses[$type]) as $index => $class) {
 			try {
-				/** @var ISection $section */
+				/** @var IIconSection $section */
 				$section = \OC::$server->query($class);
 			} catch (QueryException $e) {
 				$this->log->logException($e, ['level' => ILogger::INFO]);
 				continue;
 			}
 
-			if (!$section instanceof ISection) {
-				$this->log->logException(new \InvalidArgumentException('Invalid settings section registered'), ['level' => ILogger::INFO]);
-				continue;
-			}
-
 			$sectionID = $section->getID();
 
-			if (isset($this->sections[$type][$sectionID])) {
+			if ($sectionID !== 'connected-accounts' && isset($this->sections[$type][$sectionID])) {
 				$this->log->logException(new \InvalidArgumentException('Section with the same ID already registered: ' . $sectionID . ', class: ' . $class), ['level' => ILogger::INFO]);
 				continue;
 			}
@@ -212,7 +207,7 @@ class Manager implements IManager {
 		$appSections = $this->getSections('admin');
 
 		foreach ($appSections as $section) {
-			/** @var ISection $section */
+			/** @var IIconSection $section */
 			if (!isset($sections[$section->getPriority()])) {
 				$sections[$section->getPriority()] = [];
 			}
@@ -269,7 +264,7 @@ class Manager implements IManager {
 		$appSections = $this->getSections('personal');
 
 		foreach ($appSections as $section) {
-			/** @var ISection $section */
+			/** @var IIconSection $section */
 			if (!isset($sections[$section->getPriority()])) {
 				$sections[$section->getPriority()] = [];
 			}

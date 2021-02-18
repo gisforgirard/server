@@ -21,6 +21,7 @@ class ComposerStaticInitUserStatus
     );
 
     public static $classMap = array (
+        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'OCA\\UserStatus\\AppInfo\\Application' => __DIR__ . '/..' . '/../lib/AppInfo/Application.php',
         'OCA\\UserStatus\\BackgroundJob\\ClearOldStatusesBackgroundJob' => __DIR__ . '/..' . '/../lib/BackgroundJob/ClearOldStatusesBackgroundJob.php',
         'OCA\\UserStatus\\Capabilities' => __DIR__ . '/..' . '/../lib/Capabilities.php',
@@ -43,6 +44,7 @@ class ComposerStaticInitUserStatus
         'OCA\\UserStatus\\Listener\\UserLiveStatusListener' => __DIR__ . '/..' . '/../lib/Listener/UserLiveStatusListener.php',
         'OCA\\UserStatus\\Migration\\Version0001Date20200602134824' => __DIR__ . '/..' . '/../lib/Migration/Version0001Date20200602134824.php',
         'OCA\\UserStatus\\Migration\\Version0002Date20200902144824' => __DIR__ . '/..' . '/../lib/Migration/Version0002Date20200902144824.php',
+        'OCA\\UserStatus\\Migration\\Version1000Date20201111130204' => __DIR__ . '/..' . '/../lib/Migration/Version1000Date20201111130204.php',
         'OCA\\UserStatus\\Service\\EmojiService' => __DIR__ . '/..' . '/../lib/Service/EmojiService.php',
         'OCA\\UserStatus\\Service\\JSDataService' => __DIR__ . '/..' . '/../lib/Service/JSDataService.php',
         'OCA\\UserStatus\\Service\\PredefinedStatusService' => __DIR__ . '/..' . '/../lib/Service/PredefinedStatusService.php',

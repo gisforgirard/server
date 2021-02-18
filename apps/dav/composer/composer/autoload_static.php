@@ -21,6 +21,7 @@ class ComposerStaticInitDAV
     );
 
     public static $classMap = array (
+        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'OCA\\DAV\\AppInfo\\Application' => __DIR__ . '/..' . '/../lib/AppInfo/Application.php',
         'OCA\\DAV\\AppInfo\\PluginManager' => __DIR__ . '/..' . '/../lib/AppInfo/PluginManager.php',
         'OCA\\DAV\\Avatars\\AvatarHome' => __DIR__ . '/..' . '/../lib/Avatars/AvatarHome.php',
@@ -190,6 +191,7 @@ class ComposerStaticInitDAV
         'OCA\\DAV\\Events\\AddressBookDeletedEvent' => __DIR__ . '/..' . '/../lib/Events/AddressBookDeletedEvent.php',
         'OCA\\DAV\\Events\\AddressBookShareUpdatedEvent' => __DIR__ . '/..' . '/../lib/Events/AddressBookShareUpdatedEvent.php',
         'OCA\\DAV\\Events\\AddressBookUpdatedEvent' => __DIR__ . '/..' . '/../lib/Events/AddressBookUpdatedEvent.php',
+        'OCA\\DAV\\Events\\BeforeFileDirectDownloadedEvent' => __DIR__ . '/..' . '/../lib/Events/BeforeFileDirectDownloadedEvent.php',
         'OCA\\DAV\\Events\\CachedCalendarObjectCreatedEvent' => __DIR__ . '/..' . '/../lib/Events/CachedCalendarObjectCreatedEvent.php',
         'OCA\\DAV\\Events\\CachedCalendarObjectDeletedEvent' => __DIR__ . '/..' . '/../lib/Events/CachedCalendarObjectDeletedEvent.php',
         'OCA\\DAV\\Events\\CachedCalendarObjectUpdatedEvent' => __DIR__ . '/..' . '/../lib/Events/CachedCalendarObjectUpdatedEvent.php',
@@ -218,8 +220,11 @@ class ComposerStaticInitDAV
         'OCA\\DAV\\Files\\Sharing\\FilesDropPlugin' => __DIR__ . '/..' . '/../lib/Files/Sharing/FilesDropPlugin.php',
         'OCA\\DAV\\Files\\Sharing\\PublicLinkCheckPlugin' => __DIR__ . '/..' . '/../lib/Files/Sharing/PublicLinkCheckPlugin.php',
         'OCA\\DAV\\HookManager' => __DIR__ . '/..' . '/../lib/HookManager.php',
+        'OCA\\DAV\\Listener\\CalendarContactInteractionListener' => __DIR__ . '/..' . '/../lib/Listener/CalendarContactInteractionListener.php',
         'OCA\\DAV\\Migration\\BuildCalendarSearchIndex' => __DIR__ . '/..' . '/../lib/Migration/BuildCalendarSearchIndex.php',
         'OCA\\DAV\\Migration\\BuildCalendarSearchIndexBackgroundJob' => __DIR__ . '/..' . '/../lib/Migration/BuildCalendarSearchIndexBackgroundJob.php',
+        'OCA\\DAV\\Migration\\BuildSocialSearchIndex' => __DIR__ . '/..' . '/../lib/Migration/BuildSocialSearchIndex.php',
+        'OCA\\DAV\\Migration\\BuildSocialSearchIndexBackgroundJob' => __DIR__ . '/..' . '/../lib/Migration/BuildSocialSearchIndexBackgroundJob.php',
         'OCA\\DAV\\Migration\\CalDAVRemoveEmptyValue' => __DIR__ . '/..' . '/../lib/Migration/CalDAVRemoveEmptyValue.php',
         'OCA\\DAV\\Migration\\ChunkCleanup' => __DIR__ . '/..' . '/../lib/Migration/ChunkCleanup.php',
         'OCA\\DAV\\Migration\\FixBirthdayCalendarComponent' => __DIR__ . '/..' . '/../lib/Migration/FixBirthdayCalendarComponent.php',
@@ -245,6 +250,8 @@ class ComposerStaticInitDAV
         'OCA\\DAV\\Migration\\Version1011Date20190725113607' => __DIR__ . '/..' . '/../lib/Migration/Version1011Date20190725113607.php',
         'OCA\\DAV\\Migration\\Version1011Date20190806104428' => __DIR__ . '/..' . '/../lib/Migration/Version1011Date20190806104428.php',
         'OCA\\DAV\\Migration\\Version1012Date20190808122342' => __DIR__ . '/..' . '/../lib/Migration/Version1012Date20190808122342.php',
+        'OCA\\DAV\\Migration\\Version1016Date20201109085907' => __DIR__ . '/..' . '/../lib/Migration/Version1016Date20201109085907.php',
+        'OCA\\DAV\\Migration\\Version1017Date20210216083742' => __DIR__ . '/..' . '/../lib/Migration/Version1017Date20210216083742.php',
         'OCA\\DAV\\Provisioning\\Apple\\AppleProvisioningNode' => __DIR__ . '/..' . '/../lib/Provisioning/Apple/AppleProvisioningNode.php',
         'OCA\\DAV\\Provisioning\\Apple\\AppleProvisioningPlugin' => __DIR__ . '/..' . '/../lib/Provisioning/Apple/AppleProvisioningPlugin.php',
         'OCA\\DAV\\RootCollection' => __DIR__ . '/..' . '/../lib/RootCollection.php',

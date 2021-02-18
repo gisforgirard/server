@@ -358,7 +358,7 @@ class CardDavBackendTest extends TestCase {
 			$this->assertArrayHasKey('lastmodified', $card);
 			$this->assertArrayHasKey('etag', $card);
 			$this->assertArrayHasKey('size', $card);
-			$this->assertEquals($this->{ 'vcardTest'.($index+1) }, $card['carddata']);
+			$this->assertEquals($this->{ 'vcardTest'.($index + 1) }, $card['carddata']);
 		}
 
 		// delete the card
@@ -549,7 +549,12 @@ class CardDavBackendTest extends TestCase {
 		$this->invokePrivate($backend, 'updateProperties', [$bookId, $cardUri, $vCard->serialize()]);
 
 		$query = $this->db->getQueryBuilder();
-		$result = $query->select('*')->from('cards_properties')->execute()->fetchAll();
+		$query->select('*')
+			->from('cards_properties');
+
+		$qResult = $query->execute();
+		$result = $qResult->fetchAll();
+		$qResult->closeCursor();
 
 		$this->assertSame(2, count($result));
 
@@ -569,7 +574,12 @@ class CardDavBackendTest extends TestCase {
 		$this->invokePrivate($backend, 'updateProperties', [$bookId, $cardUri, $vCard->serialize()]);
 
 		$query = $this->db->getQueryBuilder();
-		$result = $query->select('*')->from('cards_properties')->execute()->fetchAll();
+		$query->select('*')
+			->from('cards_properties');
+
+		$qResult = $query->execute();
+		$result = $qResult->fetchAll();
+		$qResult->closeCursor();
 
 		$this->assertSame(1, count($result));
 
@@ -609,7 +619,13 @@ class CardDavBackendTest extends TestCase {
 		$this->invokePrivate($this->backend, 'purgeProperties', [1, 1]);
 
 		$query = $this->db->getQueryBuilder();
-		$result = $query->select('*')->from('cards_properties')->execute()->fetchAll();
+		$query->select('*')
+			->from('cards_properties');
+
+		$qResult = $query->execute();
+		$result = $qResult->fetchAll();
+		$qResult->closeCursor();
+
 		$this->assertSame(1, count($result));
 		$this->assertSame(1 ,(int)$result[0]['addressbookid']);
 		$this->assertSame(2 ,(int)$result[0]['cardid']);
@@ -668,7 +684,7 @@ class CardDavBackendTest extends TestCase {
 
 		$vCardIds = [];
 		$query = $this->db->getQueryBuilder();
-		for ($i=0; $i < 3; $i++) {
+		for ($i = 0; $i < 3; $i++) {
 			$query->insert($this->dbCardsTable)
 					->values(
 							[
@@ -767,7 +783,7 @@ class CardDavBackendTest extends TestCase {
 			'limit' => ['john', ['FN'], ['limit' => 1], [['uri0', 'John Doe']]],
 			'limit and offset' => ['john', ['FN'], ['limit' => 1, 'offset' => 1], [['uri1', 'John M. Doe']]],
 			'find "_" escaped' => ['_', ['CLOUD'], [], [['uri2', 'find without options']]],
-			'find not empty CLOUD' => ['%_%', ['CLOUD'], ['escape_like_param'=>false], [['uri0', 'John Doe'], ['uri2', 'find without options']]],
+			'find not empty CLOUD' => ['%_%', ['CLOUD'], ['escape_like_param' => false], [['uri0', 'John Doe'], ['uri2', 'find without options']]],
 		];
 	}
 
@@ -800,7 +816,7 @@ class CardDavBackendTest extends TestCase {
 
 	public function testGetContact() {
 		$query = $this->db->getQueryBuilder();
-		for ($i=0; $i<2; $i++) {
+		for ($i = 0; $i < 2; $i++) {
 			$query->insert($this->dbCardsTable)
 					->values(
 							[

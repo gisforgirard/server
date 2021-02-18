@@ -37,6 +37,7 @@ use OCA\User_LDAP\LDAP;
 use OCA\User_LDAP\LogWrapper;
 use OCA\User_LDAP\User\Manager;
 use OCA\User_LDAP\UserPluginManager;
+use OCP\Share\IManager;
 
 abstract class AbstractIntegrationTest {
 	/** @var  LDAP */
@@ -65,8 +66,8 @@ abstract class AbstractIntegrationTest {
 		$this->server = [
 			'host' => $host,
 			'port' => $port,
-			'dn'   => $bind,
-			'pwd'  => $pwd
+			'dn' => $bind,
+			'pwd' => $pwd
 		];
 	}
 
@@ -126,9 +127,9 @@ abstract class AbstractIntegrationTest {
 			new LogWrapper(),
 			\OC::$server->getAvatarManager(),
 			new \OCP\Image(),
-			\OC::$server->getDatabaseConnection(),
 			\OC::$server->getUserManager(),
-			\OC::$server->getNotificationManager()
+			\OC::$server->getNotificationManager(),
+			\OC::$server->get(IManager::class)
 		);
 	}
 
@@ -136,7 +137,7 @@ abstract class AbstractIntegrationTest {
 	 * initializes the test Helper
 	 */
 	protected function initHelper() {
-		$this->helper = new Helper(\OC::$server->getConfig());
+		$this->helper = new Helper(\OC::$server->getConfig(), \OC::$server->getDatabaseConnection());
 	}
 
 	/**

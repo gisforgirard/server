@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author Julien Veyssier <eneiluj@posteo.net>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -59,7 +60,7 @@ class JSDataService implements \JsonSerializable {
 			'imprintUrl' => $this->themingDefaults->getImprintUrl(),
 			'privacyUrl' => $this->themingDefaults->getPrivacyUrl(),
 			'inverted' => $this->util->invertTextColor($this->themingDefaults->getColorPrimary()),
-			'cacheBuster' => $this->appConfig->getAppValue(Application::class, 'cachebuster', '0'),
+			'cacheBuster' => $this->appConfig->getAppValue(Application::APP_ID, 'cachebuster', '0'),
 		];
 	}
 }

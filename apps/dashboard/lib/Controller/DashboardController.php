@@ -35,20 +35,23 @@ use OCP\AppFramework\Http\FileDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\NotFoundResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\App\IAppManager;
+use OCP\AppFramework\Services\IInitialState;
 use OCP\Dashboard\IManager;
 use OCP\Dashboard\IWidget;
 use OCP\Dashboard\RegisterWidgetEvent;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IConfig;
-use OCP\IInitialStateService;
 use OCP\IRequest;
 
 class DashboardController extends Controller {
 
-	/** @var IInitialStateService */
-	private $inititalStateService;
+	/** @var IInitialState */
+	private $inititalState;
 	/** @var IEventDispatcher */
 	private $eventDispatcher;
+	/** @var IAppManager */
+	private $appManager;
 	/** @var IManager */
 	private $dashboardManager;
 	/** @var IConfig */
@@ -63,8 +66,9 @@ class DashboardController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		IInitialStateService $initialStateService,
+		IInitialState $initialState,
 		IEventDispatcher $eventDispatcher,
+		IAppManager $appManager,
 		IManager $dashboardManager,
 		IConfig $config,
 		BackgroundService $backgroundService,
@@ -72,8 +76,9 @@ class DashboardController extends Controller {
 	) {
 		parent::__construct($appName, $request);
 
-		$this->inititalStateService = $initialStateService;
+		$this->inititalState = $initialState;
 		$this->eventDispatcher = $eventDispatcher;
+		$this->appManager = $appManager;
 		$this->dashboardManager = $dashboardManager;
 		$this->config = $config;
 		$this->backgroundService = $backgroundService;
@@ -94,7 +99,8 @@ class DashboardController extends Controller {
 
 		$this->eventDispatcher->dispatchTyped(new RegisterWidgetEvent($this->dashboardManager));
 
-		$userLayout = explode(',', $this->config->getUserValue($this->userId, 'dashboard', 'layout', 'recommendations,spreed,mail,calendar'));
+		$systemDefault = $this->config->getAppValue('dashboard', 'layout', 'recommendations,spreed,mail,calendar');
+		$userLayout = explode(',', $this->config->getUserValue($this->userId, 'dashboard', 'layout', $systemDefault));
 		$widgets = array_map(function (IWidget $widget) {
 			return [
 				'id' => $widget->getId(),
@@ -109,13 +115,18 @@ class DashboardController extends Controller {
 		// It does not matter if some statuses are missing from the array, missing ones are considered enabled
 		$statuses = ($statuses && count($statuses) > 0) ? $statuses : ['weather' => true];
 
-		$this->inititalStateService->provideInitialState('dashboard', 'panels', $widgets);
-		$this->inititalStateService->provideInitialState('dashboard', 'statuses', $statuses);
-		$this->inititalStateService->provideInitialState('dashboard', 'layout', $userLayout);
-		$this->inititalStateService->provideInitialState('dashboard', 'firstRun', $this->config->getUserValue($this->userId, 'dashboard', 'firstRun', '1') === '1');
-		$this->inititalStateService->provideInitialState('dashboard', 'shippedBackgrounds', BackgroundService::SHIPPED_BACKGROUNDS);
-		$this->inititalStateService->provideInitialState('dashboard', 'background', $this->config->getUserValue($this->userId, 'dashboard', 'background', 'default'));
-		$this->inititalStateService->provideInitialState('dashboard', 'version', $this->config->getUserValue($this->userId, 'dashboard', 'backgroundVersion', 0));
+		// if theming app is enabled and wants to override default, we pass it
+		$themingDefaultBackground = $this->appManager->isEnabledForUser('theming')
+			? $this->config->getAppValue('theming', 'backgroundMime', '')
+			: '';
+		$this->inititalState->provideInitialState('themingDefaultBackground', $themingDefaultBackground);
+		$this->inititalState->provideInitialState('panels', $widgets);
+		$this->inititalState->provideInitialState('statuses', $statuses);
+		$this->inititalState->provideInitialState('layout', $userLayout);
+		$this->inititalState->provideInitialState('firstRun', $this->config->getUserValue($this->userId, 'dashboard', 'firstRun', '1') === '1');
+		$this->inititalState->provideInitialState('shippedBackgrounds', BackgroundService::SHIPPED_BACKGROUNDS);
+		$this->inititalState->provideInitialState('background', $this->config->getUserValue($this->userId, 'dashboard', 'background', 'default'));
+		$this->inititalState->provideInitialState('version', $this->config->getUserValue($this->userId, 'dashboard', 'backgroundVersion', 0));
 		$this->config->setUserValue($this->userId, 'dashboard', 'firstRun', '0');
 
 		$response = new TemplateResponse('dashboard', 'index');
@@ -188,7 +199,7 @@ class DashboardController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 */
-	public function getBackground() {
+	public function getBackground(): Http\Response {
 		$file = $this->backgroundService->getBackground();
 		if ($file !== null) {
 			$response = new FileDisplayResponse($file, Http::STATUS_OK, ['Content-Type' => $file->getMimeType()]);

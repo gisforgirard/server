@@ -15,9 +15,9 @@ declare(strict_types=1);
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Liam JACK <liamjack@users.noreply.github.com>
  * @author Lukas Reschke <lukas@statuscode.ch>
+ * @author medcloud <42641918+medcloud@users.noreply.github.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
- * @author Simon Spannagel <simonspa@kth.se>
  * @author Tomasz Paluszkiewicz <tomasz.paluszkiewicz@gmail.com>
  *
  * @license GNU AGPL version 3 or any later version
@@ -120,8 +120,8 @@ EOF;
 						<table class="row collapse" style="border-collapse:collapse;border-spacing:0;display:table;padding:0;position:relative;text-align:left;vertical-align:top;width:100%%">
 							<tbody>
 							<tr style="padding:0;text-align:left;vertical-align:top">
-								<center data-parsed="" style="background-color:%s;width:150px;height:150px;padding:0px;position:relative;border-radius:200px">
-									<img class="logo float-center" src="%s" alt="%s" align="center" style="-ms-interpolation-mode:bicubic;clear:both;display:block;float:none;outline:0;text-align:center;text-decoration:none;position:absolute;max-height:100px;max-width:100px;width:auto;height:auto;position:absolute;top:0;bottom:0;left:0;right:0;margin:auto;">
+								<center data-parsed="" style="background-color:%s;min-width:175px;max-height:175px; padding:35px 0px;border-radius:200px">
+									<img class="logo float-center" src="%s" alt="%s" align="center" style="-ms-interpolation-mode:bicubic;clear:both;display:block;float:none;margin:0 auto;outline:0;text-align:center;text-decoration:none;max-height:105px;max-width:105px;width:auto;height:auto">
 								</center>
 							</tr>
 							</tbody>
@@ -293,7 +293,7 @@ EOF;
 									<td style="-moz-hyphens:auto;-webkit-hyphens:auto;Margin:0;border-collapse:collapse!important;color:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',Arial,sans-serif;font-size:16px;font-weight:400;hyphens:auto;line-height:1.3;margin:0;padding:0;text-align:left;vertical-align:top;word-wrap:break-word">
 										<table style="border-collapse:collapse;border-spacing:0;padding:0;text-align:left;vertical-align:top;width:100%%">
 											<tr style="padding:0;text-align:left;vertical-align:top">
-												<td style="-moz-hyphens:auto;-webkit-hyphens:auto;Margin:0;border:0 solid %2\$;border-collapse:collapse!important;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',Arial,sans-serif;font-size:16px;font-weight:400;hyphens:auto;line-height:1.3;margin:0;padding:0;text-align:left;vertical-align:top;word-wrap:break-word">
+												<td style="-moz-hyphens:auto;-webkit-hyphens:auto;Margin:0;border:0 solid %2\$s;border-collapse:collapse!important;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',Arial,sans-serif;font-size:16px;font-weight:400;hyphens:auto;line-height:1.3;margin:0;padding:0;text-align:left;vertical-align:top;word-wrap:break-word">
 													<a href="%3\$s" style="Margin:0;border:0 solid %4\$s;border-radius:2px;color:%5\$s;display:inline-block;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen-Sans,Ubuntu,Cantarell,'Helvetica Neue',Arial,sans-serif;font-size:16px;font-weight:regular;line-height:1.3;margin:0;padding:10px 25px 10px 25px;text-align:left;outline:1px solid %5\$s;text-decoration:none">%7\$s</a>
 												</td>
 											</tr>
@@ -500,7 +500,7 @@ EOF;
 				$label = ($plainMetaInfo !== false)? $plainMetaInfo : '';
 				$this->plainBody .= sprintf("%${plainIndent}s %s\n",
 					$label,
-					str_replace("\n", "\n" . str_repeat(' ', $plainIndent+1), $plainText));
+					str_replace("\n", "\n" . str_repeat(' ', $plainIndent + 1), $plainText));
 			}
 		}
 	}
@@ -595,7 +595,7 @@ EOF;
 			$this->plainBody .= $plainText . ': ';
 		}
 
-		$this->plainBody .=  $url . PHP_EOL;
+		$this->plainBody .= $url . PHP_EOL;
 	}
 
 	/**

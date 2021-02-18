@@ -8,7 +8,7 @@
  * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Vincent Petry <vincent@nextcloud.com>
  *
  * @license AGPL-3.0
  *
@@ -269,7 +269,7 @@ class Storage implements IStorage {
 
 		if ($this->view->file_exists($path)) {
 			if (isset($this->keyCache[$path])) {
-				$key =  $this->keyCache[$path];
+				$key = $this->keyCache[$path];
 			} else {
 				$data = $this->view->file_get_contents($path);
 
@@ -301,7 +301,7 @@ class Storage implements IStorage {
 						$fallback = false;
 						try {
 							$clearData = $this->crypto->decrypt($data);
-						} catch (\Exception $e) {
+						} catch (\Throwable $e) {
 							$fallback = true;
 						}
 

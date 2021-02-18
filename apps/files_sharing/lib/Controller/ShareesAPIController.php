@@ -13,6 +13,7 @@ declare(strict_types=1);
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Joas Schilling <coding@schilljs.com>
  * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
+ * @author Julius Härtl <jus@bitgrid.net>
  * @author Maxence Lange <maxence@nextcloud.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
@@ -36,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Files_Sharing\Controller;
 
+use OCP\Constants;
 use function array_slice;
 use function array_values;
 use Generator;
@@ -83,6 +85,7 @@ class ShareesAPIController extends OCSController {
 			'emails' => [],
 			'circles' => [],
 			'rooms' => [],
+			'deck' => [],
 		],
 		'users' => [],
 		'groups' => [],
@@ -92,6 +95,7 @@ class ShareesAPIController extends OCSController {
 		'lookup' => [],
 		'circles' => [],
 		'rooms' => [],
+		'deck' => [],
 		'lookupEnabled' => false,
 	];
 
@@ -146,7 +150,7 @@ class ShareesAPIController extends OCSController {
 		}
 
 		// never return more than the max. number of results configured in the config.php
-		$maxResults = (int)$this->config->getSystemValue('sharing.maxAutocompleteResults', 0);
+		$maxResults = $this->config->getSystemValueInt('sharing.maxAutocompleteResults', Constants::SHARING_MAX_AUTOCOMPLETE_RESULTS_DEFAULT);
 		if ($maxResults > 0) {
 			$perPage = min($perPage, $maxResults);
 		}
@@ -183,6 +187,10 @@ class ShareesAPIController extends OCSController {
 			if ($this->shareManager->shareProviderExists(IShare::TYPE_ROOM)) {
 				$shareTypes[] = IShare::TYPE_ROOM;
 			}
+
+			if ($this->shareManager->shareProviderExists(IShare::TYPE_DECK)) {
+				$shareTypes[] = IShare::TYPE_DECK;
+			}
 		} else {
 			$shareTypes[] = IShare::TYPE_GROUP;
 			$shareTypes[] = IShare::TYPE_EMAIL;
@@ -193,6 +201,10 @@ class ShareesAPIController extends OCSController {
 			$shareTypes[] = IShare::TYPE_CIRCLE;
 		}
 
+		if ($this->shareManager->shareProviderExists(IShare::TYPE_DECK)) {
+			$shareTypes[] = IShare::TYPE_DECK;
+		}
+
 		if ($shareType !== null && is_array($shareType)) {
 			$shareTypes = array_intersect($shareTypes, $shareType);
 		} elseif (is_numeric($shareType)) {
@@ -200,7 +212,7 @@ class ShareesAPIController extends OCSController {
 		}
 		sort($shareTypes);
 
-		$this->limit = (int) $perPage;
+		$this->limit = $perPage;
 		$this->offset = $perPage * ($page - 1);
 
 		// In global scale mode we always search the loogup server

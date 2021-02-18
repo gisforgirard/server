@@ -39,8 +39,8 @@ use OC\Cache\CappedMemoryCache;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IConfig;
-use OCP\ILogger;
 use OCP\Security\ICrypto;
+use Psr\Log\LoggerInterface;
 
 class PublicKeyTokenProvider implements IProvider {
 	/** @var PublicKeyTokenMapper */
@@ -52,10 +52,10 @@ class PublicKeyTokenProvider implements IProvider {
 	/** @var IConfig */
 	private $config;
 
-	/** @var ILogger $logger */
+	/** @var LoggerInterface */
 	private $logger;
 
-	/** @var ITimeFactory $time */
+	/** @var ITimeFactory */
 	private $time;
 
 	/** @var CappedMemoryCache */
@@ -64,7 +64,7 @@ class PublicKeyTokenProvider implements IProvider {
 	public function __construct(PublicKeyTokenMapper $mapper,
 								ICrypto $crypto,
 								IConfig $config,
-								ILogger $logger,
+								LoggerInterface $logger,
 								ITimeFactory $time) {
 		$this->mapper = $mapper;
 		$this->crypto = $crypto;
@@ -215,9 +215,13 @@ class PublicKeyTokenProvider implements IProvider {
 		if (!($token instanceof PublicKeyToken)) {
 			throw new InvalidTokenException("Invalid token type");
 		}
-		/** @var DefaultToken $token */
+
+		$activityInterval = $this->config->getSystemValueInt('token_auth_activity_update', 60);
+		$activityInterval = min(max($activityInterval, 0), 300);
+
+		/** @var PublicKeyToken $token */
 		$now = $this->time->getTime();
-		if ($token->getLastActivity() < ($now - 60)) {
+		if ($token->getLastActivity() < ($now - $activityInterval)) {
 			// Update token only once per minute
 			$token->setLastActivity($now);
 			$this->mapper->update($token);
@@ -409,11 +413,6 @@ class PublicKeyTokenProvider implements IProvider {
 
 	public function updatePasswords(string $uid, string $password) {
 		$this->cache->clear();
-
-		if (!$this->mapper->hasExpiredTokens($uid)) {
-			// Nothing to do here
-			return;
-		}
 
 		// Update the password for all tokens
 		$tokens = $this->mapper->getTokenByUser($uid);

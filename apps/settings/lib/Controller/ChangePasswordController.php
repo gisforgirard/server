@@ -5,6 +5,7 @@
  * @author Arthur Schiwon <blizzz@arthur-schiwon.de>
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Daniel Calviño Sánchez <danxuliu@gmail.com>
+ * @author Daniel Kesselberg <mail@danielkesselberg.de>
  * @author Joas Schilling <coding@schilljs.com>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Lukas Reschke <lukas@statuscode.ch>
@@ -35,6 +36,7 @@
 
 namespace OCA\Settings\Controller;
 
+use OC\Group\Manager as GroupManager;
 use OC\HintException;
 use OC\User\Session;
 use OCP\App\IAppManager;
@@ -58,7 +60,7 @@ class ChangePasswordController extends Controller {
 	/** @var IL10N */
 	private $l;
 
-	/** @var IGroupManager */
+	/** @var GroupManager */
 	private $groupManager;
 
 	/** @var Session */

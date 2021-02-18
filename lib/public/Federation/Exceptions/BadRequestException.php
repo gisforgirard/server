@@ -3,6 +3,7 @@
  * @copyright Copyright (c) 2018 Bjoern Schiessle <bjoern@schiessle.org>
  *
  * @author Bjoern Schiessle <bjoern@schiessle.org>
+ * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -60,7 +61,7 @@ class BadRequestException extends HintException {
 	public function getReturnMessage() {
 		$result = [
 			'message' => 'RESOURCE_NOT_FOUND',
-			'validationErrors' =>[
+			'validationErrors' => [
 			]
 		];
 

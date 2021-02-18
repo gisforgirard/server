@@ -7,6 +7,7 @@ declare(strict_types=1);
  *
  * @author Daniel Calviño Sánchez <danxuliu@gmail.com>
  * @author Daniel Kesselberg <mail@danielkesselberg.de>
+ * @author Joas Schilling <coding@schilljs.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -28,7 +29,7 @@ declare(strict_types=1);
 
 namespace OC\Core\Migrations;
 
-use Doctrine\DBAL\Types\Types;
+use OCP\DB\Types;
 use OCP\DB\ISchemaWrapper;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
@@ -43,6 +44,7 @@ class Version14000Date20180710092004 extends SimpleMigrationStep {
 		if (!$table->hasColumn('password_by_talk')) {
 			$table->addColumn('password_by_talk', Types::BOOLEAN, [
 				'default' => 0,
+				'notnull' => false,
 			]);
 		}
 

@@ -12,7 +12,6 @@
  * @author Jörn Friedrich Dreyer <jfd@butonic.de>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Ko- <k.stoffelen@cs.ru.nl>
- * @author Lukas Reschke <lukas@statuscode.ch>
  * @author Michael Gapczynski <GapczynskiM@gmail.com>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Nicolai Ehemann <en@enlightened.de>
@@ -23,7 +22,7 @@
  * @author Thibaut GRIDEL <tgridel@free.fr>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
  * @author Victor Dubiniuk <dubiniuk@owncloud.com>
- * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Vincent Petry <vincent@nextcloud.com>
  *
  * @license AGPL-3.0
  *
@@ -109,6 +108,7 @@ class OC_Files {
 	 * @param array $params ; 'head' boolean to only send header of the request ; 'range' http range header
 	 */
 	public static function get($dir, $files, $params = null) {
+		OC_Util::setupFS();
 		$view = \OC\Files\Filesystem::getView();
 		$getType = self::FILE;
 		$filename = $dir;
@@ -209,18 +209,18 @@ class OC_Files {
 		} catch (\OCP\Lock\LockedException $ex) {
 			self::unlockAllTheFiles($dir, $files, $getType, $view, $filename);
 			OC::$server->getLogger()->logException($ex);
-			$l = \OC::$server->getL10N('core');
+			$l = \OC::$server->getL10N('lib');
 			$hint = method_exists($ex, 'getHint') ? $ex->getHint() : '';
 			\OC_Template::printErrorPage($l->t('File is currently busy, please try again later'), $hint, 200);
 		} catch (\OCP\Files\ForbiddenException $ex) {
 			self::unlockAllTheFiles($dir, $files, $getType, $view, $filename);
 			OC::$server->getLogger()->logException($ex);
-			$l = \OC::$server->getL10N('core');
+			$l = \OC::$server->getL10N('lib');
 			\OC_Template::printErrorPage($l->t('Can\'t read file'), $ex->getMessage(), 200);
 		} catch (\Exception $ex) {
 			self::unlockAllTheFiles($dir, $files, $getType, $view, $filename);
 			OC::$server->getLogger()->logException($ex);
-			$l = \OC::$server->getL10N('core');
+			$l = \OC::$server->getL10N('lib');
 			$hint = method_exists($ex, 'getHint') ? $ex->getHint() : '';
 			\OC_Template::printErrorPage($l->t('Can\'t read file'), $hint, 200);
 		}
@@ -232,7 +232,7 @@ class OC_Files {
 	 * @return array $rangeArray ('from'=>int,'to'=>int), ...
 	 */
 	private static function parseHttpRangeHeader($rangeHeaderPos, $fileSize) {
-		$rArray=explode(',', $rangeHeaderPos);
+		$rArray = explode(',', $rangeHeaderPos);
 		$minOffset = 0;
 		$ind = 0;
 
@@ -244,7 +244,7 @@ class OC_Files {
 				if ($ranges[0] < $minOffset) { // case: bytes=500-700,601-999
 					$ranges[0] = $minOffset;
 				}
-				if ($ind > 0 && $rangeArray[$ind-1]['to']+1 == $ranges[0]) { // case: bytes=500-600,601-999
+				if ($ind > 0 && $rangeArray[$ind - 1]['to'] + 1 == $ranges[0]) { // case: bytes=500-600,601-999
 					$ind--;
 					$ranges[0] = $rangeArray[$ind]['from'];
 				}
@@ -253,7 +253,7 @@ class OC_Files {
 			if (is_numeric($ranges[0]) && is_numeric($ranges[1]) && $ranges[0] < $fileSize && $ranges[0] <= $ranges[1]) {
 				// case: x-x
 				if ($ranges[1] >= $fileSize) {
-					$ranges[1] = $fileSize-1;
+					$ranges[1] = $fileSize - 1;
 				}
 				$rangeArray[$ind++] = [ 'from' => $ranges[0], 'to' => $ranges[1], 'size' => $fileSize ];
 				$minOffset = $ranges[1] + 1;
@@ -262,14 +262,14 @@ class OC_Files {
 				}
 			} elseif (is_numeric($ranges[0]) && $ranges[0] < $fileSize) {
 				// case: x-
-				$rangeArray[$ind++] = [ 'from' => $ranges[0], 'to' => $fileSize-1, 'size' => $fileSize ];
+				$rangeArray[$ind++] = [ 'from' => $ranges[0], 'to' => $fileSize - 1, 'size' => $fileSize ];
 				break;
 			} elseif (is_numeric($ranges[1])) {
 				// case: -x
 				if ($ranges[1] > $fileSize) {
 					$ranges[1] = $fileSize;
 				}
-				$rangeArray[$ind++] = [ 'from' => $fileSize-$ranges[1], 'to' => $fileSize-1, 'size' => $fileSize ];
+				$rangeArray[$ind++] = [ 'from' => $fileSize - $ranges[1], 'to' => $fileSize - 1, 'size' => $fileSize ];
 				break;
 			}
 		}

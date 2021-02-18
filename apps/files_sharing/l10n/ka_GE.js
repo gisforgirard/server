@@ -128,8 +128,6 @@ OC.L10N.register(
     "Download %s" : "%s-ის ჩამოტვირთვა",
     "Upload files to %s" : "ფაილების ატვირთვა %s-ში",
     "Select or drop files" : "აირჩიეთ ან გადმოიტანეთ ფაილები",
-    "Uploaded files:" : "ფაილების ატვირთვა:",
-    "could not delete share" : "გაზიარების გაუქმება ვერ მოხერხდა",
-    "Uploading files…" : "ფაილების ატვირთვა..."
+    "Uploaded files:" : "ფაილების ატვირთვა:"
 },
 "nplurals=2; plural=(n!=1);");

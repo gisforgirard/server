@@ -6,6 +6,7 @@ declare(strict_types=1);
  * @copyright 2020 Christoph Wurst <christoph@winzerhof-wurst.at>
  *
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
+ * @author Maxence Lange <maxence@artificial-owl.com>
  *
  * @license GNU AGPL version 3 or any later version
  *
@@ -141,6 +142,7 @@ class ScopedPsrLogger implements LoggerInterface {
 
 	public function log($level, $message, array $context = []) {
 		$this->inner->log(
+			$level,
 			$message,
 			array_merge(
 				[

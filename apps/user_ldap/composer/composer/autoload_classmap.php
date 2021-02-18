@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = $vendorDir;
 
 return array(
+    'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'OCA\\User_LDAP\\Access' => $baseDir . '/../lib/Access.php',
     'OCA\\User_LDAP\\AccessFactory' => $baseDir . '/../lib/AccessFactory.php',
     'OCA\\User_LDAP\\AppInfo\\Application' => $baseDir . '/../lib/AppInfo/Application.php',
@@ -51,6 +52,7 @@ return array(
     'OCA\\User_LDAP\\Mapping\\GroupMapping' => $baseDir . '/../lib/Mapping/GroupMapping.php',
     'OCA\\User_LDAP\\Mapping\\UserMapping' => $baseDir . '/../lib/Mapping/UserMapping.php',
     'OCA\\User_LDAP\\Migration\\RemoveRefreshTime' => $baseDir . '/../lib/Migration/RemoveRefreshTime.php',
+    'OCA\\User_LDAP\\Migration\\SetDefaultProvider' => $baseDir . '/../lib/Migration/SetDefaultProvider.php',
     'OCA\\User_LDAP\\Migration\\UUIDFix' => $baseDir . '/../lib/Migration/UUIDFix.php',
     'OCA\\User_LDAP\\Migration\\UUIDFixGroup' => $baseDir . '/../lib/Migration/UUIDFixGroup.php',
     'OCA\\User_LDAP\\Migration\\UUIDFixInsert' => $baseDir . '/../lib/Migration/UUIDFixInsert.php',

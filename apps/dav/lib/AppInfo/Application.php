@@ -53,7 +53,11 @@ use OCA\DAV\CardDAV\CardDavBackend;
 use OCA\DAV\CardDAV\ContactsManager;
 use OCA\DAV\CardDAV\PhotoCache;
 use OCA\DAV\CardDAV\SyncService;
+use OCA\DAV\Events\CalendarObjectCreatedEvent;
+use OCA\DAV\Events\CalendarObjectUpdatedEvent;
+use OCA\DAV\Events\CalendarShareUpdatedEvent;
 use OCA\DAV\HookManager;
+use OCA\DAV\Listener\CalendarContactInteractionListener;
 use OCA\DAV\Search\ContactsSearchProvider;
 use OCA\DAV\Search\EventsSearchProvider;
 use OCA\DAV\Search\TasksSearchProvider;
@@ -106,6 +110,13 @@ class Application extends App implements IBootstrap {
 		$context->registerSearchProvider(ContactsSearchProvider::class);
 		$context->registerSearchProvider(EventsSearchProvider::class);
 		$context->registerSearchProvider(TasksSearchProvider::class);
+
+		/**
+		 * Register event listeners
+		 */
+		$context->registerEventListener(CalendarObjectCreatedEvent::class, CalendarContactInteractionListener::class);
+		$context->registerEventListener(CalendarObjectUpdatedEvent::class, CalendarContactInteractionListener::class);
+		$context->registerEventListener(CalendarShareUpdatedEvent::class, CalendarContactInteractionListener::class);
 	}
 
 	public function boot(IBootContext $context): void {
@@ -132,7 +143,7 @@ class Application extends App implements IBootstrap {
 			}
 		});
 
-		$birthdayListener = function ($event) use ($container) {
+		$birthdayListener = function ($event) use ($container): void {
 			if ($event instanceof GenericEvent) {
 				/** @var BirthdayService $b */
 				$b = $container->query(BirthdayService::class);
@@ -157,7 +168,7 @@ class Application extends App implements IBootstrap {
 			}
 		});
 
-		$clearPhotoCache = function ($event) use ($container) {
+		$clearPhotoCache = function ($event) use ($container): void {
 			if ($event instanceof GenericEvent) {
 				/** @var PhotoCache $p */
 				$p = $container->query(PhotoCache::class);
@@ -229,7 +240,7 @@ class Application extends App implements IBootstrap {
 			);
 		});
 
-		$listener = function (GenericEvent $event, $eventName) use ($container) {
+		$listener = function (GenericEvent $event, $eventName) use ($container): void {
 			/** @var Backend $backend */
 			$backend = $container->query(Backend::class);
 
@@ -325,7 +336,7 @@ class Application extends App implements IBootstrap {
 			}
 		);
 
-		$eventHandler = function () use ($container, $serverContainer) {
+		$eventHandler = function () use ($container, $serverContainer): void {
 			try {
 				/** @var UpdateCalendarResourcesRoomsBackgroundJob $job */
 				$job = $container->query(UpdateCalendarResourcesRoomsBackgroundJob::class);

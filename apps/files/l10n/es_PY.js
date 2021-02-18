@@ -17,7 +17,7 @@ OC.L10N.register(
     "Processing files …" : "Procesando archivos ...",
     "…" : "...",
     "Unable to upload {filename} as it is a directory or has 0 bytes" : "No fue posible cargar {filename} ya que es una carpeta o tiene un tamaño de 0 bytes",
-    "Not enough free space, you are uploading {size1} but only {size2} is left" : "No tienes suficiente espacio disponible, Estas cargando {size1} pero sólo cuentas con {size2} disponible",
+    "Not enough free space, you are uploading {size1} but only {size2} is left" : "No tienes suficiente espacio disponible, Estás cargando {size1} pero sólo cuentas con {size2} disponible",
     "Target folder \"{dir}\" does not exist any more" : "La carpeta destino \"{dir}\" ya no existe",
     "Not enough free space" : "No cuentas con suficiente espacio libre",
     "An unknown error has occurred" : "Se presentó un error desconocido",
@@ -78,12 +78,8 @@ OC.L10N.register(
     "\"/\" is not allowed inside a file name." : "\"/\" no es permitido dentro del nombre de un archivo.",
     "\"{name}\" is not an allowed filetype" : "\"{name}\" es un tipo de archivo no permitido",
     "Storage of {owner} is full, files can not be updated or synced anymore!" : "El espacio de {owner} está lleno. ¡Los archivos ya no se pueden actualizar o sincronizar!",
-    "This group folder is full, files can not be updated or synced anymore!" : "Esta carpeta grupal esta llena. ¡Los archivos ya no se pueden actualizar o sincronizar!",
-    "This external storage is full, files can not be updated or synced anymore!" : "Este espacio externo esta lleno. ¡Los archivos ya no se pueden actualizar o sincronizar!",
     "Your storage is full, files can not be updated or synced anymore!" : "Tu espacio está lleno. ¡Los archivos ya no se pueden actualizar o sincronizar!",
     "Storage of {owner} is almost full ({usedSpacePercent}%)." : "El espacio de {owner} está casi lleno ({usedSpacePercent}%).",
-    "This group folder is almost full ({usedSpacePercent}%)." : "Esta carpeta grupal está casi llena ({usedSpacePercent}%).",
-    "This external storage is almost full ({usedSpacePercent}%)." : "Este espacio externo está casi lleno ({usedSpacePercent}%).",
     "Your storage is almost full ({usedSpacePercent}%)." : "Tu espacio está casi lleno ({usedSpacePercent}%).",
     "_matches '{filter}'_::_match '{filter}'_" : ["coincide '{filter}'","coincidencia '{filter}'"],
     "View in folder" : "Ver en la carpeta",
@@ -160,7 +156,6 @@ OC.L10N.register(
     "A new file or folder has been <strong>created</strong>" : "Un archivo o carpeta ha sido <strong>creado</strong>",
     "A file or folder has been <strong>deleted</strong>" : "Un archivo o carpeta ha sido <strong>borrado</strong>",
     "Limit notifications about creation and changes to your <strong>favorite files</strong> <em>(Stream only)</em>" : "Limita las notificaciones de la creación y cambios a tus <strong>archivos favoritos</strong> <em>(sólo flujo)</em>",
-    "A file or folder has been <strong>restored</strong>" : "Un archivo o carpeta ha sido <strong>restaurado</strong>",
-    "Use this address to <a href=\"%s\" target=\"_blank\" rel=\"noreferrer noopener\">access your Files via WebDAV</a>" : "Usa esta dirección para <a href=\"%s\" target=\"_blank\" rel=\"noreferrer noopener\">acceder a tus Archivos vía WebDAV</a>"
+    "A file or folder has been <strong>restored</strong>" : "Un archivo o carpeta ha sido <strong>restaurado</strong>"
 },
 "nplurals=2; plural=(n != 1);");

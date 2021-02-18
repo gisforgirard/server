@@ -21,6 +21,7 @@ use OC\User\User;
 use OCA\DAV\Connector\Sabre\Auth;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\ICacheFactory;
 use OCP\IConfig;
 use OCP\ILogger;
 use OCP\IRequest;
@@ -31,6 +32,7 @@ use OCP\Security\ICrypto;
 use OCP\Security\ISecureRandom;
 use OCP\User\Events\PostLoginEvent;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -231,7 +233,8 @@ class SessionTest extends \Test\TestCase {
 			->setConstructorArgs([
 				$this->config,
 				$this->createMock(EventDispatcherInterface::class),
-				$this->createMock(IEventDispatcher::class)
+				$this->createMock(ICacheFactory::class),
+				$this->createMock(IEventDispatcher::class),
 			])
 			->getMock();
 
@@ -297,7 +300,8 @@ class SessionTest extends \Test\TestCase {
 			->setConstructorArgs([
 				$this->config,
 				$this->createMock(EventDispatcherInterface::class),
-				$this->createMock(IEventDispatcher::class)
+				$this->createMock(ICacheFactory::class),
+				$this->createMock(IEventDispatcher::class),
 			])
 			->getMock();
 
@@ -330,7 +334,8 @@ class SessionTest extends \Test\TestCase {
 			->setConstructorArgs([
 				$this->config,
 				$this->createMock(EventDispatcherInterface::class),
-				$this->createMock(IEventDispatcher::class)
+				$this->createMock(ICacheFactory::class),
+				$this->createMock(IEventDispatcher::class),
 			])
 			->getMock();
 		$backend = $this->createMock(\Test\Util\User\Dummy::class);
@@ -573,7 +578,8 @@ class SessionTest extends \Test\TestCase {
 			->setConstructorArgs([
 				$this->config,
 				$this->createMock(EventDispatcherInterface::class),
-				$this->createMock(IEventDispatcher::class)
+				$this->createMock(ICacheFactory::class),
+				$this->createMock(IEventDispatcher::class),
 			])
 			->getMock();
 		$userSession = $this->getMockBuilder(Session::class)
@@ -662,7 +668,8 @@ class SessionTest extends \Test\TestCase {
 			->setConstructorArgs([
 				$this->config,
 				$this->createMock(EventDispatcherInterface::class),
-				$this->createMock(IEventDispatcher::class)
+				$this->createMock(ICacheFactory::class),
+				$this->createMock(IEventDispatcher::class),
 			])
 			->getMock();
 		$userSession = $this->getMockBuilder(Session::class)
@@ -726,7 +733,8 @@ class SessionTest extends \Test\TestCase {
 			->setConstructorArgs([
 				$this->config,
 				$this->createMock(EventDispatcherInterface::class),
-				$this->createMock(IEventDispatcher::class)
+				$this->createMock(ICacheFactory::class),
+				$this->createMock(IEventDispatcher::class),
 			])
 			->getMock();
 		$userSession = $this->getMockBuilder(Session::class)
@@ -778,7 +786,8 @@ class SessionTest extends \Test\TestCase {
 			->setConstructorArgs([
 				$this->config,
 				$this->createMock(EventDispatcherInterface::class),
-				$this->createMock(IEventDispatcher::class)
+				$this->createMock(ICacheFactory::class),
+				$this->createMock(IEventDispatcher::class),
 			])
 			->getMock();
 		$userSession = $this->getMockBuilder(Session::class)
@@ -1246,7 +1255,7 @@ class SessionTest extends \Test\TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 		$crypto = $this->createMock(ICrypto::class);
-		$logger = $this->createMock(ILogger::class);
+		$logger = $this->createMock(LoggerInterface::class);
 		$tokenProvider = new DefaultTokenProvider($mapper, $crypto, $this->config, $logger, $this->timeFactory);
 
 		/** @var \OC\User\Session $userSession */
@@ -1296,7 +1305,7 @@ class SessionTest extends \Test\TestCase {
 			->disableOriginalConstructor()
 			->getMock();
 		$crypto = $this->createMock(ICrypto::class);
-		$logger = $this->createMock(ILogger::class);
+		$logger = $this->createMock(LoggerInterface::class);
 		$tokenProvider = new DefaultTokenProvider($mapper, $crypto, $this->config, $logger, $this->timeFactory);
 
 		/** @var \OC\User\Session $userSession */

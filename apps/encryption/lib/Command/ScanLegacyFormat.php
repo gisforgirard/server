@@ -5,6 +5,7 @@ declare(strict_types=1);
 /**
  * @copyright Copyright (c) 2020, Roeland Jago Douma <roeland@famdouma.nl>
  *
+ * @author essys <essys@users.noreply.github.com>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  *
  * @license GNU AGPL version 3 or any later version
@@ -96,7 +97,7 @@ class ScanLegacyFormat extends Command {
 		}
 
 		if ($result) {
-			$output->writeln('All scanned files are propperly encrypted. You can disable the legacy compatibility mode.');
+			$output->writeln('All scanned files are properly encrypted. You can disable the legacy compatibility mode.');
 			return 0;
 		}
 

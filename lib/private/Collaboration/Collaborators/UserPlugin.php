@@ -6,6 +6,7 @@
  * @author Christoph Wurst <christoph@winzerhof-wurst.at>
  * @author Georg Ehrke <oc.list@georgehrke.com>
  * @author Joas Schilling <coding@schilljs.com>
+ * @author John Molakvoæ (skjnldsv) <skjnldsv@protonmail.com>
  * @author Julius Härtl <jus@bitgrid.net>
  * @author Morris Jobke <hey@morrisjobke.de>
  * @author Robin Appelman <robin@icewind.nl>
@@ -147,19 +148,22 @@ class UserPlugin implements ISearchPlugin {
 
 
 			if (
-				strtolower($uid) === $lowerSearch ||
+				$lowerSearch !== '' && (strtolower($uid) === $lowerSearch ||
 				strtolower($userDisplayName) === $lowerSearch ||
-				strtolower($userEmail) === $lowerSearch
+				strtolower($userEmail) === $lowerSearch)
 			) {
 				if (strtolower($uid) === $lowerSearch) {
 					$foundUserById = true;
 				}
 				$result['exact'][] = [
 					'label' => $userDisplayName,
+					'subline' => $status['message'] ?? '',
+					'icon' => 'icon-user',
 					'value' => [
 						'shareType' => IShare::TYPE_USER,
 						'shareWith' => $uid,
 					],
+					'shareWithDisplayNameUnique' => !empty($userEmail) ? $userEmail : $uid,
 					'status' => $status,
 				];
 			} else {
@@ -178,10 +182,13 @@ class UserPlugin implements ISearchPlugin {
 				if ($addToWideResults) {
 					$result['wide'][] = [
 						'label' => $userDisplayName,
+						'subline' => $status['message'] ?? '',
+						'icon' => 'icon-user',
 						'value' => [
 							'shareType' => IShare::TYPE_USER,
 							'shareWith' => $uid,
 						],
+						'shareWithDisplayNameUnique' => !empty($userEmail) ? $userEmail : $uid,
 						'status' => $status,
 					];
 				}
@@ -203,6 +210,8 @@ class UserPlugin implements ISearchPlugin {
 
 				if ($addUser) {
 					$status = [];
+					$uid = $user->getUID();
+					$userEmail = $user->getEMailAddress();
 					if (array_key_exists($user->getUID(), $userStatuses)) {
 						$userStatus = $userStatuses[$user->getUID()];
 						$status = [
@@ -217,10 +226,13 @@ class UserPlugin implements ISearchPlugin {
 
 					$result['exact'][] = [
 						'label' => $user->getDisplayName(),
+						'icon' => 'icon-user',
+						'subline' => $status['message'] ?? '',
 						'value' => [
 							'shareType' => IShare::TYPE_USER,
 							'shareWith' => $user->getUID(),
 						],
+						'shareWithDisplayNameUnique' => $userEmail !== null && $userEmail !== '' ? $userEmail : $uid,
 						'status' => $status,
 					];
 				}

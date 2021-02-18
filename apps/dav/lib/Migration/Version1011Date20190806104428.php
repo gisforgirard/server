@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\DAV\Migration;
 
 use Closure;
-use Doctrine\DBAL\Types\Types;
+use OCP\DB\Types;
 use OCP\DB\ISchemaWrapper;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
@@ -71,7 +71,6 @@ class Version1011Date20190806104428 extends SimpleMigrationStep {
 
 		$table->setPrimaryKey(['id']);
 		$table->addUniqueIndex(['owner_id', 'proxy_id', 'permissions'], 'dav_cal_proxy_uidx');
-		$table->addIndex(['owner_id'], 'dav_cal_proxy_ioid');
 		$table->addIndex(['proxy_id'], 'dav_cal_proxy_ipid');
 
 		return $schema;

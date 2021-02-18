@@ -20,7 +20,7 @@
  * @author Robin McCorkell <robin@mccorkell.me.uk>
  * @author Roeland Jago Douma <roeland@famdouma.nl>
  * @author Thomas Müller <thomas.mueller@tmit.eu>
- * @author Vincent Petry <pvince81@owncloud.com>
+ * @author Vincent Petry <vincent@nextcloud.com>
  *
  * @license AGPL-3.0
  *
@@ -165,7 +165,13 @@ class AmazonS3 extends \OC\Files\Storage\Common {
 					'MaxKeys' => 1,
 					'Delimiter' => '/',
 				]);
-				$this->directoryCache[$path] = ($result['Contents'][0]['Key'] === rtrim($path, '/') . '/') || $result['CommonPrefixes'];
+
+				if ((isset($result['Contents'][0]['Key']) && $result['Contents'][0]['Key'] === rtrim($path, '/') . '/')
+					 || isset($result['CommonPrefixes'])) {
+					$this->directoryCache[$path] = true;
+				} else {
+					$this->directoryCache[$path] = false;
+				}
 			} catch (S3Exception $e) {
 				if ($e->getStatusCode() === 403) {
 					$this->directoryCache[$path] = false;
@@ -179,7 +185,7 @@ class AmazonS3 extends \OC\Files\Storage\Common {
 
 	/**
 	 * Updates old storage ids (v0.2.1 and older) that are based on key and secret to new ones based on the bucket name.
-	 * TODO Do this in an update.php. requires iterating over all users and loading the mount.json from their home
+	 * TODO Do this in a repair step. requires iterating over all users and loading the mount.json from their home
 	 *
 	 * @param array $params
 	 */
